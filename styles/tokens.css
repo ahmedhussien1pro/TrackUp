@@ -1,0 +1,172 @@
+/* =============================================================
+   TrackUp Design Tokens
+   Art direction: Career guidance SaaS → purposeful, focused
+   Palette: warm neutral surfaces + deep teal primary
+   Typography: Instrument Serif (display) + Cabinet Grotesk (body)
+   Density: balanced
+============================================================= */
+
+:root,
+[data-theme="light"] {
+  /* Surfaces */
+  --color-bg:               #f6f5f1;
+  --color-surface:          #f9f8f5;
+  --color-surface-2:        #fbfaf8;
+  --color-surface-offset:   #f0ede8;
+  --color-surface-offset-2: #e9e5df;
+  --color-surface-dynamic:  #e2ddd7;
+  --color-divider:          #dad6cf;
+  --color-border:           #ccc8c0;
+
+  /* Text */
+  --color-text:           #1e1c17;
+  --color-text-muted:     #716e67;
+  --color-text-faint:     #b5b3ad;
+  --color-text-inverse:   #f8f7f3;
+
+  /* Primary — Deep Teal */
+  --color-primary:          #016268;
+  --color-primary-hover:    #0a4a50;
+  --color-primary-active:   #0d3336;
+  --color-primary-highlight:#cddcda;
+
+  /* Success */
+  --color-success:          #3d7320;
+  --color-success-hover:    #295510;
+  --color-success-active:   #1a3b08;
+  --color-success-highlight:#d0ddc8;
+
+  /* Warning */
+  --color-warning:          #8c3e17;
+  --color-warning-hover:    #6b3012;
+  --color-warning-active:   #47210d;
+  --color-warning-highlight:#dacbc2;
+
+  /* Error */
+  --color-error:            #9a2870;
+  --color-error-hover:      #771b55;
+  --color-error-active:     #511239;
+  --color-error-highlight:  #decbd5;
+
+  /* Gold — for pricing highlights */
+  --color-gold:             #c89200;
+  --color-gold-hover:       #a87600;
+  --color-gold-active:      #845800;
+  --color-gold-highlight:   #e6dcc2;
+
+  /* Radius */
+  --radius-sm:   0.375rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+  --radius-2xl:  1.5rem;
+  --radius-full: 9999px;
+
+  /* Spacing (4px base) */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* Type scale */
+  --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
+  --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
+  --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
+  --text-lg:   clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);
+  --text-xl:   clamp(1.5rem,   1.2rem  + 1.25vw, 2.25rem);
+  --text-2xl:  clamp(2rem,     1.2rem  + 2.5vw,  3.5rem);
+  --text-3xl:  clamp(2.5rem,   1rem    + 4vw,    5rem);
+  --text-hero: clamp(3rem,     0.5rem  + 7vw,    8rem);
+
+  /* Fonts */
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body:    'Cabinet Grotesk', 'Inter', sans-serif;
+
+  /* Transitions */
+  --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-page:        320ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px oklch(0.18 0.02 80 / 0.06);
+  --shadow-md: 0 4px 12px oklch(0.18 0.02 80 / 0.08);
+  --shadow-lg: 0 12px 32px oklch(0.18 0.02 80 / 0.12);
+
+  /* Layout */
+  --content-narrow:  640px;
+  --content-default: 960px;
+  --content-wide:    1200px;
+  --content-full:    100%;
+
+  /* Sidebar */
+  --sidebar-width: 240px;
+  --topbar-height: 56px;
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+  --color-bg:               #141310;
+  --color-surface:          #19180f;
+  --color-surface-2:        #1e1d13;
+  --color-surface-offset:   #1b1a11;
+  --color-surface-offset-2: #201f15;
+  --color-surface-dynamic:  #2a2920;
+  --color-divider:          #232218;
+  --color-border:           #36352b;
+  --color-text:             #cac9c5;
+  --color-text-muted:       #75746f;
+  --color-text-faint:       #575650;
+  --color-text-inverse:     #28271e;
+  --color-primary:          #4d959f;
+  --color-primary-hover:    #1f7a86;
+  --color-primary-active:   #175f69;
+  --color-primary-highlight:#2e3a3a;
+  --color-success:          #67a33e;
+  --color-success-hover:    #4a8a22;
+  --color-success-active:   #356d12;
+  --color-success-highlight:#363f30;
+  --color-warning:          #b66038;
+  --color-warning-hover:    #b45020;
+  --color-warning-active:   #943808;
+  --color-warning-highlight:#52443d;
+  --color-error:            #cc5fa1;
+  --color-error-hover:      #b34388;
+  --color-error-active:     #952c6e;
+  --color-error-highlight:  #493a43;
+  --color-gold:             #e4ab30;
+  --color-gold-hover:       #fac04e;
+  --color-gold-active:      #fad570;
+  --color-gold-highlight:   #4a3f2e;
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.22);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / 0.32);
+  --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.44);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-bg:               #141310;
+    --color-surface:          #19180f;
+    --color-surface-2:        #1e1d13;
+    --color-surface-offset:   #1b1a11;
+    --color-surface-offset-2: #201f15;
+    --color-surface-dynamic:  #2a2920;
+    --color-divider:          #232218;
+    --color-border:           #36352b;
+    --color-text:             #cac9c5;
+    --color-text-muted:       #75746f;
+    --color-text-faint:       #575650;
+    --color-text-inverse:     #28271e;
+    --color-primary:          #4d959f;
+    --color-primary-hover:    #1f7a86;
+    --color-primary-active:   #175f69;
+    --color-primary-highlight:#2e3a3a;
+  }
+}
