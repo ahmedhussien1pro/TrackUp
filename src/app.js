@@ -24,12 +24,21 @@ import { Progress, ProgressEvents }                       from './screens/Progre
 import { Notifications, NotificationsEvents }             from './screens/Notifications/Notifications.js';
 import { Settings, SettingsEvents }                       from './screens/Settings/Settings.js';
 
-const PUBLIC_ROUTES = ['/', '/login', '/register', '/pricing', '/test', '/results', '/decision-summary', '/onboarding'];
+// Routes that never require auth and never show layout
+const ALWAYS_PUBLIC = ['/', '/login', '/register', '/pricing', '/onboarding', '/test'];
+
+// Routes visible without auth IF a testResult exists (semi-protected)
+// Once logged in, layout shows on these too
+const SEMI_PUBLIC = ['/results', '/decision-summary'];
 
 window.__trackup_layout_sidebar__ = { Sidebar, SidebarEvents };
 
-function isPublic(path) {
-  return PUBLIC_ROUTES.includes(path);
+function _isAlwaysPublic(path) {
+  return ALWAYS_PUBLIC.includes(path);
+}
+
+function _isSemiPublic(path) {
+  return SEMI_PUBLIC.includes(path);
 }
 
 let _layoutMounted = false;
@@ -42,14 +51,16 @@ function _updateActiveLink() {
     link.setAttribute('aria-current', active ? 'page' : 'false');
   });
   const PAGE_KEYS = {
-    '/dashboard':     'nav.dashboard',
-    '/career':        'nav.career',
-    '/roadmap':       'nav.roadmap',
-    '/courses':       'nav.courses',
-    '/mentorship':    'nav.mentorship',
-    '/progress':      'nav.progress',
-    '/notifications': 'nav.notifications',
-    '/settings':      'nav.settings',
+    '/dashboard':       'nav.dashboard',
+    '/career':          'nav.career',
+    '/roadmap':         'nav.roadmap',
+    '/courses':         'nav.courses',
+    '/mentorship':      'nav.mentorship',
+    '/progress':        'nav.progress',
+    '/notifications':   'nav.notifications',
+    '/settings':        'nav.settings',
+    '/results':         'nav.results',
+    '/decision-summary':'nav.decisionSummary',
   };
   const { t } = window.__trackup_i18n__ || {};
   const titleEl = document.getElementById('topbar-page-title');
@@ -71,12 +82,21 @@ function bootstrap() {
   if (testResult) State.setState('testResult', testResult);
 
   Router.setGuard((path) => {
-    const loggedIn = !!State.getState('user');
+    const loggedIn   = !!State.getState('user');
+    const hasResult  = !!State.getState('testResult');
 
-    if (!isPublic(path) && !loggedIn) return '/login';
+    // Redirect logged-in users away from auth pages
     if (loggedIn && (path === '/login' || path === '/register')) return '/dashboard';
 
-    const needsLayout = !isPublic(path) && loggedIn;
+    // Block private routes if not logged in
+    if (!_isAlwaysPublic(path) && !_isSemiPublic(path) && !loggedIn) return '/login';
+
+    // Block semi-public routes if no result AND not logged in
+    if (_isSemiPublic(path) && !hasResult && !loggedIn) return '/test';
+
+    // Determine if layout should be shown:
+    // Show layout when logged in OR when user has a result and is on a semi-public route
+    const needsLayout = loggedIn || (hasResult && _isSemiPublic(path));
 
     if (needsLayout && !_layoutMounted) {
       _layoutMounted = true;
