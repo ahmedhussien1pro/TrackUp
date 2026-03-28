@@ -18,7 +18,7 @@ const PAGE_TITLES = {
 
 function _currentTitle() {
   const path = window.location.hash.slice(1).split('?')[0] || '/';
-  const key = PAGE_TITLES[path];
+  const key  = PAGE_TITLES[path];
   return key ? t(key) : '';
 }
 
@@ -43,10 +43,12 @@ export function Topbar() {
         aria-controls="app-sidebar"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
       </button>
-      ${title ? `<span id="topbar-page-title" class="topbar__page-title">${title}</span>` : '<span id="topbar-page-title" class="topbar__page-title"></span>'}
+      <span id="topbar-page-title" class="topbar__page-title">${title}</span>
     </div>
 
     <div class="topbar__end">
@@ -83,7 +85,7 @@ export function Topbar() {
         aria-label="${t('settings.theme')}"
         title="Toggle Theme"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="topbar-theme-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="5"/>
           <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
         </svg>
@@ -105,48 +107,44 @@ export function Topbar() {
 }
 
 export function TopbarEvents() {
-  // ---- Theme toggle ----
+  // ---- Theme ----
   document.getElementById('topbar-theme-btn')?.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme') || 'light';
-    const next = current === 'dark' ? 'light' : 'dark';
+    const cur  = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = cur === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     StorageService.set('theme', next);
   });
 
-  // ---- Language toggle ----
+  // ---- Language (full reload of layout + route) ----
   document.getElementById('topbar-lang-btn')?.addEventListener('click', () => {
     const next = getLang() === 'ar' ? 'en' : 'ar';
     setLang(next);
     StorageService.set('lang', next);
+    // Full remount on language change (intentional — strings must update)
     mountLayout();
-    Router._resolve();
+    Router._resolve?.();
   });
 
-  // ---- Hamburger: Desktop collapse + Mobile open ----
+  // ---- Hamburger ----
   document.getElementById('topbar-menu-btn')?.addEventListener('click', () => {
     const sidebar  = document.getElementById('app-sidebar');
     const isMobile = window.innerWidth < 768;
-
     if (isMobile) {
-      const isOpen = sidebar.classList.contains('open');
-      isOpen ? _closeSidebar() : _openSidebar();
+      sidebar?.classList.contains('open') ? _closeSidebar() : _openSidebar();
     } else {
-      // Desktop: toggle collapsed
-      const isCollapsed = sidebar.classList.contains('collapsed');
-      sidebar.classList.toggle('collapsed');
+      const collapsed = sidebar?.classList.toggle('collapsed');
       document.getElementById('topbar-menu-btn')
-        ?.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
-      StorageService.set('sidebarCollapsed', !isCollapsed);
+        ?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      StorageService.set('sidebarCollapsed', collapsed);
     }
   });
 
-  // ---- Restore desktop collapse state ----
-  const wasCollapsed = StorageService.get('sidebarCollapsed');
-  if (wasCollapsed && window.innerWidth >= 768) {
+  // Restore desktop collapse
+  if (StorageService.get('sidebarCollapsed') && window.innerWidth >= 768) {
     document.getElementById('app-sidebar')?.classList.add('collapsed');
   }
 
-  // ---- Overlay click closes mobile sidebar ----
+  // ---- Overlay close ----
   document.getElementById('sidebar-overlay')?.addEventListener('click', _closeSidebar);
 
   // ---- Avatar dropdown ----
@@ -163,13 +161,14 @@ export function TopbarEvents() {
   });
 
   // ---- Escape closes dropdown ----
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', function _escHandler(e) {
     if (e.key === 'Escape') {
       const dd = document.getElementById('topbar-dropdown');
       if (dd) {
         dd.remove();
         document.getElementById('topbar-avatar-btn')?.setAttribute('aria-expanded', 'false');
         document.getElementById('topbar-avatar-btn')?.focus();
+        document.removeEventListener('keydown', _escHandler);
       }
     }
   });
@@ -177,47 +176,48 @@ export function TopbarEvents() {
 
 function _buildDropdown(btn) {
   const user = State.getState('user');
-  const dropdown = document.createElement('div');
-  dropdown.id = 'topbar-dropdown';
-  dropdown.className = 'topbar__dropdown';
-  dropdown.setAttribute('role', 'menu');
-  dropdown.innerHTML = `
+  const dd   = document.createElement('div');
+  dd.id        = 'topbar-dropdown';
+  dd.className = 'topbar__dropdown';
+  dd.setAttribute('role', 'menu');
+  dd.innerHTML = `
     <div class="topbar__dropdown-user">
       <strong>${user?.name || 'User'}</strong>
       <span>${user?.email || ''}</span>
-      <span class="badge" style="margin-top:4px;width:fit-content">${user?.plan || 'free'}</span>
+      <span class="badge badge--primary" style="margin-top:4px;width:fit-content">${user?.plan || 'free'}</span>
     </div>
     <hr class="topbar__dropdown-divider">
-    <a href="#/settings" class="topbar__dropdown-item" role="menuitem">${t('nav.settings')}</a>
+    <a href="#/settings"      class="topbar__dropdown-item" role="menuitem">${t('nav.settings')}</a>
     <a href="#/notifications" class="topbar__dropdown-item" role="menuitem">${t('nav.notifications')}</a>
     <hr class="topbar__dropdown-divider">
     <button class="topbar__dropdown-item topbar__dropdown-item--danger" id="topbar-logout" role="menuitem">
       ${t('auth.logout')}
     </button>
   `;
-  document.getElementById('topbar-user-menu')?.appendChild(dropdown);
+  document.getElementById('topbar-user-menu')?.appendChild(dd);
   btn.setAttribute('aria-expanded', 'true');
 
   document.getElementById('topbar-logout')?.addEventListener('click', () => {
     AuthService.logout();
-    Router.navigate('/login');
     unmountLayout();
+    Router.navigate('/login');
   });
 
-  // Close on outside click
   setTimeout(() => {
-    document.addEventListener('click', function _close() {
-      dropdown?.remove();
+    document.addEventListener('click', function _closeDD() {
+      dd?.remove();
       btn.setAttribute('aria-expanded', 'false');
-      document.removeEventListener('click', _close);
+      document.removeEventListener('click', _closeDD);
     });
   }, 0);
 }
 
+// ============================================================
+// Layout mount / unmount
+// ============================================================
 export function mountLayout() {
   const sidebar = document.getElementById('app-sidebar');
   const topbar  = document.getElementById('app-topbar');
-  const appBody = document.getElementById('app-body');
   if (!sidebar || !topbar) return;
 
   const { Sidebar, SidebarEvents } = window.__trackup_layout_sidebar__ || {};
@@ -227,7 +227,6 @@ export function mountLayout() {
 
   sidebar.removeAttribute('aria-hidden');
   topbar.removeAttribute('aria-hidden');
-  appBody?.classList.remove('no-sidebar');
 
   SidebarEvents?.();
   TopbarEvents();
@@ -236,8 +235,6 @@ export function mountLayout() {
 export function unmountLayout() {
   const sidebar = document.getElementById('app-sidebar');
   const topbar  = document.getElementById('app-topbar');
-  const appBody = document.getElementById('app-body');
   if (sidebar) { sidebar.innerHTML = ''; sidebar.setAttribute('aria-hidden', 'true'); }
   if (topbar)  { topbar.innerHTML  = ''; topbar.setAttribute('aria-hidden',  'true'); }
-  appBody?.classList.add('no-sidebar');
 }

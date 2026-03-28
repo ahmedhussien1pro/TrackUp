@@ -102,23 +102,26 @@
   font-weight: var(--weight-semi);
   border-radius: var(--radius-full);
   line-height: 1.4;
+  /* LTR by default — badges contain numbers/short text */
+  direction: ltr;
+  unicode-bidi: isolate;
 }
-.badge--primary  { background: var(--color-primary-light); color: var(--color-primary); }
-.badge--success  { background: #d1fae5; color: #065f46; }
-.badge--neutral  { background: var(--color-surface-2); color: var(--color-text-secondary); }
-.badge--beginner { background: #d1fae5; color: #065f46; }
+.badge--primary      { background: var(--color-primary-light); color: var(--color-primary); }
+.badge--success      { background: #d1fae5; color: #065f46; }
+.badge--neutral      { background: var(--color-surface-2); color: var(--color-text-secondary); }
+.badge--beginner     { background: #d1fae5; color: #065f46; }
 .badge--intermediate { background: #fef3c7; color: #92400e; }
-.badge--advanced { background: #fee2e2; color: #991b1b; }
-.badge--completed { background: #d1fae5; color: #065f46; }
-.badge--active   { background: #dbeafe; color: #1e40af; }
-.badge--locked   { background: var(--color-surface-2); color: var(--color-text-muted); }
+.badge--advanced     { background: #fee2e2; color: #991b1b; }
+.badge--completed    { background: #d1fae5; color: #065f46; }
+.badge--active       { background: #dbeafe; color: #1e40af; }
+.badge--locked       { background: var(--color-surface-2); color: var(--color-text-muted); }
 
-[data-theme="dark"] .badge--success    { background: #064e3b; color: #6ee7b7; }
-[data-theme="dark"] .badge--beginner   { background: #064e3b; color: #6ee7b7; }
-[data-theme="dark"] .badge--intermediate { background: #78350f; color: #fde68a; }
-[data-theme="dark"] .badge--advanced   { background: #7f1d1d; color: #fca5a5; }
-[data-theme="dark"] .badge--completed  { background: #064e3b; color: #6ee7b7; }
-[data-theme="dark"] .badge--active     { background: #1e3a8a; color: #93c5fd; }
+[data-theme="dark"] .badge--success       { background: #064e3b; color: #6ee7b7; }
+[data-theme="dark"] .badge--beginner      { background: #064e3b; color: #6ee7b7; }
+[data-theme="dark"] .badge--intermediate  { background: #78350f; color: #fde68a; }
+[data-theme="dark"] .badge--advanced      { background: #7f1d1d; color: #fca5a5; }
+[data-theme="dark"] .badge--completed     { background: #064e3b; color: #6ee7b7; }
+[data-theme="dark"] .badge--active        { background: #1e3a8a; color: #93c5fd; }
 
 /* ------------------------------------------------------------
    CARDS
@@ -136,17 +139,76 @@
 /* ------------------------------------------------------------
    STAT CARDS
 ------------------------------------------------------------ */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
 .stat-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-5) var(--space-5);
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  align-items: center;
+  gap: var(--space-4);
+  transition: box-shadow var(--transition-base);
 }
-.stat-card__label { font-size: var(--text-sm); color: var(--color-text-muted); font-weight: var(--weight-medium); }
+.stat-card:hover { box-shadow: var(--shadow-md); }
+.stat-card__icon {
+  width: 44px; height: 44px; min-width: 44px;
+  border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+}
+.stat-card__body { display: flex; flex-direction: column; gap: 2px; }
 .stat-card__value { font-size: var(--text-2xl); font-weight: var(--weight-black); color: var(--color-text); }
+.stat-card__label { font-size: var(--text-xs); color: var(--color-text-muted); font-weight: var(--weight-medium); }
+
+/* ------------------------------------------------------------
+   SECTION HEADER
+------------------------------------------------------------ */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.section-header__title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+}
+.section-header__link {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--color-primary);
+}
+.section-header__link:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------
+   PROGRESS BAR
+------------------------------------------------------------ */
+.progress-bar {
+  height: 8px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+.progress-bar__fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0%;
+}
+.progress-bar__meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
 
 /* ------------------------------------------------------------
    AUTH SCREENS
@@ -211,6 +273,11 @@
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
+.track-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 .track-card__icon {
   width: 44px; height: 44px;
   background: var(--color-primary-light);
@@ -222,7 +289,106 @@
 }
 .track-card__name { font-size: var(--text-md); font-weight: var(--weight-bold); color: var(--color-text); }
 .track-card__desc { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: var(--leading-snug); }
-.track-card__footer { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: auto; }
+.track-card__footer {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+.track-card__cta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--color-primary);
+}
+.track-card__cta:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------
+   DASHBOARD SPECIFIC
+------------------------------------------------------------ */
+.dashboard-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  padding: var(--space-8);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  border-radius: var(--radius-2xl);
+  color: #fff;
+}
+.dashboard-hero__greeting {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  opacity: 0.85;
+  color: rgba(255,255,255,0.85);
+}
+.dashboard-hero__name {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.03em;
+  color: #fff;
+  margin: var(--space-1) 0;
+}
+.dashboard-hero__sub { font-size: var(--text-sm); opacity: 0.85; color: rgba(255,255,255,0.85); }
+.dashboard-hero__sub strong { color: #fff; }
+
+.dashboard-hero .btn--primary {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.4);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  flex-shrink: 0;
+}
+.dashboard-hero .btn--primary:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.dashboard-track-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+}
+.dashboard-track-card__icon {
+  width: 48px; height: 48px; min-width: 48px;
+  border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--text-xl);
+}
+.dashboard-track-card__name { font-size: var(--text-lg); font-weight: var(--weight-bold); }
+.dashboard-track-card__desc { font-size: var(--text-sm); color: var(--color-text-secondary); }
+.dashboard-track-card__progress { margin-top: var(--space-2); }
+
+.dashboard-cta-card {
+  text-align: center;
+  padding: var(--space-10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+.dashboard-cta-card__icon {
+  width: 64px; height: 64px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: var(--space-2);
+}
+.dashboard-cta-card h3 { font-size: var(--text-xl); font-weight: var(--weight-bold); }
+.dashboard-cta-card p  { font-size: var(--text-sm); color: var(--color-text-muted); max-width: 400px; }
+
+.dashboard-section { margin-top: var(--space-8); }
+.tracks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-5);
+}
 
 /* ------------------------------------------------------------
    COURSE CARDS
@@ -275,7 +441,6 @@
 /* ------------------------------------------------------------
    GRIDS
 ------------------------------------------------------------ */
-.tracks-grid,
 .career-screen__grid,
 .courses-screen__grid,
 .mentorship-screen__grid,
@@ -300,9 +465,9 @@
   margin-bottom: var(--space-3);
   transition: border-color var(--transition-fast);
 }
-.step--active   { border-color: var(--color-primary); }
+.step--active    { border-color: var(--color-primary); }
 .step--completed { border-color: var(--color-success); opacity: 0.85; }
-.step--locked   { opacity: 0.5; }
+.step--locked    { opacity: 0.5; }
 
 .roadmap-step__index {
   width: 32px; height: 32px; min-width: 32px;
@@ -312,13 +477,13 @@
   font-size: var(--text-sm); font-weight: var(--weight-bold);
   color: var(--color-text-secondary);
 }
-.step--active   .roadmap-step__index { background: var(--color-primary); color: #fff; }
+.step--active    .roadmap-step__index { background: var(--color-primary); color: #fff; }
 .step--completed .roadmap-step__index { background: var(--color-success); color: #fff; }
 
 .roadmap-step__body { flex: 1; }
 .roadmap-step__body h4 { font-size: var(--text-base); font-weight: var(--weight-bold); margin-bottom: var(--space-1); }
 .roadmap-step__body p  { font-size: var(--text-sm); color: var(--color-text-secondary); }
-.roadmap-step__meta { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+.roadmap-step__meta   { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
 .roadmap-step__action { display: flex; align-items: center; }
 
 /* ------------------------------------------------------------
@@ -397,6 +562,11 @@
 /* ------------------------------------------------------------
    NOTIFICATIONS
 ------------------------------------------------------------ */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
 .notification-item {
   display: flex;
   align-items: flex-start;
@@ -410,18 +580,27 @@
   background: var(--color-primary-light);
   border-color: var(--color-border);
 }
+[data-theme="dark"] .notification-item--unread {
+  background: rgba(99,102,241,0.12);
+}
 .notification-item__dot {
   width: 8px; height: 8px; min-width: 8px;
   border-radius: 50%;
   background: var(--color-primary);
   margin-top: 5px;
 }
-.notification-item--unread ~ * .notification-item__dot { opacity: 0; }
 .notification-item:not(.notification-item--unread) .notification-item__dot {
   background: var(--color-text-muted);
 }
 .notification-item__text { font-size: var(--text-sm); color: var(--color-text); }
-.notification-item__time { font-size: var(--text-xs); color: var(--color-text-muted); }
+.notification-item__time {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+  margin-top: 2px;
+}
 
 /* ------------------------------------------------------------
    EMPTY STATE
@@ -438,48 +617,18 @@
 }
 
 /* ------------------------------------------------------------
-   SCREEN HEADERS
------------------------------------------------------------- */
-.career-screen__header,
-.courses-screen__header,
-.mentorship-screen__header,
-.progress-screen__header,
-.notifications-screen__header,
-.settings-screen__header,
-.dashboard__welcome,
-.roadmap-screen__header,
-.test-screen__header,
-.results-screen,
-.pricing-screen__header,
-.payment-screen {
-  margin-bottom: var(--space-6);
-}
-
-/* ------------------------------------------------------------
-   DASHBOARD
------------------------------------------------------------- */
-.dashboard__stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: var(--space-4);
-  margin: var(--space-6) 0;
-}
-.dashboard__tracks h3 {
-  font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
-  margin-bottom: var(--space-4);
-}
-
-/* ------------------------------------------------------------
    TEST SCREEN
 ------------------------------------------------------------ */
+.test-screen {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-4);
+}
 .test-question {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-8);
-  max-width: 640px;
-  margin-inline: auto;
 }
 .test-question__count {
   font-size: var(--text-sm);
@@ -490,6 +639,7 @@
   font-size: var(--text-xl);
   font-weight: var(--weight-bold);
   margin: var(--space-4) 0 var(--space-6);
+  color: var(--color-text);
 }
 .test-question__options {
   display: flex;
@@ -513,6 +663,12 @@
   border-color: var(--color-primary);
   background: var(--color-primary-light);
   color: var(--color-primary);
+}
+.test-option--selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: var(--weight-semi);
 }
 
 /* ------------------------------------------------------------
@@ -572,7 +728,41 @@
   font-size: var(--text-sm);
 }
 .payment-screen__row {
-  display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
+}
+
+/* ------------------------------------------------------------
+   SCREEN HEADERS (generic)
+------------------------------------------------------------ */
+.screen-header {
+  margin-bottom: var(--space-8);
+}
+.screen-header h1 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-1);
+}
+.screen-header p {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* ------------------------------------------------------------
+   RESPONSIVE
+------------------------------------------------------------ */
+@media (max-width: 768px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboard-hero {
+    padding: var(--space-6);
+  }
+  .tracks-grid,
+  .career-screen__grid,
+  .courses-screen__grid,
+  .mentorship-screen__grid {
+    grid-template-columns: 1fr;
+  }
 }
