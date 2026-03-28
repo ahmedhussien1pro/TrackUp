@@ -1,6 +1,8 @@
 import { Router } from '../../router.js';
 import { TestService } from '../../services/test.service.js';
 import { TrackService } from '../../services/track.service.js';
+import State from '../../state.js';
+import { StorageService } from '../../services/storage.service.js';
 
 const WORK_STYLE = {
   frontend: {
@@ -49,9 +51,9 @@ const PREFERENCES = {
 };
 
 const CONF_LABEL = {
-  high:   { en: 'High',     ar: 'عالية' },
-  medium: { en: 'Medium',   ar: 'متوسطة' },
-  low:    { en: 'Moderate', ar: 'معقولة' },
+  high:   { en: 'High',     ar: 'عالية'    },
+  medium: { en: 'Medium',   ar: 'متوسطة'  },
+  low:    { en: 'Moderate', ar: 'معقولة'   },
 };
 
 function _dimBar(label, pct, color) {
@@ -73,11 +75,17 @@ export function DecisionSummary() {
   const isAr   = lang === 'ar';
 
   if (!result) {
-    return `<div class="empty-state">
-      <h3>${isAr ? 'لا توجد نتائج' : 'No results found'}</h3>
-      <p>${isAr ? 'أكمل التقييم أولاً' : 'Complete the assessment first'}</p>
-      <a href="#/test" class="btn btn--primary">${isAr ? 'ابدأ التقييم' : 'Start Assessment'}</a>
-    </div>`;
+    return `
+      <div class="empty-state">
+        <div class="empty-state__icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+          </svg>
+        </div>
+        <h3>${isAr ? 'لا توجد نتائج' : 'No results found'}</h3>
+        <p>${isAr ? 'أكمل التقييم أولاً' : 'Complete the assessment first'}</p>
+        <a href="#/test" class="btn btn--primary">${isAr ? 'ابدأ التقييم' : 'Start Assessment'}</a>
+      </div>`;
   }
 
   const allTracks  = TrackService.getAllTracks();
@@ -104,6 +112,15 @@ export function DecisionSummary() {
   return `
     <div class="ds-screen fade-in">
 
+      <!-- Back nav breadcrumb -->
+      <div class="ds-breadcrumb">
+        <button class="btn btn--ghost btn--sm ds-back-btn" id="ds-back-results">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          ${isAr ? 'العودة للنتائج' : 'Back to Results'}
+        </button>
+      </div>
+
+      <!-- Banner -->
       <div class="ds-banner" style="border-color:${color}30;background:${color}08">
         <div class="ds-banner__left">
           <div class="ds-banner__eyebrow">${isAr ? 'ملخص القرار المهني' : 'Career Decision Summary'}</div>
@@ -118,6 +135,7 @@ export function DecisionSummary() {
         </div>
       </div>
 
+      <!-- Stats row -->
       <div class="ds-stats">
         <div class="ds-stat">
           <div class="ds-stat__value ltr-text" style="color:${color}">${top3[0]?.pct || 0}%</div>
@@ -137,6 +155,7 @@ export function DecisionSummary() {
         </div>
       </div>
 
+      <!-- Body grid -->
       <div class="ds-body">
         <div class="ds-col">
 
@@ -227,15 +246,26 @@ export function DecisionSummary() {
         </div>
       </div>
 
+      <!-- CTA block -->
       <div class="ds-cta">
         <div class="ds-cta__left">
-          <div class="ds-cta__headline">${isAr ? 'جاهز لتحويل هذا القرار إلى خطة عمل؟' : 'Ready to turn this decision into an action plan?'}</div>
-          <div class="ds-cta__sub">${isAr ? 'افتح التقرير الكامل للحصول على خارطة طريق مخصصة' : 'Unlock the full report for a personalised roadmap, deep track analysis, and mentorship access.'}</div>
+          <div class="ds-cta__headline">
+            ${isAr ? 'جاهز لتحويل هذا القرار إلى خطة عمل؟' : 'Ready to turn this decision into an action plan?'}
+          </div>
+          <div class="ds-cta__sub">
+            ${isAr ? 'افتح التقرير الكامل للحصول على خارطة طريق مخصصة' : 'Unlock the full report for a personalised roadmap, deep track analysis, and mentorship access.'}
+          </div>
         </div>
         <div class="ds-cta__actions">
-          <a href="#/pricing" class="btn btn--primary btn--lg">${isAr ? 'فتح التقرير الكامل' : 'Unlock Full Report'}</a>
+          <a href="#/pricing" class="btn btn--primary btn--lg">
+            ${isAr ? 'فتح التقرير الكامل' : 'Unlock Full Report'}
+          </a>
           <button class="btn btn--outline" id="ds-start-free-btn" data-track-id="${topTrack.id}">
             ${isAr ? 'ابدأ المسار مجاناً' : 'Start Track for Free'}
+          </button>
+          <button class="btn btn--ghost btn--sm" id="ds-retake-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+            ${isAr ? 'إعادة التقييم' : 'Retake Assessment'}
           </button>
         </div>
       </div>
@@ -244,6 +274,7 @@ export function DecisionSummary() {
 }
 
 export function DecisionSummaryEvents() {
+  // Animate dimension bars
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       document.querySelectorAll('.ds-dim__fill').forEach(el => {
@@ -253,10 +284,22 @@ export function DecisionSummaryEvents() {
     });
   });
 
-  // Use static TrackService — no dynamic import
+  // Back to Results
+  document.getElementById('ds-back-results')?.addEventListener('click', () => {
+    Router.navigate('/results');
+  });
+
+  // Start Track for Free → enroll + Roadmap
   document.getElementById('ds-start-free-btn')?.addEventListener('click', (e) => {
     const trackId = e.currentTarget.dataset.trackId;
     if (trackId) TrackService.enrollInTrack(trackId);
-    Router.navigate('/roadmap');
+    Router.navigate('/dashboard');
+  });
+
+  // Retake → clear state + Test
+  document.getElementById('ds-retake-btn')?.addEventListener('click', () => {
+    State.setState('testResult', null);
+    StorageService.set('testResult', null);
+    Router.navigate('/test');
   });
 }
