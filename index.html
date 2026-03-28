@@ -10,7 +10,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.fontshare.com" />
-
   <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,600,700,800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
 
@@ -54,7 +53,9 @@
 
   <div id="app-root">
     <aside id="app-sidebar" class="app-sidebar" aria-hidden="true"></aside>
-    <div id="app-body">
+    <!-- Mobile overlay -->
+    <div id="sidebar-overlay" aria-hidden="true"></div>
+    <div id="app-body" class="no-sidebar">
       <header id="app-topbar" class="app-topbar" aria-hidden="true"></header>
       <main id="app-outlet" role="main" aria-live="polite"></main>
     </div>
