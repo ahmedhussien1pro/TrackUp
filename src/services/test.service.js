@@ -23,7 +23,6 @@ const DIMENSION_LABELS = {
   systematic: { en: 'Systems Thinking',  ar: 'التفكير المنظومي' },
 };
 
-// Confidence copy per level
 const CONFIDENCE_COPY = {
   high: {
     en: 'Your answers were highly consistent — this recommendation carries strong confidence.',
@@ -39,7 +38,7 @@ const CONFIDENCE_COPY = {
   },
 };
 
-function _computeDimensions(answers) {
+function _computeDimensions(answers, dimHints = {}) {
   const scores = { visual: 0, logical: 0, analytical: 0, empathetic: 0, creative: 0, systematic: 0 };
 
   Object.entries(answers).forEach(([qid, optIdx]) => {
@@ -50,8 +49,12 @@ function _computeDimensions(answers) {
     });
   });
 
-  // Normalise to percentage (max possible per dim = 2 * questions)
-  const maxPossible = 14; // 7 questions × 2
+  // Apply onboarding dimension hints as a soft prior
+  Object.entries(dimHints).forEach(([dim, boost]) => {
+    if (scores[dim] !== undefined) scores[dim] += boost;
+  });
+
+  const maxPossible = 14 + Object.values(dimHints).reduce((s, v) => s + v, 0);
   return Object.fromEntries(
     Object.entries(scores).map(([k, v]) => [k, Math.min(100, Math.round((v / maxPossible) * 100))])
   );
@@ -64,7 +67,6 @@ function _computeConfidence(top3) {
   return { level, gap };
 }
 
-// Strength sentence per track × dimension combo
 const STRENGTH_SENTENCE = {
   frontend: {
     en: 'You think in visuals, care about output, and love building things people interact with.',
@@ -98,9 +100,20 @@ export const TestService = {
   },
 
   submitTest(session) {
+    // Load onboarding context (prior weights from goal/background answers)
+    const ctx          = StorageService.get('onboarding_context') || {};
+    const priorWeights = ctx.priorWeights || {};
+    const dimHints     = ctx.dimHints     || {};
+
     const scores = {};
     tracks.forEach(t => { scores[t.id] = 0; });
 
+    // Apply onboarding prior weights as a soft boost
+    Object.entries(priorWeights).forEach(([trackId, boost]) => {
+      if (scores[trackId] !== undefined) scores[trackId] += boost;
+    });
+
+    // Score from test answers
     session.questions.forEach(q => {
       const idx = session.answers[q.id];
       if (idx === undefined) return;
@@ -115,7 +128,7 @@ export const TestService = {
       .sort((a, b) => b[1] - a[1])
       .map(([id, score]) => ({ id, score }));
 
-    const top     = sorted[0].score;
+    const top        = sorted[0].score;
     const topTrackId = sorted[0].id;
 
     const percentages = {};
@@ -123,9 +136,9 @@ export const TestService = {
       percentages[id] = top > 0 ? Math.round((score / top) * 100) : 0;
     });
 
-    const top3 = sorted.slice(0, 3).map(s => ({ ...s, pct: percentages[s.id] }));
-    const confidence   = _computeConfidence(top3);
-    const dimensions   = _computeDimensions(session.answers);
+    const top3       = sorted.slice(0, 3).map(s => ({ ...s, pct: percentages[s.id] }));
+    const confidence = _computeConfidence(top3);
+    const dimensions = _computeDimensions(session.answers, dimHints);
 
     const result = {
       scores,
@@ -136,6 +149,7 @@ export const TestService = {
       confidence,
       dimensions,
       strengthSentence: STRENGTH_SENTENCE[topTrackId] || STRENGTH_SENTENCE.frontend,
+      onboardingContext: ctx,
       completedAt: Date.now(),
     };
 
