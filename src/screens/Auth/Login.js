@@ -1,50 +1,80 @@
 import { t } from '../../i18n.js';
-import { AuthService } from '../../services/auth.service.js';
 import { Router } from '../../router.js';
-import { showToast } from '../../utils.js';
+import { AuthService } from '../../services/auth.service.js';
 
 export function Login() {
   return `
-    <div class="auth-card">
-      <div class="auth-card__header">
-        <span class="auth-card__logo">TrackUp</span>
-        <h2>${t('auth.login.title')}</h2>
+    <div class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-card__header">
+          <span class="auth-card__logo">TrackUp</span>
+          <h1>${t('auth.login.title')}</h1>
+          <p>${t('auth.login.noAccount')} <a href="#/register">${t('auth.login.register')}</a></p>
+        </div>
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="login-email">${t('auth.email')}</label>
+            <input class="form-input" id="login-email" type="email" autocomplete="email" placeholder="you@example.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">${t('auth.password')}</label>
+            <input class="form-input" id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" />
+          </div>
+          <div id="login-error" class="form-error" style="display:none"></div>
+          <button type="submit" class="btn btn--primary btn--full btn--lg" id="login-submit">
+            ${t('auth.login.submit')}
+          </button>
+        </form>
+        <div class="auth-card__hint" style="margin-top:1rem;font-size:0.8rem;color:var(--color-text-muted);text-align:center">
+          Demo: demo@trackup.io / demo1234
+        </div>
       </div>
-      <form class="auth-form" id="login-form" novalidate>
-        <div class="form-group">
-          <label class="form-label">${t('auth.email')}</label>
-          <input class="form-input" type="email" id="login-email" required />
-        </div>
-        <div class="form-group">
-          <label class="form-label">${t('auth.password')}</label>
-          <input class="form-input" type="password" id="login-password" required />
-        </div>
-        <button type="submit" class="btn btn--primary btn--full">
-          ${t('auth.login.submit')}
-        </button>
-      </form>
-      <p class="auth-card__switch">
-        ${t('auth.login.noAccount')}
-        <a href="#/register">${t('auth.login.register')}</a>
-      </p>
     </div>
   `;
 }
 
 export function LoginEvents() {
-  document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+  const form   = document.getElementById('login-form');
+  const errEl  = document.getElementById('login-error');
+  const btnEl  = document.getElementById('login-submit');
+
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value.trim();
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    errEl.style.display = 'none';
+
     if (!email || !password) {
-      showToast(t('auth.validation.required'), 'error');
+      showError(t('auth.validation.required'));
       return;
     }
+
+    btnEl.disabled = true;
+    btnEl.textContent = t('common.loading');
+
+    await new Promise(r => setTimeout(r, 400));
+
     const result = AuthService.login(email, password);
-    if (result.success) {
-      Router.navigate('/dashboard');
+
+    if (!result.success) {
+      btnEl.disabled = false;
+      btnEl.textContent = t('auth.login.submit');
+      showError(result.message);
+      return;
+    }
+
+    const user = result.user;
+    if (!user.activeTrackId) {
+      Router.navigate('/onboarding');
     } else {
-      showToast(result.message, 'error');
+      Router.navigate('/dashboard');
     }
   });
+
+  function showError(msg) {
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+    errEl.style.cssText = 'display:block;color:var(--color-danger);font-size:0.85rem;margin-bottom:0.75rem;padding:0.5rem 0.75rem;background:#fee2e2;border-radius:6px;';
+  }
 }
