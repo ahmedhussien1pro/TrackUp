@@ -1,74 +1,74 @@
-/**
- * TRACKUP SPA ROUTER
- * Hash-based routing with auth guard and fade transition.
- */
-
-import { setState } from './state.js';
+import State from './state.js';
 
 const _routes = {};
 let _guard = null;
 let _outlet = null;
-let _fallbackRedirect = '/login';
 
-export function register(path, screenFn, meta = {}) {
-  _routes[path] = { screenFn, meta };
-}
+export const Router = {
+  register(path, { render, after } = {}) {
+    _routes[path] = { render, after };
+  },
 
-export function setGuard(fn) {
-  _guard = fn;
-}
+  setGuard(fn) {
+    _guard = fn;
+  },
 
-export function setOutlet(el) {
-  _outlet = el;
-}
+  navigate(path) {
+    window.location.hash = '#' + path;
+  },
 
-export function navigate(path) {
-  window.location.hash = path;
-}
+  init() {
+    window.addEventListener('hashchange', () => this._resolve());
+    this._resolve();
+  },
 
-async function _resolve(path) {
-  const route = _routes[path];
+  _getPath() {
+    const hash = window.location.hash.slice(1) || '/';
+    const [path] = hash.split('?');
+    return path;
+  },
 
-  if (!route) {
-    navigate('/');
-    return;
-  }
+  async _resolve() {
+    const path = this._getPath();
 
-  if (_guard && !_guard(path, route.meta)) {
-    navigate(_fallbackRedirect);
-    return;
-  }
+    if (_guard) {
+      const redirect = _guard(path);
+      if (redirect) {
+        this.navigate(redirect);
+        return;
+      }
+    }
 
-  setState('route', path);
+    const route = _routes[path];
+    if (!route) {
+      this.navigate('/');
+      return;
+    }
 
-  if (!_outlet) return;
+    State.setState('route', path);
 
-  _outlet.style.opacity = '0';
-  _outlet.style.transform = 'translateY(8px)';
+    _outlet = _outlet || document.getElementById('app-outlet');
+    if (!_outlet) return;
 
-  await new Promise(r => setTimeout(r, 130));
+    _outlet.style.opacity = '0';
+    _outlet.style.transform = 'translateY(10px)';
+    _outlet.style.transition = 'none';
 
-  _outlet.innerHTML = '';
-  const screen = await route.screenFn({});
-  if (screen) _outlet.appendChild(screen);
+    await new Promise(r => setTimeout(r, 120));
 
-  requestAnimationFrame(() => {
-    _outlet.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
-    _outlet.style.opacity = '1';
-    _outlet.style.transform = 'translateY(0)';
-  });
-}
+    _outlet.innerHTML = typeof route.render === 'function' ? route.render() : '';
 
-export function start(fallback = '/') {
-  _fallbackRedirect = '/login';
-  const initial = window.location.hash.slice(1) || fallback;
+    requestAnimationFrame(() => {
+      _outlet.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+      _outlet.style.opacity = '1';
+      _outlet.style.transform = 'translateY(0)';
+    });
 
-  window.addEventListener('hashchange', () => {
-    const path = window.location.hash.slice(1) || fallback;
-    _resolve(path);
-  });
+    if (typeof route.after === 'function') {
+      await new Promise(r => setTimeout(r, 50));
+      route.after();
+    }
+  },
+};
 
-  _resolve(initial);
-}
-
-export default { register, setGuard, setOutlet, navigate, start };
+export default Router;
