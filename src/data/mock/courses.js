@@ -1,0 +1,13 @@
+export const MOCK_COURSES = [
+  { id: 'c1', trackId: 'track-1', title: 'HTML & CSS Foundations', titleAr: 'أسس HTML و CSS', description: 'Zero to confident in web structure and styling.', level: 'beginner', lessons: 18, duration: '3 weeks', free: true, instructor: 'Karim Saad' },
+  { id: 'c2', trackId: 'track-1', title: 'JavaScript Essentials', titleAr: 'أساسيات JavaScript', description: 'Core JS: functions, arrays, async, DOM.', level: 'beginner', lessons: 24, duration: '4 weeks', free: false, instructor: 'Karim Saad' },
+  { id: 'c3', trackId: 'track-1', title: 'React from Scratch', titleAr: 'React من الصفر', description: 'Build real apps with React hooks and state.', level: 'intermediate', lessons: 30, duration: '5 weeks', free: false, instructor: 'Karim Saad' },
+  { id: 'c4', trackId: 'track-2', title: 'Node.js & Express', titleAr: 'Node.js و Express', description: 'Build REST APIs and handle server logic.', level: 'intermediate', lessons: 22, duration: '4 weeks', free: false, instructor: 'Dina Magdy' },
+  { id: 'c5', trackId: 'track-2', title: 'SQL & PostgreSQL', titleAr: 'SQL و PostgreSQL', description: 'Relational databases, queries, and optimization.', level: 'intermediate', lessons: 20, duration: '3 weeks', free: false, instructor: 'Dina Magdy' },
+  { id: 'c6', trackId: 'track-2', title: 'Auth & Security', titleAr: 'المصادقة والأمان', description: 'JWT, OAuth2, secure API patterns.', level: 'intermediate', lessons: 14, duration: '2 weeks', free: false, instructor: 'Dina Magdy' },
+  { id: 'c7', trackId: 'track-3', title: 'Python for Data Science', titleAr: 'Python لعلم البيانات', description: 'NumPy, Pandas, data wrangling.', level: 'beginner', lessons: 20, duration: '3 weeks', free: true, instructor: 'Youssef Taha' },
+  { id: 'c8', trackId: 'track-3', title: 'Machine Learning Fundamentals', titleAr: 'أساسيات التعلم الآلي', description: 'Regression, classification, evaluation.', level: 'intermediate', lessons: 28, duration: '5 weeks', free: false, instructor: 'Youssef Taha' },
+  { id: 'c9', trackId: 'track-4', title: 'Design Foundations', titleAr: 'أسس التصميم', description: 'Typography, color theory, spacing grids.', level: 'beginner', lessons: 12, duration: '2 weeks', free: true, instructor: 'Rania Fawzi' },
+  { id: 'c10', trackId: 'track-4', title: 'Figma for Product Design', titleAr: 'Figma لتصميم المنتج', description: 'Components, variants, prototyping.', level: 'intermediate', lessons: 22, duration: '4 weeks', free: false, instructor: 'Rania Fawzi' },
+  { id: 'c11', trackId: 'track-5', title: 'Docker & Kubernetes', titleAr: 'Docker و Kubernetes', description: 'Containerization and orchestration at scale.', level: 'advanced', lessons: 26, duration: '5 weeks', free: false, instructor: 'Dina Magdy' },
+];
