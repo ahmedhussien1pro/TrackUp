@@ -1,41 +1,60 @@
 import { t } from '../../i18n.js';
-import { RoadmapService } from '../../services/roadmap.service.js';
+import { Router } from '../../router.js';
 import State from '../../state.js';
-
-const STATUS_CLASS = {
-  completed: 'step--completed',
-  active: 'step--active',
-  locked: 'step--locked',
-};
+import { RoadmapService } from '../../services/roadmap.service.js';
+import { TrackService } from '../../services/track.service.js';
 
 export function Roadmap() {
-  const track = State.getState('activeTrack');
-  if (!track) return `<div class="empty-state"><p>${t('roadmap.noTrack')}</p></div>`;
-  const steps = RoadmapService.getStepsForTrack(track.id);
+  const user = State.getState('user');
+  if (!user?.activeTrackId) {
+    return `
+      <div class="roadmap-screen">
+        <div class="empty-state">
+          <p>${t('roadmap.noTrack')}</p>
+          <a href="#/career" class="btn btn--primary" style="margin-top:1rem">${t('career.title')}</a>
+        </div>
+      </div>
+    `;
+  }
+
+  const track = TrackService.getTrackById(user.activeTrackId);
+  const steps = RoadmapService.getStepsForTrack(user.activeTrackId);
+  const prog  = RoadmapService.getProgressForTrack(user.activeTrackId);
+
   return `
     <div class="roadmap-screen">
       <div class="roadmap-screen__header">
-        <h2>${track.name}</h2>
-        <p>${t('roadmap.subtitle')}</p>
+        <div>
+          <h1>${track?.name || 'Roadmap'}</h1>
+          <p>${t('roadmap.subtitle')}</p>
+        </div>
+        <div style="text-align:end">
+          <div style="font-size:var(--text-2xl);font-weight:var(--weight-black);color:var(--color-primary)">${prog.percent}%</div>
+          <div style="font-size:var(--text-sm);color:var(--color-text-muted)">${prog.completed}/${prog.total} steps</div>
+        </div>
       </div>
-      <div class="roadmap-screen__steps">
+
+      <div class="roadmap-steps">
         ${steps.map((step, i) => `
-          <div class="roadmap-step ${STATUS_CLASS[step.status] || 'step--locked'}" data-step-id="${step.id}">
-            <div class="roadmap-step__index">${i + 1}</div>
+          <div class="roadmap-step step--${step.status}" data-step-id="${step.id}">
+            <div class="roadmap-step__index">${step.status === 'completed' ? '&#10003;' : i + 1}</div>
             <div class="roadmap-step__body">
               <h4>${step.title}</h4>
-              <p>${step.description}</p>
+              <p>${step.description || ''}</p>
               <div class="roadmap-step__meta">
-                <span class="badge badge--neutral">${step.duration}</span>
-                <span class="badge badge--type">${step.type}</span>
+                ${step.duration ? `<span class="badge badge--neutral">${step.duration}</span>` : ''}
+                <span class="badge badge--${step.status}">${t('roadmap.status.' + step.status) || step.status}</span>
               </div>
             </div>
             <div class="roadmap-step__action">
-              ${step.status !== 'locked' ? `
-                <button class="btn btn--sm btn--${step.status === 'completed' ? 'ghost' : 'primary'}" data-step-id="${step.id}">
-                  ${step.status === 'completed' ? t('roadmap.review') : t('roadmap.start')}
+              ${step.status === 'active' ? `
+                <button class="btn btn--primary btn--sm roadmap-complete-btn" data-step-id="${step.id}">
+                  ${t('roadmap.start')}
                 </button>
-              ` : `<span class="roadmap-step__lock"></span>`}
+              ` : ''}
+              ${step.status === 'completed' ? `
+                <button class="btn btn--ghost btn--sm">${t('roadmap.review')}</button>
+              ` : ''}
             </div>
           </div>
         `).join('')}
@@ -45,10 +64,14 @@ export function Roadmap() {
 }
 
 export function RoadmapEvents() {
-  document.querySelectorAll('.roadmap-step__action [data-step-id]').forEach(btn => {
+  document.querySelectorAll('.roadmap-complete-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const stepId = btn.dataset.stepId;
-      RoadmapService.markStepActive(stepId);
+      RoadmapService.completeStep(stepId);
+      Toastify({ text: 'Step completed. Keep going!', duration: 2000, gravity: 'bottom', position: 'right', style: { background: 'var(--color-success)' } }).showToast();
+      // Re-render
+      const outlet = document.getElementById('app-outlet');
+      if (outlet) { outlet.innerHTML = Roadmap(); RoadmapEvents(); }
     });
   });
 }
