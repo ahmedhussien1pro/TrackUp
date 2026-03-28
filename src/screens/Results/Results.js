@@ -26,11 +26,18 @@ export function Results() {
   const isAr       = lang === 'ar';
   const allTracks  = TrackService.getAllTracks();
   const top3       = result.top3 || [];
-  const topTrack   = allTracks.find(tr => tr.id === result.topTrackId) || allTracks[0];
+
+  // Guard: find topTrack by topTrackId, fallback to top3[0].id, then first track
+  const topTrack =
+    allTracks.find(tr => tr.id === result.topTrackId) ||
+    allTracks.find(tr => tr.id === top3[0]?.id) ||
+    allTracks[0];
+
   const confidence = result.confidence || { level: 'high', gap: 30 };
   const dimensions = result.dimensions || {};
   const trackName  = isAr ? (topTrack.nameAr || topTrack.name) : topTrack.name;
-  const fitPct     = top3[0]?.pct || 0;
+  // fitPct: always read from top3[0].pct; top track is always 100% relative
+  const fitPct     = typeof top3[0]?.pct === 'number' ? top3[0].pct : 100;
 
   const confColorMap = {
     high:   'var(--color-success)',
@@ -60,15 +67,14 @@ export function Results() {
   const topDimLabel = topDim ? TestService.getDimensionLabel(topDim[0], lang) : '';
   const topDimDelta = topDim && secondDim ? topDim[1] - secondDim[1] : 0;
 
-  // ── Narrative language: connects from test analysis → results discovery ──
   const narrativeBridge = isAr
     ? `بناءً على إجاباتك، حللنا أسلوب تفكيرك عبر 6 أبعاد معرفية. إليك ما وجدناه:`
     : `Based on your answers, we analysed your thinking style across 6 cognitive dimensions. Here is what we found:`;
 
   const whySentence = topDim
     ? (isAr
-        ? `توافقك ${fitPct}% مع مسار ${trackName} مدفوع بدرجة "${topDimLabel}" لديك (${topDim[1]}%)، وهي أعلى بـ ${topDimDelta} نقطة من أقوى أبعادك الأخرى — إشارة واضحة على توافق طبيعي مع هذا المسار.`
-        : `Your ${fitPct}% fit with ${trackName} is driven by your "${topDimLabel}" score (${topDim[1]}%), which is ${topDimDelta} points above your next strongest dimension — a clear signal of natural alignment.`)
+        ? `توافقك مع مسار ${trackName} مدفوع بدرجة "${topDimLabel}" لديك (${topDim[1]}%)، وهي أعلى بـ ${topDimDelta} نقطة من أقوى أبعادك الأخرى — إشارة واضحة على توافق طبيعي مع هذا المسار.`
+        : `Your fit with ${trackName} is driven by your "${topDimLabel}" score (${topDim[1]}%), which is ${topDimDelta} points above your next strongest dimension — a clear signal of natural alignment.`)
     : '';
 
   const runnerUp = top3[1] ? allTracks.find(tr => tr.id === top3[1].id) : null;
@@ -109,7 +115,6 @@ export function Results() {
       <!-- ── FULL RESULTS (revealed after decision moment) ── -->
       <div class="rc-results" id="rc-results" style="opacity:0;pointer-events:none">
 
-        <!-- Hero -->
         <div class="rc-hero">
           <div class="rc-hero__eyebrow">${t('results.eyebrow')}</div>
           <h1 class="rc-hero__title">
@@ -126,7 +131,6 @@ export function Results() {
           </div>
         </div>
 
-        <!-- Primary Track Decision Card -->
         <div class="rc-decision-card" style="border-color:${topTrack.color}30;background:${topTrack.color}05">
           <div class="rc-decision-card__header">
             <div class="rc-decision-card__icon" style="background:${topTrack.color}18;color:${topTrack.color}">
@@ -148,7 +152,6 @@ export function Results() {
           </div>
         </div>
 
-        <!-- Alternative Track -->
         ${runnerUp ? `
           <div class="rc-alt-track">
             <div class="rc-alt-track__label">${t('results.altTrack')}</div>
@@ -188,7 +191,6 @@ export function Results() {
           }).join('')}
         </div>
 
-        <!-- Gateway Actions -->
         <div class="rc-gateway">
           <div class="rc-gateway__primary">
             <button class="btn btn--primary btn--lg" id="rc-summary-btn" data-track-id="${topTrack.id}">
@@ -227,7 +229,6 @@ export function ResultsEvents() {
     t('results.rankingResults'),
   ];
 
-  // Phase 1: analysis dots (1.4s)
   let phaseIdx = 0;
   const phaseInterval = setInterval(() => {
     phaseIdx = (phaseIdx + 1) % phases.length;
@@ -237,7 +238,6 @@ export function ResultsEvents() {
   setTimeout(() => {
     clearInterval(phaseInterval);
 
-    // Phase 2: hide analysis overlay, show Decision Moment
     if (overlay) {
       overlay.style.transition = 'opacity 0.35s ease';
       overlay.style.opacity    = '0';
@@ -246,19 +246,17 @@ export function ResultsEvents() {
 
     if (dm) {
       dm.style.display = 'flex';
-      requestAnimationFrame(() => {
-        dm.classList.add('rc-dm--visible');
-      });
-      // count up fit score inside the decision moment
+      requestAnimationFrame(() => { dm.classList.add('rc-dm--visible'); });
+
       if (dmScore) {
-        const result = (() => { try { return JSON.parse(localStorage.getItem('testResult')); } catch { return null; } })();
-        const target = result?.top3?.[0]?.pct || 0;
+        // ✓ Use StorageService — respects the trackup__ prefix
+        const result = StorageService.get('testResult');
+        const target = typeof result?.top3?.[0]?.pct === 'number' ? result.top3[0].pct : 100;
         _countUp(dmScore, 0, target, 900, '%');
       }
     }
   }, 1400);
 
-  // Phase 3: CTA inside Decision Moment → scroll down to full results
   dmCta?.addEventListener('click', () => {
     if (dm) {
       dm.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
