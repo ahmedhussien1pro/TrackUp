@@ -78,8 +78,14 @@ function bootstrap() {
   State.setState('lang', savedLang);
 
   AuthService.restoreSession();
+
+  // Restore persisted test result
   const testResult = StorageService.get('testResult');
   if (testResult) State.setState('testResult', testResult);
+
+  // Restore onboarding context so TestService scoring always has prior weights
+  const onboardingCtx = StorageService.get('onboarding_context');
+  if (onboardingCtx) State.setState('onboarding_context', onboardingCtx);
 
   Router.setGuard((path) => {
     const loggedIn   = !!State.getState('user');
