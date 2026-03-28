@@ -6,24 +6,25 @@ import { AuthService } from './services/auth.service.js';
 import { Sidebar, SidebarEvents } from './components/layout/Sidebar.js';
 import { mountLayout, unmountLayout } from './components/layout/Topbar.js';
 
-import { Landing }                              from './screens/Landing/Landing.js';
-import { Login, LoginEvents }                   from './screens/Auth/Login.js';
-import { Register, RegisterEvents }             from './screens/Auth/Register.js';
-import { Onboarding, OnboardingEvents }         from './screens/Onboarding/Onboarding.js';
-import { Test, TestEvents }                     from './screens/Test/Test.js';
-import { Results, ResultsEvents }               from './screens/Results/Results.js';
-import { Pricing, PricingEvents }               from './screens/Pricing/Pricing.js';
-import { Payment, PaymentEvents }               from './screens/Payment/Payment.js';
-import { Dashboard, DashboardEvents }           from './screens/Dashboard/Dashboard.js';
-import { Career, CareerEvents }                 from './screens/Career/Career.js';
-import { Roadmap, RoadmapEvents }               from './screens/Roadmap/Roadmap.js';
-import { Courses, CoursesEvents }               from './screens/Courses/Courses.js';
-import { Mentorship, MentorshipEvents }         from './screens/Mentorship/Mentorship.js';
-import { Progress, ProgressEvents }             from './screens/Progress/Progress.js';
-import { Notifications, NotificationsEvents }   from './screens/Notifications/Notifications.js';
-import { Settings, SettingsEvents }             from './screens/Settings/Settings.js';
+import { Landing }                                        from './screens/Landing/Landing.js';
+import { Login, LoginEvents }                             from './screens/Auth/Login.js';
+import { Register, RegisterEvents }                       from './screens/Auth/Register.js';
+import { Onboarding, OnboardingEvents }                   from './screens/Onboarding/Onboarding.js';
+import { Test, TestEvents }                               from './screens/Test/Test.js';
+import { Results, ResultsEvents }                         from './screens/Results/Results.js';
+import { DecisionSummary, DecisionSummaryEvents }         from './screens/DecisionSummary/DecisionSummary.js';
+import { Pricing, PricingEvents }                         from './screens/Pricing/Pricing.js';
+import { Payment, PaymentEvents }                         from './screens/Payment/Payment.js';
+import { Dashboard, DashboardEvents }                     from './screens/Dashboard/Dashboard.js';
+import { Career, CareerEvents }                           from './screens/Career/Career.js';
+import { Roadmap, RoadmapEvents }                         from './screens/Roadmap/Roadmap.js';
+import { Courses, CoursesEvents }                         from './screens/Courses/Courses.js';
+import { Mentorship, MentorshipEvents }                   from './screens/Mentorship/Mentorship.js';
+import { Progress, ProgressEvents }                       from './screens/Progress/Progress.js';
+import { Notifications, NotificationsEvents }             from './screens/Notifications/Notifications.js';
+import { Settings, SettingsEvents }                       from './screens/Settings/Settings.js';
 
-const PUBLIC_ROUTES = ['/', '/login', '/register', '/pricing', '/test', '/results', '/onboarding'];
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/pricing', '/test', '/results', '/decision-summary', '/onboarding'];
 
 window.__trackup_layout_sidebar__ = { Sidebar, SidebarEvents };
 
@@ -33,7 +34,6 @@ function isPublic(path) {
 
 let _layoutMounted = false;
 
-// Lightweight active-link update — no full re-render
 function _updateActiveLink() {
   const path = window.location.hash.slice(1).split('?')[0] || '/';
   document.querySelectorAll('.sidebar__link').forEach(link => {
@@ -57,23 +57,19 @@ function _updateActiveLink() {
 }
 
 function bootstrap() {
-  // Theme
   const savedTheme = StorageService.get('theme') ||
     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   document.documentElement.setAttribute('data-theme', savedTheme);
   State.setState('theme', savedTheme);
 
-  // Language
   const savedLang = StorageService.get('lang') || 'en';
   setLang(savedLang);
   State.setState('lang', savedLang);
 
-  // Session restore
   AuthService.restoreSession();
   const testResult = StorageService.get('testResult');
   if (testResult) State.setState('testResult', testResult);
 
-  // Guard
   Router.setGuard((path) => {
     const loggedIn = !!State.getState('user');
 
@@ -95,23 +91,23 @@ function bootstrap() {
     return null;
   });
 
-  // Routes
-  Router.register('/',               { render: Landing });
-  Router.register('/login',          { render: Login,          after: LoginEvents });
-  Router.register('/register',       { render: Register,       after: RegisterEvents });
-  Router.register('/onboarding',     { render: Onboarding,     after: OnboardingEvents });
-  Router.register('/test',           { render: Test,           after: TestEvents });
-  Router.register('/results',        { render: Results,        after: ResultsEvents });
-  Router.register('/pricing',        { render: Pricing,        after: PricingEvents });
-  Router.register('/payment',        { render: Payment,        after: PaymentEvents });
-  Router.register('/dashboard',      { render: Dashboard,      after: DashboardEvents });
-  Router.register('/career',         { render: Career,         after: CareerEvents });
-  Router.register('/roadmap',        { render: Roadmap,        after: RoadmapEvents });
-  Router.register('/courses',        { render: Courses,        after: CoursesEvents });
-  Router.register('/mentorship',     { render: Mentorship,     after: MentorshipEvents });
-  Router.register('/progress',       { render: Progress,       after: ProgressEvents });
-  Router.register('/notifications',  { render: Notifications,  after: NotificationsEvents });
-  Router.register('/settings',       { render: Settings,       after: SettingsEvents });
+  Router.register('/',                  { render: Landing });
+  Router.register('/login',             { render: Login,             after: LoginEvents });
+  Router.register('/register',          { render: Register,          after: RegisterEvents });
+  Router.register('/onboarding',        { render: Onboarding,        after: OnboardingEvents });
+  Router.register('/test',              { render: Test,              after: TestEvents });
+  Router.register('/results',           { render: Results,           after: ResultsEvents });
+  Router.register('/decision-summary',  { render: DecisionSummary,   after: DecisionSummaryEvents });
+  Router.register('/pricing',           { render: Pricing,           after: PricingEvents });
+  Router.register('/payment',           { render: Payment,           after: PaymentEvents });
+  Router.register('/dashboard',         { render: Dashboard,         after: DashboardEvents });
+  Router.register('/career',            { render: Career,            after: CareerEvents });
+  Router.register('/roadmap',           { render: Roadmap,           after: RoadmapEvents });
+  Router.register('/courses',           { render: Courses,           after: CoursesEvents });
+  Router.register('/mentorship',        { render: Mentorship,        after: MentorshipEvents });
+  Router.register('/progress',          { render: Progress,          after: ProgressEvents });
+  Router.register('/notifications',     { render: Notifications,     after: NotificationsEvents });
+  Router.register('/settings',          { render: Settings,          after: SettingsEvents });
 
   Router.init();
 }
