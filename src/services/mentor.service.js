@@ -1,33 +1,45 @@
-import { getState, setState } from '../state.js';
-import { MENTORS } from '../data/mock/mentors.js';
+import State from '../state.js';
+import { MOCK_MENTORS } from '../data/mock/mentors.js';
 
-export function getMentors() {
-  return MENTORS;
-}
+const _mentors = [...MOCK_MENTORS];
 
-export function getMentorsForTrack(trackId) {
-  return MENTORS.filter(m => m.tracks.includes(trackId) || m.tracks.includes('all'));
-}
+export const MentorService = {
+  getAllMentors() {
+    return _mentors;
+  },
 
-export function getMentorById(id) {
-  return MENTORS.find(m => m.id === id) || null;
-}
+  getMentorsForTrack(trackId) {
+    return _mentors.filter(m => m.tracks.includes(trackId));
+  },
 
-export function bookSession(mentorId, slot) {
-  const bookings = [...(getState('bookings') || [])];
-  const booking = {
-    id:        crypto.randomUUID(),
-    mentorId,
-    slot,
-    status:    'pending',
-    bookedAt:  Date.now(),
-  };
-  bookings.push(booking);
-  setState('bookings', bookings);
-  return booking;
-}
+  getMentorById(id) {
+    return _mentors.find(m => m.id === id) || null;
+  },
 
-export function cancelBooking(bookingId) {
-  const bookings = (getState('bookings') || []).filter(b => b.id !== bookingId);
-  setState('bookings', bookings);
-}
+  bookSession(mentorId, slot = null) {
+    const mentor = this.getMentorById(mentorId);
+    if (!mentor) return { success: false, message: 'Mentor not found.' };
+    const bookings = [...(State.getState('bookings') || [])];
+    const booking = {
+      id: 'b' + Date.now(),
+      mentorId,
+      mentorName: mentor.name,
+      slot: slot || mentor.availability[0],
+      status: 'pending',
+      bookedAt: Date.now(),
+    };
+    bookings.push(booking);
+    State.setState('bookings', bookings);
+    return { success: true, message: 'Session booked successfully.', booking };
+  },
+
+  cancelBooking(bookingId) {
+    const bookings = (State.getState('bookings') || []).filter(b => b.id !== bookingId);
+    State.setState('bookings', bookings);
+    return { success: true, message: 'Booking cancelled.' };
+  },
+
+  getBookings() {
+    return State.getState('bookings') || [];
+  },
+};
