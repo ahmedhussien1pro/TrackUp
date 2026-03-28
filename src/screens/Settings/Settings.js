@@ -9,6 +9,7 @@ export function Settings() {
   const user  = State.getState('user') || {};
   const theme = document.documentElement.getAttribute('data-theme') || 'light';
   const lang  = getLang();
+  const isAr  = lang === 'ar';
 
   return `
     <div class="settings-screen">
@@ -16,7 +17,6 @@ export function Settings() {
         <h1>${t('settings.title')}</h1>
       </div>
 
-      <!-- Profile -->
       <div class="settings-section">
         <div class="settings-section__title">${t('settings.profile')}</div>
         <div class="form-group">
@@ -33,7 +33,6 @@ export function Settings() {
         <button class="btn btn--primary btn--sm" id="settings-save">${t('settings.save')}</button>
       </div>
 
-      <!-- Preferences -->
       <div class="settings-section">
         <div class="settings-section__title">${t('settings.preferences')}</div>
         <div class="settings-row">
@@ -45,14 +44,13 @@ export function Settings() {
         <div class="settings-row">
           <span>${t('settings.language')}</span>
           <button class="btn btn--outline btn--sm" id="settings-lang-btn">
-            ${lang === 'ar' ? 'English' : '\u0627\u0644\u0639\u0631\u0628\u064a\u0629'}
+            ${isAr ? 'English' : '\u0627\u0644\u0639\u0631\u0628\u064a\u0629'}
           </button>
         </div>
       </div>
 
-      <!-- Account -->
       <div class="settings-section">
-        <div class="settings-section__title">Account</div>
+        <div class="settings-section__title">${isAr ? '\u0627\u0644\u062d\u0633\u0627\u0628' : 'Account'}</div>
         <button class="btn btn--danger btn--sm" id="settings-logout">${t('settings.logout')}</button>
       </div>
     </div>
@@ -60,22 +58,21 @@ export function Settings() {
 }
 
 export function SettingsEvents() {
-  // Save name
+  // Save profile name
   document.getElementById('settings-save')?.addEventListener('click', () => {
-    const name = document.getElementById('settings-name')?.value.trim();
-    if (!name) return;
-    const user = { ...State.getState('user'), name };
-    State.setState('user', user);
-    StorageService.set('session', user);
-    // Update sidebar avatar letter
-    document.querySelector('.sidebar__avatar')?.textContent = name.charAt(0).toUpperCase();
-    document.querySelector('.sidebar__user-name')?.textContent = name;
+    const nameVal = document.getElementById('settings-name')?.value.trim();
+    if (!nameVal) return;
+    const updatedUser = { ...State.getState('user'), name: nameVal };
+    State.setState('user', updatedUser);
+    StorageService.set('session', updatedUser);
+    document.querySelector('.sidebar__avatar')?.textContent = nameVal.charAt(0).toUpperCase();
+    document.querySelector('.sidebar__user-name')?.textContent = nameVal;
     Toastify({
-      text: t('settings.saved'),
+      text:     t('settings.saved'),
       duration: 2500,
-      gravity: 'bottom',
+      gravity:  'bottom',
       position: 'right',
-      style: { background: 'var(--color-success)' },
+      style:    { background: 'var(--color-success)' },
     }).showToast();
   });
 
@@ -86,34 +83,49 @@ export function SettingsEvents() {
     document.documentElement.setAttribute('data-theme', next);
     StorageService.set('theme', next);
     const outlet = document.getElementById('app-outlet');
-    if (outlet) { outlet.innerHTML = Settings(); SettingsEvents(); }
+    if (outlet) {
+      outlet.innerHTML = Settings();
+      SettingsEvents();
+    }
   });
 
-  // Language toggle — full layout remount needed for translated strings
+  // Language toggle
   document.getElementById('settings-lang-btn')?.addEventListener('click', () => {
-    const next = getLang() === 'ar' ? 'en' : 'ar';
-    setLang(next);
-    StorageService.set('lang', next);
+    const nextLang = getLang() === 'ar' ? 'en' : 'ar';
+    setLang(nextLang);
+    StorageService.set('lang', nextLang);
     mountLayout();
     const outlet = document.getElementById('app-outlet');
-    if (outlet) { outlet.innerHTML = Settings(); SettingsEvents(); }
+    if (outlet) {
+      outlet.innerHTML = Settings();
+      SettingsEvents();
+    }
   });
 
   // Logout
-  document.getElementById('settings-logout')?.addEventListener('click', async () => {
-    const result = await Swal.fire({
-      title: getLang() === 'ar' ? '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c\u061f' : 'Sign out?',
-      text:  getLang() === 'ar' ? '\u0633\u064a\u062a\u0645 \u0625\u0646\u0647\u0627\u0621 \u062c\u0644\u0633\u062a\u0643' : 'Your session will end.',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText:  getLang() === 'ar' ? '\u062e\u0631\u0648\u062c' : 'Sign out',
-      cancelButtonText:   getLang() === 'ar' ? '\u0625\u0644\u063a\u0627\u0621' : 'Cancel',
+  document.getElementById('settings-logout')?.addEventListener('click', () => {
+    const currentLang = getLang();
+    const isArabic    = currentLang === 'ar';
+
+    const swalTitle   = isArabic ? '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c\u061f' : 'Sign out?';
+    const swalText    = isArabic ? '\u0633\u064a\u062a\u0645 \u0625\u0646\u0647\u0627\u0621 \u062c\u0644\u0633\u062a\u0643' : 'Your session will end.';
+    const confirmTxt  = isArabic ? '\u062e\u0631\u0648\u062c' : 'Sign out';
+    const cancelTxt   = isArabic ? '\u0625\u0644\u063a\u0627\u0621' : 'Cancel';
+
+    Swal.fire({
+      title:              swalTitle,
+      text:               swalText,
+      icon:               'question',
+      showCancelButton:   true,
+      confirmButtonText:  confirmTxt,
+      cancelButtonText:   cancelTxt,
       confirmButtonColor: '#ef4444',
+    }).then(function(swalResult) {
+      if (swalResult.isConfirmed) {
+        AuthService.logout();
+        unmountLayout();
+        Router.navigate('/login');
+      }
     });
-    if (result.isConfirmed) {
-      AuthService.logout();
-      unmountLayout();
-      Router.navigate('/login');
-    }
   });
 }
