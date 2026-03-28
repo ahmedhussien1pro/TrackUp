@@ -2,6 +2,7 @@ import { t } from '../../i18n.js';
 import { Router } from '../../router.js';
 import { TestService } from '../../services/test.service.js';
 import { TrackService } from '../../services/track.service.js';
+import { StorageService } from '../../services/storage.service.js';
 
 export function Results() {
   const result = TestService.getResult();
@@ -15,9 +16,10 @@ export function Results() {
     `;
   }
 
-  const track = result.recommendedTrack || TrackService.getTrackById(result.topTrackId);
-  const scores = result.scores || {};
   const allTracks = TrackService.getAllTracks();
+  const track = allTracks.find(t2 => t2.id === result.topTrackId) || allTracks[0];
+  const scores = result.scores || {};
+  const maxScore = Math.max(...Object.values(scores), 1);
 
   return `
     <div class="results-screen" style="max-width:640px;margin:0 auto;padding:var(--space-8) var(--space-4)">
@@ -27,9 +29,9 @@ export function Results() {
       </div>
 
       <div class="card" style="text-align:center;padding:var(--space-10);margin-bottom:var(--space-6)">
-        <div style="font-size:3rem;margin-bottom:var(--space-3)">${track?.icon || '&#128640;'}</div>
+        <div style="font-size:3rem;font-weight:900;letter-spacing:-0.05em;color:var(--color-primary);margin-bottom:var(--space-3)">${track?.icon || 'FE'}</div>
         <h2 style="margin-bottom:var(--space-2)">${track?.name || 'Frontend Engineer'}</h2>
-        <p>${track?.description || ''}</p>
+        <p style="color:var(--color-text-secondary);font-size:var(--text-sm)">${track?.description || ''}</p>
         <div style="margin-top:var(--space-6);display:flex;flex-direction:column;gap:var(--space-3)">
           <button class="btn btn--primary btn--lg" id="results-start-btn" data-track-id="${track?.id}">
             ${t('results.cta.start')}
@@ -40,17 +42,17 @@ export function Results() {
 
       <div class="card">
         <h3 style="margin-bottom:var(--space-4);font-size:var(--text-base)">Score breakdown</h3>
-        ${allTracks.map(t2 => {
-          const score = scores[t2.id] || 0;
-          const max   = Math.max(...Object.values(scores), 1);
-          const pct   = Math.round((score / max) * 100);
+        ${allTracks.map(tr => {
+          const score = scores[tr.id] || 0;
+          const pct   = Math.round((score / maxScore) * 100);
           return `
             <div style="margin-bottom:var(--space-3)">
               <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);margin-bottom:var(--space-1)">
-                <span>${t2.name}</span><span style="color:var(--color-text-muted)">${score}pts</span>
+                <span>${tr.name}</span>
+                <span style="color:var(--color-text-muted)">${score} pts</span>
               </div>
               <div style="height:6px;background:var(--color-surface-2);border-radius:var(--radius-full);overflow:hidden">
-                <div style="height:100%;width:${pct}%;background:${t2.id === result.topTrackId ? 'var(--color-primary)' : 'var(--color-border)'};border-radius:var(--radius-full);transition:width 0.5s ease"></div>
+                <div style="height:100%;width:${pct}%;background:${tr.id === result.topTrackId ? 'var(--color-primary)' : 'var(--color-border)'};border-radius:var(--radius-full);transition:width 0.5s ease"></div>
               </div>
             </div>
           `;
@@ -61,16 +63,16 @@ export function Results() {
 }
 
 export function ResultsEvents() {
-  document.getElementById('results-start-btn')?.addEventListener('click', (e) => {
+  document.getElementById('results-start-btn')?.addEventListener('click', async (e) => {
     const trackId = e.currentTarget.dataset.trackId;
-    if (trackId) {
-      const { TrackService } = window.__trackup_services__ || {};
-      import('../../services/track.service.js').then(({ TrackService }) => {
-        TrackService.enrollInTrack(trackId);
-        Router.navigate('/roadmap');
-      });
+    const { TrackService } = await import('../../../src/services/track.service.js').catch(() => ({}));
+    if (TrackService && trackId) {
+      TrackService.enrollInTrack(trackId);
     } else {
-      Router.navigate('/roadmap');
+      // fallback: inline enroll
+      const { TrackService: TS } = await import('../../services/track.service.js');
+      if (trackId) TS.enrollInTrack(trackId);
     }
+    Router.navigate('/roadmap');
   });
 }

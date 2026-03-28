@@ -6,31 +6,32 @@ import { AuthService } from './services/auth.service.js';
 import { Sidebar, SidebarEvents } from './components/layout/Sidebar.js';
 import { mountLayout, unmountLayout } from './components/layout/Topbar.js';
 
-import { Landing }                           from './screens/Landing/Landing.js';
-import { Login, LoginEvents }                from './screens/Auth/Login.js';
-import { Register, RegisterEvents }          from './screens/Auth/Register.js';
-import { Onboarding, OnboardingEvents }      from './screens/Onboarding/Onboarding.js';
-import { Test, TestEvents }                  from './screens/Test/Test.js';
-import { Results }                           from './screens/Results/Results.js';
-import { Pricing, PricingEvents }            from './screens/Pricing/Pricing.js';
-import { Payment, PaymentEvents }            from './screens/Payment/Payment.js';
-import { Dashboard }                         from './screens/Dashboard/Dashboard.js';
-import { Career, CareerEvents }              from './screens/Career/Career.js';
-import { Roadmap, RoadmapEvents }            from './screens/Roadmap/Roadmap.js';
-import { Courses, CoursesEvents }            from './screens/Courses/Courses.js';
-import { Mentorship, MentorshipEvents }      from './screens/Mentorship/Mentorship.js';
-import { Progress }                          from './screens/Progress/Progress.js';
+import { Landing }                            from './screens/Landing/Landing.js';
+import { Login, LoginEvents }                 from './screens/Auth/Login.js';
+import { Register, RegisterEvents }           from './screens/Auth/Register.js';
+import { Onboarding, OnboardingEvents }       from './screens/Onboarding/Onboarding.js';
+import { Test, TestEvents }                   from './screens/Test/Test.js';
+import { Results, ResultsEvents }             from './screens/Results/Results.js';
+import { Pricing, PricingEvents }             from './screens/Pricing/Pricing.js';
+import { Payment, PaymentEvents }             from './screens/Payment/Payment.js';
+import { Dashboard }                          from './screens/Dashboard/Dashboard.js';
+import { Career, CareerEvents }               from './screens/Career/Career.js';
+import { Roadmap, RoadmapEvents }             from './screens/Roadmap/Roadmap.js';
+import { Courses, CoursesEvents }             from './screens/Courses/Courses.js';
+import { Mentorship, MentorshipEvents }       from './screens/Mentorship/Mentorship.js';
+import { Progress }                           from './screens/Progress/Progress.js';
 import { Notifications, NotificationsEvents } from './screens/Notifications/Notifications.js';
-import { Settings, SettingsEvents }          from './screens/Settings/Settings.js';
+import { Settings, SettingsEvents }           from './screens/Settings/Settings.js';
 
-const PUBLIC_ROUTES = ['/', '/login', '/register', '/pricing', '/test', '/results'];
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/pricing', '/test', '/results', '/onboarding'];
 
-// Expose Sidebar to Topbar.mountLayout via global (avoids circular import)
 window.__trackup_layout_sidebar__ = { Sidebar, SidebarEvents };
 
 function isPublic(path) {
-  return PUBLIC_ROUTES.some(r => path === r || path.startsWith(r + '?'));
+  return PUBLIC_ROUTES.includes(path);
 }
+
+let _layoutMounted = false;
 
 function bootstrap() {
   // Theme
@@ -46,31 +47,41 @@ function bootstrap() {
 
   // Session restore
   AuthService.restoreSession();
+  // Restore testResult
+  const testResult = StorageService.get('testResult');
+  if (testResult) State.setState('testResult', testResult);
 
-  // Guard: handles auth redirect + layout mount/unmount
+  // Guard
   Router.setGuard((path) => {
     const loggedIn = !!State.getState('user');
 
     if (!isPublic(path) && !loggedIn) return '/login';
     if (loggedIn && (path === '/login' || path === '/register')) return '/dashboard';
 
-    // Mount/unmount sidebar+topbar based on auth
-    if (!isPublic(path) && loggedIn) {
-      mountLayout();
-    } else {
+    // Mount / unmount layout — only when auth state changes
+    const needsLayout = !isPublic(path) && loggedIn;
+    if (needsLayout && !_layoutMounted) {
+      _layoutMounted = true;
+      // defer so outlet render happens first
+      setTimeout(() => mountLayout(), 0);
+    } else if (!needsLayout && _layoutMounted) {
+      _layoutMounted = false;
       unmountLayout();
+    } else if (needsLayout && _layoutMounted) {
+      // refresh sidebar active link on every navigation
+      setTimeout(() => mountLayout(), 0);
     }
 
     return null;
   });
 
-  // Register routes
+  // Routes
   Router.register('/',               { render: Landing });
   Router.register('/login',          { render: Login,          after: LoginEvents });
   Router.register('/register',       { render: Register,       after: RegisterEvents });
   Router.register('/onboarding',     { render: Onboarding,     after: OnboardingEvents });
   Router.register('/test',           { render: Test,           after: TestEvents });
-  Router.register('/results',        { render: Results });
+  Router.register('/results',        { render: Results,        after: ResultsEvents });
   Router.register('/pricing',        { render: Pricing,        after: PricingEvents });
   Router.register('/payment',        { render: Payment,        after: PaymentEvents });
   Router.register('/dashboard',      { render: Dashboard });
