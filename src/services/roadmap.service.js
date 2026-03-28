@@ -1,37 +1,44 @@
-import { getState, setState } from '../state.js';
-import { ROADMAP_STEPS } from '../data/mock/roadmapSteps.js';
+import State from '../state.js';
+import { MOCK_ROADMAP_STEPS } from '../data/mock/roadmapSteps.js';
 
-export const STEP_STATUS = {
-  LOCKED:      'locked',
-  AVAILABLE:   'available',
-  IN_PROGRESS: 'in_progress',
-  DONE:        'done',
+const _steps = [...MOCK_ROADMAP_STEPS];
+
+export const RoadmapService = {
+  getStepsForTrack(trackId) {
+    return _steps
+      .filter(s => s.trackId === trackId)
+      .sort((a, b) => a.order - b.order);
+  },
+
+  loadStepsForTrack(trackId) {
+    const steps = this.getStepsForTrack(trackId);
+    State.setState('roadmapSteps', steps);
+    return steps;
+  },
+
+  markStepActive(stepId) {
+    const idx = _steps.findIndex(s => s.id === stepId);
+    if (idx === -1) return;
+    _steps[idx] = { ..._steps[idx], status: 'active' };
+    const trackId = _steps[idx].trackId;
+    this.loadStepsForTrack(trackId);
+  },
+
+  completeStep(stepId) {
+    const idx = _steps.findIndex(s => s.id === stepId);
+    if (idx === -1) return;
+    _steps[idx] = { ..._steps[idx], status: 'completed' };
+    const next = _steps.find(s => s.trackId === _steps[idx].trackId && s.order === _steps[idx].order + 1);
+    if (next && next.status === 'locked') {
+      const ni = _steps.findIndex(s => s.id === next.id);
+      _steps[ni] = { ..._steps[ni], status: 'active' };
+    }
+    this.loadStepsForTrack(_steps[idx].trackId);
+  },
+
+  getProgressForTrack(trackId) {
+    const steps = this.getStepsForTrack(trackId);
+    const completed = steps.filter(s => s.status === 'completed').length;
+    return { total: steps.length, completed, percent: steps.length ? Math.round((completed / steps.length) * 100) : 0 };
+  },
 };
-
-export function getStepsForTrack(trackId) {
-  return ROADMAP_STEPS.filter(s => s.trackId === trackId);
-}
-
-export function loadRoadmapForTrack(trackId) {
-  setState('roadmapSteps', getStepsForTrack(trackId));
-}
-
-export function startStep(stepId) {
-  const steps = getState('roadmapSteps').map(s =>
-    s.id === stepId ? { ...s, status: STEP_STATUS.IN_PROGRESS } : s
-  );
-  setState('roadmapSteps', steps);
-}
-
-export function completeStep(stepId) {
-  const steps = getState('roadmapSteps');
-  const idx = steps.findIndex(s => s.id === stepId);
-  if (idx === -1) return;
-
-  setState('roadmapSteps', steps.map((s, i) => {
-    if (s.id === stepId) return { ...s, status: STEP_STATUS.DONE };
-    if (i === idx + 1 && s.status === STEP_STATUS.LOCKED)
-      return { ...s, status: STEP_STATUS.AVAILABLE };
-    return s;
-  }));
-}
