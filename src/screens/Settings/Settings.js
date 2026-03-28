@@ -57,16 +57,24 @@ export function Settings() {
   `;
 }
 
+function _setText(selector, value) {
+  const el = document.querySelector(selector);
+  if (el) el.textContent = value;
+}
+
 export function SettingsEvents() {
-  // Save profile name
   document.getElementById('settings-save')?.addEventListener('click', () => {
-    const nameVal = document.getElementById('settings-name')?.value.trim();
+    const nameInput = document.getElementById('settings-name');
+    const nameVal   = nameInput ? nameInput.value.trim() : '';
     if (!nameVal) return;
+
     const updatedUser = { ...State.getState('user'), name: nameVal };
     State.setState('user', updatedUser);
     StorageService.set('session', updatedUser);
-    document.querySelector('.sidebar__avatar')?.textContent = nameVal.charAt(0).toUpperCase();
-    document.querySelector('.sidebar__user-name')?.textContent = nameVal;
+
+    _setText('.sidebar__avatar',    nameVal.charAt(0).toUpperCase());
+    _setText('.sidebar__user-name', nameVal);
+
     Toastify({
       text:     t('settings.saved'),
       duration: 2500,
@@ -76,7 +84,6 @@ export function SettingsEvents() {
     }).showToast();
   });
 
-  // Theme toggle
   document.getElementById('settings-theme-btn')?.addEventListener('click', () => {
     const cur  = document.documentElement.getAttribute('data-theme') || 'light';
     const next = cur === 'dark' ? 'light' : 'dark';
@@ -89,7 +96,6 @@ export function SettingsEvents() {
     }
   });
 
-  // Language toggle
   document.getElementById('settings-lang-btn')?.addEventListener('click', () => {
     const nextLang = getLang() === 'ar' ? 'en' : 'ar';
     setLang(nextLang);
@@ -102,25 +108,19 @@ export function SettingsEvents() {
     }
   });
 
-  // Logout
   document.getElementById('settings-logout')?.addEventListener('click', () => {
-    const currentLang = getLang();
-    const isArabic    = currentLang === 'ar';
-
-    const swalTitle   = isArabic ? '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c\u061f' : 'Sign out?';
-    const swalText    = isArabic ? '\u0633\u064a\u062a\u0645 \u0625\u0646\u0647\u0627\u0621 \u062c\u0644\u0633\u062a\u0643' : 'Your session will end.';
-    const confirmTxt  = isArabic ? '\u062e\u0631\u0648\u062c' : 'Sign out';
-    const cancelTxt   = isArabic ? '\u0625\u0644\u063a\u0627\u0621' : 'Cancel';
-
-    Swal.fire({
-      title:              swalTitle,
-      text:               swalText,
+    const isArabic   = getLang() === 'ar';
+    const swalConfig = {
+      title:              isArabic ? '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c\u061f' : 'Sign out?',
+      text:               isArabic ? '\u0633\u064a\u062a\u0645 \u0625\u0646\u0647\u0627\u0621 \u062c\u0644\u0633\u062a\u0643' : 'Your session will end.',
       icon:               'question',
       showCancelButton:   true,
-      confirmButtonText:  confirmTxt,
-      cancelButtonText:   cancelTxt,
+      confirmButtonText:  isArabic ? '\u062e\u0631\u0648\u062c' : 'Sign out',
+      cancelButtonText:   isArabic ? '\u0625\u0644\u063a\u0627\u0621' : 'Cancel',
       confirmButtonColor: '#ef4444',
-    }).then(function(swalResult) {
+    };
+
+    Swal.fire(swalConfig).then(function (swalResult) {
       if (swalResult.isConfirmed) {
         AuthService.logout();
         unmountLayout();
