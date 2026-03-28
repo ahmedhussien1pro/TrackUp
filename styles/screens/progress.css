@@ -1,0 +1,160 @@
+/* ============================================================
+   PROGRESS + NOTIFICATIONS + SETTINGS
+============================================================ */
+
+/* ---- Progress ---- */
+.progress-screen {
+  padding: var(--space-6) var(--space-6) var(--space-10);
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+}
+.progress-screen__header {
+  margin-bottom: var(--space-8);
+}
+.progress-screen__header h1 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-1);
+}
+.progress-screen__header p {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* SVG ring */
+.progress-ring-wrap {
+  position: relative;
+  width: 140px; height: 140px;
+  flex-shrink: 0;
+}
+.progress-ring { width: 140px; height: 140px; transform: rotate(-90deg); }
+.progress-ring__bg {
+  fill: none;
+  stroke: var(--color-surface-2);
+  stroke-width: 10;
+}
+.progress-ring__fill {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s ease;
+}
+.progress-ring__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-black);
+  color: var(--color-text);
+  letter-spacing: -0.03em;
+}
+
+/* ---- Notifications ---- */
+.notifications-screen {
+  padding: var(--space-6) var(--space-6) var(--space-10);
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+}
+.notifications-screen h1 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-1);
+}
+.notifications-screen p {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  transition: background var(--transition-fast);
+}
+.notification-item--unread {
+  background: var(--color-primary-light);
+  border-color: rgba(99,102,241,0.2);
+}
+[data-theme="dark"] .notification-item--unread {
+  background: rgba(99,102,241,0.1);
+}
+.notification-item__dot {
+  width: 8px; height: 8px; min-width: 8px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  margin-top: 6px;
+}
+.notification-item--unread .notification-item__dot {
+  background: var(--color-primary);
+}
+.notification-item__text {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-bottom: var(--space-1);
+}
+.notification-item__time {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* ---- Settings ---- */
+.settings-screen {
+  padding: var(--space-6) var(--space-6) var(--space-10);
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+.settings-screen__header {
+  margin-bottom: var(--space-8);
+}
+.settings-screen__header h1 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.02em;
+}
+.settings-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.settings-section__title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+}
+.settings-row:last-child { border-bottom: none; }
+
+@media (max-width: 600px) {
+  .progress-screen, .notifications-screen, .settings-screen { padding: var(--space-4); }
+}
