@@ -22,6 +22,8 @@ export function Results() {
       </div>`;
   }
 
+  const lang       = document.documentElement.getAttribute('lang') || 'en';
+  const isAr       = lang === 'ar';
   const allTracks  = TrackService.getAllTracks();
   const top3       = result.top3 || [];
   const topTrack   = allTracks.find(tr => tr.id === result.topTrackId) || allTracks[0];
@@ -35,7 +37,7 @@ export function Results() {
   };
   const confColor = confColorMap[confidence.level] || confColorMap.high;
 
-  // Build dimension insight rows from top 3 scoring dims
+  // Top 3 scoring dimensions
   const dimEntries = Object.entries(dimensions)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
@@ -43,7 +45,7 @@ export function Results() {
   const dimRows = dimEntries.map(([key, pct]) => `
     <div class="rc-reason">
       <div class="rc-reason__header">
-        <span class="rc-reason__dim">${TestService.getDimensionLabel(key)}</span>
+        <span class="rc-reason__dim">${TestService.getDimensionLabel(key, lang)}</span>
         <span class="rc-reason__score">${pct}%</span>
       </div>
       <div class="rc-reason__bar">
@@ -52,10 +54,21 @@ export function Results() {
     </div>
   `).join('');
 
-  const runnerUp = top3[1] ? allTracks.find(tr => tr.id === top3[1].id) : null;
+  // ── Mandatory reasoning bridge ───────────────────────────────────────
+  const topDim      = dimEntries[0];   // ["visual", 86]
+  const secondDim   = dimEntries[1];   // ["creative", 79]
+  const topDimLabel = topDim ? TestService.getDimensionLabel(topDim[0], lang) : '';
+  const topDimDelta = topDim && secondDim ? topDim[1] - secondDim[1] : 0;
+  const trackName   = isAr ? (topTrack.nameAr || topTrack.name) : topTrack.name;
+  const fitPct      = top3[0]?.pct || 0;
 
-  const strengthText = result.strengthSentence?.[document.documentElement.getAttribute('lang') || 'en']
-    || result.strengthSentence?.en || '';
+  const whySentence = topDim
+    ? (isAr
+        ? `توافقك ${fitPct}% مع مسار ${trackName} مدفوع بدرجة ${topDimLabel} لديك (${topDim[1]}%)، وهي أعلى بـ ${topDimDelta} نقطة من أقوى أبعادك الأخرى — إشارة واضحة على توافق طبيعي مع هذا المسار.`
+        : `Your ${fitPct}% fit with ${trackName} is driven by your ${topDimLabel} score (${topDim[1]}%), which is ${topDimDelta} points above your next strongest dimension — a clear signal of natural alignment.`)
+    : '';
+
+  const runnerUp = top3[1] ? allTracks.find(tr => tr.id === top3[1].id) : null;
 
   return `
     <div class="results-screen">
@@ -76,14 +89,14 @@ export function Results() {
           <div class="rc-hero__eyebrow">${t('results.eyebrow')}</div>
           <h1 class="rc-hero__title">
             ${t('results.headline')}
-            <span style="color:${topTrack.color}">&nbsp;${topTrack.name}</span>
+            <span style="color:${topTrack.color}">&nbsp;${trackName}</span>
           </h1>
           <p class="rc-hero__sub">${t('results.sub')}</p>
 
           <div class="rc-confidence" style="border-color:${confColor}20;background:${confColor}0d">
             <span class="rc-confidence__dot" style="background:${confColor}"></span>
             <span class="rc-confidence__label" style="color:${confColor}">
-              ${TestService.getConfidenceCopy(confidence.level)}
+              ${TestService.getConfidenceCopy(confidence.level, lang)}
             </span>
           </div>
         </div>
@@ -95,19 +108,19 @@ export function Results() {
               ${topTrack.icon}
             </div>
             <div class="rc-decision-card__meta">
-              <div class="rc-decision-card__name">${topTrack.name}</div>
+              <div class="rc-decision-card__name">${trackName}</div>
               <div class="rc-decision-card__sub">${topTrack.level} &middot; ${topTrack.duration}</div>
             </div>
             <span class="rc-badge" style="background:${topTrack.color}18;color:${topTrack.color};border-color:${topTrack.color}30">
-              ${top3[0]?.pct || 0}%
+              ${fitPct}%
             </span>
           </div>
 
-          <!-- Why This Track — dimension reasons -->
+          <!-- Why This Track — dimension reasons + reasoning bridge -->
           <div class="rc-why-section">
             <p class="rc-why-section__title">${t('results.whyThis')}</p>
             <div class="rc-reasons">${dimRows}</div>
-            ${strengthText ? `<p class="rc-strength">${strengthText}</p>` : ''}
+            ${whySentence ? `<p class="rc-why-bridge">${whySentence}</p>` : ''}
           </div>
         </div>
 
@@ -120,7 +133,7 @@ export function Results() {
                 ${runnerUp.icon}
               </div>
               <div class="rc-alt-track__info">
-                <strong>${runnerUp.name}</strong>
+                <strong>${isAr ? (runnerUp.nameAr || runnerUp.name) : runnerUp.name}</strong>
                 <span class="badge badge--neutral ltr-text">${top3[1]?.pct || 0}%</span>
               </div>
             </div>
@@ -138,7 +151,7 @@ export function Results() {
                   <div class="rc-card__rank">${i + 2}</div>
                   <div class="rc-card__icon" style="background:${tr.color}18;color:${tr.color};border-color:${tr.color}30">${tr.icon}</div>
                   <div class="rc-card__meta">
-                    <div class="rc-card__name">${tr.name}</div>
+                    <div class="rc-card__name">${isAr ? (tr.nameAr || tr.name) : tr.name}</div>
                     <div class="rc-card__sub">${tr.level} &middot; ${tr.duration}</div>
                   </div>
                 </div>
@@ -152,19 +165,19 @@ export function Results() {
           }).join('')}
         </div>
 
-        <!-- Gateway Actions -->
+        <!-- Gateway Actions — Decision Summary is PRIMARY -->
         <div class="rc-gateway">
           <div class="rc-gateway__primary">
-            <button class="btn btn--primary btn--lg" id="rc-start-btn" data-track-id="${topTrack.id}">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              ${t('results.startTrack')}
+            <button class="btn btn--primary btn--lg" id="rc-summary-btn" data-track-id="${topTrack.id}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              ${t('results.viewFull')}
             </button>
-            <p class="rc-gateway__hint">${t('results.startHint')}</p>
+            <p class="rc-gateway__hint">${isAr ? 'اعرف بالضبط لماذا هذا المسار مناسب لك' : 'Understand exactly why this track fits you'}</p>
           </div>
           <div class="rc-gateway__secondary">
-            <button class="btn btn--outline" id="rc-summary-btn" data-track-id="${topTrack.id}">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-              ${t('results.viewFull')}
+            <button class="btn btn--outline" id="rc-start-btn" data-track-id="${topTrack.id}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              ${t('results.startTrack')}
             </button>
             <button class="btn btn--ghost btn--sm" id="rc-retake-btn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
@@ -233,19 +246,19 @@ export function ResultsEvents() {
     });
   }, 2200);
 
-  // Start Track → enroll + Dashboard
+  // PRIMARY: View Full Analysis → Decision Summary
+  document.getElementById('rc-summary-btn')?.addEventListener('click', (e) => {
+    const trackId = e.currentTarget.dataset.trackId;
+    if (trackId) TrackService.enrollInTrack(trackId);
+    Router.navigate('/decision-summary');
+  });
+
+  // SECONDARY: Start Track → Dashboard (skip summary)
   document.getElementById('rc-start-btn')?.addEventListener('click', (e) => {
     const trackId = e.currentTarget.dataset.trackId;
     if (trackId) TrackService.enrollInTrack(trackId);
     const user = State.getState('user');
     Router.navigate(user ? '/dashboard' : '/register');
-  });
-
-  // View Full Analysis → Decision Summary
-  document.getElementById('rc-summary-btn')?.addEventListener('click', (e) => {
-    const trackId = e.currentTarget.dataset.trackId;
-    if (trackId) TrackService.enrollInTrack(trackId);
-    Router.navigate('/decision-summary');
   });
 
   // Retake
