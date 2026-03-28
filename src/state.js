@@ -1,57 +1,29 @@
-/**
- * TRACKUP GLOBAL STATE STORE
- * Pub/sub pattern — no framework dependency.
- * All mutations MUST go through setState().
- */
+// Minimal reactive state store
+// Usage: State.setState('user', { name: 'Ahmed' })
+//        State.getState('user')
+//        State.subscribe('user', (val) => { ... })
 
-const _state = {
-  user: null,
-  theme: 'light',
-  lang: 'en',
-  route: null,
-  sidebarOpen: true,
+const _store = {};
+const _listeners = {};
 
-  // Career domain
-  tracks: [],
-  activeTrack: null,
-  roadmapSteps: [],
-  courses: [],
-  enrollments: {},
-  mentors: [],
-  bookings: [],
-  testSession: null,
-  testResult: null,
+const State = {
+  setState(key, value) {
+    _store[key] = value;
+    (_listeners[key] || []).forEach(fn => fn(value));
+  },
 
-  // App
-  loading: false,
-  error: null,
-  notifications: [],
+  getState(key) {
+    return _store[key] ?? null;
+  },
+
+  subscribe(key, fn) {
+    if (!_listeners[key]) _listeners[key] = [];
+    _listeners[key].push(fn);
+    // Return unsubscribe
+    return () => {
+      _listeners[key] = _listeners[key].filter(f => f !== fn);
+    };
+  },
 };
 
-const _subs = {};
-
-export function subscribe(key, cb) {
-  if (!_subs[key]) _subs[key] = [];
-  _subs[key].push(cb);
-  return () => { _subs[key] = _subs[key].filter(f => f !== cb); };
-}
-
-export function getState(key) {
-  return _state[key];
-}
-
-export function setState(key, value) {
-  const prev = _state[key];
-  _state[key] = value;
-  (_subs[key] || []).forEach(cb => cb(value, prev));
-}
-
-export function patchState(updates) {
-  Object.entries(updates).forEach(([k, v]) => setState(k, v));
-}
-
-export function getSnapshot() {
-  return { ..._state };
-}
-
-export default { getState, setState, patchState, subscribe, getSnapshot };
+export default State;

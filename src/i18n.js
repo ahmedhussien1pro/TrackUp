@@ -2,35 +2,29 @@ import { en } from './i18n/en.js';
 import { ar } from './i18n/ar.js';
 
 const LOCALES = { en, ar };
-let _locale = LOCALES.en;
-let _lang = 'en';
+let _currentLang = 'en';
 
-export function setLang(lang) {
-  _lang = lang;
-  _locale = LOCALES[lang] || LOCALES.en;
-  document.documentElement.setAttribute('lang', lang);
-  document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+function _get(obj, path) {
+  return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? path;
 }
 
 export function t(key) {
-  const parts = key.split('.');
-  let val = _locale;
-  for (const part of parts) {
-    if (val == null) break;
-    val = val[part];
+  const locale = LOCALES[_currentLang] || LOCALES.en;
+  const val = _get(locale, key);
+  if (val === key) {
+    // Fallback to English
+    return _get(LOCALES.en, key);
   }
-  if (typeof val === 'string') return val;
-  // fallback to en
-  let fallback = LOCALES.en;
-  for (const part of parts) {
-    if (fallback == null) break;
-    fallback = fallback[part];
-  }
-  return typeof fallback === 'string' ? fallback : key;
+  return val;
 }
 
 export function getLang() {
-  return _lang;
+  return _currentLang;
 }
 
-export default { t, setLang, getLang };
+export function setLang(lang) {
+  if (!LOCALES[lang]) return;
+  _currentLang = lang;
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+}

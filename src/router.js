@@ -1,11 +1,11 @@
-import State from './state.js';
+// Hash-based SPA router
+// Supports: register, navigate, guard, after-render hooks
 
 const _routes = {};
 let _guard = null;
-let _outlet = null;
 
 export const Router = {
-  register(path, { render, after } = {}) {
+  register(path, { render, after }) {
     _routes[path] = { render, after };
   },
 
@@ -14,61 +14,57 @@ export const Router = {
   },
 
   navigate(path) {
-    window.location.hash = '#' + path;
+    window.location.hash = path;
   },
 
-  init() {
-    window.addEventListener('hashchange', () => this._resolve());
-    this._resolve();
-  },
+  _resolve() {
+    const raw = window.location.hash.slice(1) || '/';
+    const [path, queryStr] = raw.split('?');
 
-  _getPath() {
-    const hash = window.location.hash.slice(1) || '/';
-    const [path] = hash.split('?');
-    return path;
-  },
+    // Parse query string
+    const query = {};
+    if (queryStr) {
+      queryStr.split('&').forEach(p => {
+        const [k, v] = p.split('=');
+        if (k) query[decodeURIComponent(k)] = decodeURIComponent(v || '');
+      });
+    }
 
-  async _resolve() {
-    const path = this._getPath();
-
+    // Auth guard
     if (_guard) {
       const redirect = _guard(path);
-      if (redirect) {
-        this.navigate(redirect);
+      if (redirect && redirect !== path) {
+        Router.navigate(redirect);
         return;
       }
     }
 
     const route = _routes[path];
     if (!route) {
-      this.navigate('/');
+      // Fallback: redirect to /
+      Router.navigate('/');
       return;
     }
 
-    State.setState('route', path);
+    const outlet = document.getElementById('app-outlet');
+    if (!outlet) return;
 
-    _outlet = _outlet || document.getElementById('app-outlet');
-    if (!_outlet) return;
+    // Render
+    outlet.innerHTML = route.render(query);
 
-    _outlet.style.opacity = '0';
-    _outlet.style.transform = 'translateY(10px)';
-    _outlet.style.transition = 'none';
-
-    await new Promise(r => setTimeout(r, 120));
-
-    _outlet.innerHTML = typeof route.render === 'function' ? route.render() : '';
-
-    requestAnimationFrame(() => {
-      _outlet.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-      _outlet.style.opacity = '1';
-      _outlet.style.transform = 'translateY(0)';
-    });
-
-    if (typeof route.after === 'function') {
-      await new Promise(r => setTimeout(r, 50));
-      route.after();
+    // After-render hook (events)
+    if (route.after) {
+      // Small tick to let DOM settle
+      requestAnimationFrame(() => route.after(query));
     }
+
+    // Scroll to top
+    outlet.scrollTop = 0;
+    window.scrollTo(0, 0);
+  },
+
+  init() {
+    window.addEventListener('hashchange', () => Router._resolve());
+    Router._resolve();
   },
 };
-
-export default Router;
