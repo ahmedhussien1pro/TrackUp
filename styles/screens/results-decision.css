@@ -219,6 +219,24 @@
   transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ---- Reasoning Bridge — mandatory connector between scores and decision ---- */
+.rc-why-bridge {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface));
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+[dir="rtl"] .rc-why-bridge {
+  border-left: none;
+  border-right: 3px solid var(--color-primary);
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
 .rc-strength {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
