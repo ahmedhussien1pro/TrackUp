@@ -3,39 +3,25 @@ import { StorageService } from './storage.service.js';
 import { courses } from '../data/mock/courses.js';
 
 export const CourseService = {
-  getAllCourses() {
-    return courses;
+  getAllCourses() { return courses; },
+
+  getCoursesByTrack(trackId) {
+    return trackId ? courses.filter(c => c.trackId === trackId) : courses;
   },
 
-  getCourseById(id) {
-    return courses.find(c => c.id === id) || null;
+  getEnrollments() {
+    return State.getState('enrollments') || StorageService.get('enrollments') || [];
   },
 
-  getCoursesForTrack(trackId) {
-    return courses.filter(c => c.trackId === trackId || c.trackIds?.includes(trackId));
+  enroll(courseId) {
+    const current = this.getEnrollments();
+    if (current.includes(courseId)) return;
+    const updated = [...current, courseId];
+    State.setState('enrollments', updated);
+    StorageService.set('enrollments', updated);
   },
 
   isEnrolled(courseId) {
-    const enrollments = State.getState('enrollments') || [];
-    return enrollments.some(e => e.courseId === courseId);
-  },
-
-  getEnrollmentProgress(courseId) {
-    const enrollments = State.getState('enrollments') || [];
-    const e = enrollments.find(e => e.courseId === courseId);
-    return e ? e.progress : 0;
-  },
-
-  enrollInCourse(courseId) {
-    const course = this.getCourseById(courseId);
-    if (!course) return { success: false, message: 'Course not found.' };
-    if (this.isEnrolled(courseId)) return { success: false, message: 'Already enrolled.' };
-
-    const enrollment = { courseId, enrolledAt: Date.now(), progress: 0, status: 'active' };
-    const enrollments = [...(State.getState('enrollments') || []), enrollment];
-    State.setState('enrollments', enrollments);
-    StorageService.set('enrollments', enrollments);
-
-    return { success: true, message: `Enrolled in ${course.title}` };
+    return this.getEnrollments().includes(courseId);
   },
 };

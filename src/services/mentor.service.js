@@ -3,33 +3,24 @@ import { StorageService } from './storage.service.js';
 import { mentors } from '../data/mock/mentors.js';
 
 export const MentorService = {
-  getAllMentors() {
-    return mentors;
+  getAllMentors() { return mentors; },
+
+  getMentorsByTrack(trackId) {
+    return trackId ? mentors.filter(m => m.trackId === trackId) : mentors;
   },
 
-  getMentorById(id) {
-    return mentors.find(m => m.id === id) || null;
-  },
+  getMentorById(id) { return mentors.find(m => m.id === id) || null; },
 
-  getMentorsForTrack(trackId) {
-    return mentors.filter(m => m.trackIds?.includes(trackId));
-  },
-
-  bookSession(mentorId) {
-    const mentor = this.getMentorById(mentorId);
-    if (!mentor) return { success: false, message: 'Mentor not found.' };
-
-    const booking = {
-      id: 'b_' + Date.now(),
-      mentorId,
-      mentorName: mentor.name,
-      bookedAt: Date.now(),
-      status: 'confirmed',
-    };
-    const bookings = [...(State.getState('bookings') || []), booking];
-    State.setState('bookings', bookings);
+  bookSession(mentorId, slot) {
+    const bookings = StorageService.get('bookings') || [];
+    const booking = { id: `b${Date.now()}`, mentorId, slot, bookedAt: Date.now() };
+    bookings.push(booking);
     StorageService.set('bookings', bookings);
+    State.setState('bookings', bookings);
+    return booking;
+  },
 
-    return { success: true, message: `Session booked with ${mentor.name}` };
+  getBookings() {
+    return State.getState('bookings') || StorageService.get('bookings') || [];
   },
 };

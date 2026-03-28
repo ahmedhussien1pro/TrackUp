@@ -4,41 +4,26 @@ import { roadmaps } from '../data/mock/roadmaps.js';
 
 export const RoadmapService = {
   getStepsForTrack(trackId) {
-    const template = roadmaps[trackId] || [];
-    const savedData = State.getState('roadmapData') || {};
-    const completed = savedData[trackId] || [];
-
-    let firstActive = false;
-    return template.map((step, i) => {
-      if (completed.includes(step.id)) {
-        return { ...step, status: 'completed' };
-      }
-      if (!firstActive) {
-        firstActive = true;
-        return { ...step, status: 'active' };
-      }
-      return { ...step, status: 'locked' };
-    });
+    return roadmaps[trackId] || [];
   },
 
   getProgressForTrack(trackId) {
-    const steps = this.getStepsForTrack(trackId);
-    const total     = steps.length;
-    const completed = steps.filter(s => s.status === 'completed').length;
-    const percent   = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, percent };
+    const key = `roadmap_progress_${trackId}`;
+    const done = State.getState(key) || StorageService.get(key) || [];
+    const steps = roadmaps[trackId] || [];
+    const completed = steps.filter(s => done.includes(s.id)).length;
+    const percent = steps.length > 0 ? Math.round((completed / steps.length) * 100) : 0;
+    return { steps, completed, total: steps.length, percent, done };
   },
 
-  completeStep(stepId) {
-    const user = State.getState('user');
-    if (!user?.activeTrackId) return;
-    const trackId    = user.activeTrackId;
-    const savedData  = { ...(State.getState('roadmapData') || {}) };
-    const completed  = savedData[trackId] || [];
-    if (!completed.includes(stepId)) {
-      savedData[trackId] = [...completed, stepId];
-      State.setState('roadmapData', savedData);
-      StorageService.set('roadmapData', savedData);
-    }
+  toggleStep(trackId, stepId) {
+    const key = `roadmap_progress_${trackId}`;
+    const done = [...(State.getState(key) || StorageService.get(key) || [])];
+    const idx = done.indexOf(stepId);
+    if (idx === -1) done.push(stepId);
+    else done.splice(idx, 1);
+    State.setState(key, done);
+    StorageService.set(key, done);
+    return done;
   },
 };

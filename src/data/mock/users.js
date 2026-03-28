@@ -1,46 +1,16 @@
-export const MOCK_USERS = [
-  {
-    id: 'u1',
-    name: 'Ahmed Hassan',
-    email: 'ahmed@trackup.io',
-    password: '123456',
-    avatar: null,
-    careerField: 'frontend',
-    activeTrackId: 'track-1',
-    plan: 'pro',
-    joinedAt: '2025-01-10',
-  },
-  {
-    id: 'u2',
-    name: 'Sara Khalil',
-    email: 'sara@trackup.io',
-    password: '123456',
-    avatar: null,
-    careerField: 'data',
-    activeTrackId: 'track-3',
-    plan: 'free',
-    joinedAt: '2025-03-05',
-  },
-  {
-    id: 'u3',
-    name: 'Omar Nabil',
-    email: 'omar@trackup.io',
-    password: '123456',
-    avatar: null,
-    careerField: 'backend',
-    activeTrackId: 'track-2',
-    plan: 'team',
-    joinedAt: '2025-02-18',
-  },
-  {
-    id: 'u4',
-    name: 'Lina Yousef',
-    email: 'lina@trackup.io',
-    password: '123456',
-    avatar: null,
-    careerField: 'design',
-    activeTrackId: 'track-4',
-    plan: 'free',
-    joinedAt: '2025-04-01',
-  },
-];
+// TrackUp — Demo user seed
+export const demoUser = {
+  id: 'u1',
+  name: 'Alex Morgan',
+  email: 'demo@trackup.io',
+  password: 'demo1234',
+  plan: 'free',
+  university: 'Cairo University',
+  year: '3rd Year',
+  major: 'Computer Science',
+  confusionLevel: 'high',
+  joinedAt: '2025-09-01',
+  activeTrackId: null,
+};
+
+export const mockUsers = [demoUser];
