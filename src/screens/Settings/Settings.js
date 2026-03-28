@@ -5,123 +5,183 @@ import { StorageService } from '../../services/storage.service.js';
 import { Router } from '../../router.js';
 import { unmountLayout, mountLayout } from '../../components/layout/Topbar.js';
 
+const PLAN_META = {
+  en: { free: 'Free', pro: 'Pro', elite: 'Elite' },
+  ar: { free: 'مجاني', pro: 'احترافي', elite: 'متميز' },
+};
+
 export function Settings() {
   const user  = State.getState('user') || {};
   const theme = document.documentElement.getAttribute('data-theme') || 'light';
   const lang  = getLang();
   const isAr  = lang === 'ar';
+  const plan  = user.plan || 'free';
+  const initials = user.name
+    ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    : 'U';
 
   return `
-    <div class="settings-screen">
+    <div class="settings-screen fade-in">
+
       <div class="screen-header">
-        <h1>${t('settings.title')}</h1>
+        <h1>${isAr ? 'الإعدادات' : 'Settings'}</h1>
+        <p>${isAr ? 'إدارة حسابك وتفضيلاتك' : 'Manage your account and preferences'}</p>
       </div>
 
-      <div class="settings-section">
-        <div class="settings-section__title">${t('settings.profile')}</div>
-        <div class="form-group">
-          <label class="form-label" for="settings-name">${t('auth.name')}</label>
-          <input class="form-input" id="settings-name" type="text"
-                 value="${user.name || ''}" autocomplete="name" />
+      <!-- Profile card -->
+      <div class="settings-card slide-up" style="animation-delay:0.04s">
+        <div class="settings-card__label">${isAr ? 'الملف الشخصي' : 'Profile'}</div>
+        <div class="settings-profile">
+          <div class="settings-avatar">${initials}</div>
+          <div class="settings-profile__meta">
+            <span class="settings-profile__name">${user.name || (isAr ? 'مستخدم' : 'User')}</span>
+            <span class="settings-profile__email">${user.email || ''}</span>
+            <span class="badge badge--plan">${PLAN_META[isAr ? 'ar' : 'en'][plan] || plan}</span>
+          </div>
         </div>
-        <div class="form-group" style="margin-bottom:var(--space-5)">
-          <label class="form-label" for="settings-email">${t('auth.email')}</label>
-          <input class="form-input" id="settings-email" type="email"
-                 value="${user.email || ''}" disabled
-                 style="opacity:0.55;cursor:not-allowed" />
-        </div>
-        <button class="btn btn--primary btn--sm" id="settings-save">${t('settings.save')}</button>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-section__title">${t('settings.preferences')}</div>
-        <div class="settings-row">
-          <span>${t('settings.theme')}</span>
-          <button class="btn btn--outline btn--sm" id="settings-theme-btn">
-            ${theme === 'dark' ? t('settings.light') : t('settings.dark')}
+        <div class="settings-form">
+          <div class="form-group">
+            <label class="form-label" for="settings-name">${isAr ? 'الاسم الكامل' : 'Full name'}</label>
+            <input class="form-input" id="settings-name" type="text"
+                   value="${user.name || ''}" autocomplete="name"
+                   placeholder="${isAr ? 'اكتب اسمك' : 'Your name'}" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">${isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+            <input class="form-input" type="email"
+                   value="${user.email || ''}" disabled
+                   style="opacity:0.5;cursor:not-allowed" />
+          </div>
+          <button class="btn btn--primary btn--sm" id="settings-save">
+            ${isAr ? 'حفظ التغييرات' : 'Save changes'}
           </button>
         </div>
+      </div>
+
+      <!-- Appearance -->
+      <div class="settings-card slide-up" style="animation-delay:0.08s">
+        <div class="settings-card__label">${isAr ? 'المظهر' : 'Appearance'}</div>
+
         <div class="settings-row">
-          <span>${t('settings.language')}</span>
-          <button class="btn btn--outline btn--sm" id="settings-lang-btn">
-            ${isAr ? 'English' : '\u0627\u0644\u0639\u0631\u0628\u064a\u0629'}
+          <div class="settings-row__info">
+            <span class="settings-row__title">${isAr ? 'الوضع الليلي' : 'Dark mode'}</span>
+            <span class="settings-row__sub">${isAr ? 'تبديل جمالية التطبيق' : 'Switch the app appearance'}</span>
+          </div>
+          <button
+            class="settings-toggle${theme === 'dark' ? ' settings-toggle--on' : ''}"
+            id="settings-theme-btn"
+            role="switch"
+            aria-checked="${theme === 'dark'}"
+            aria-label="${isAr ? 'الوضع الليلي' : 'Dark mode'}"
+          >
+            <span class="settings-toggle__knob"></span>
+          </button>
+        </div>
+
+        <div class="settings-row settings-row--border">
+          <div class="settings-row__info">
+            <span class="settings-row__title">${isAr ? 'اللغة' : 'Language'}</span>
+            <span class="settings-row__sub">${isAr ? 'تغيير لغة الواجهة' : 'Change interface language'}</span>
+          </div>
+          <div class="settings-lang-pills">
+            <button class="settings-lang-pill${!isAr ? ' settings-lang-pill--active' : ''}" data-lang="en">EN</button>
+            <button class="settings-lang-pill${isAr ? ' settings-lang-pill--active' : ''}" data-lang="ar">عر</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plan -->
+      <div class="settings-card slide-up" style="animation-delay:0.12s">
+        <div class="settings-card__label">${isAr ? 'خطة الاشتراك' : 'Subscription'}</div>
+        <div class="settings-plan-row">
+          <div>
+            <span class="settings-plan-row__name">${PLAN_META[isAr ? 'ar' : 'en'][plan] || plan}</span>
+            <span class="settings-plan-row__hint">${
+              plan === 'free'
+                ? (isAr ? 'تحديث للحصول على جميع الميزات' : 'Upgrade to unlock all features')
+                : (isAr ? 'لديك وصول كامل' : 'Full access active')
+            }</span>
+          </div>
+          ${plan === 'free'
+            ? `<a href="#/pricing" class="btn btn--primary btn--sm">${isAr ? 'تحديث' : 'Upgrade'}</a>`
+            : `<span class="badge badge--active">${isAr ? 'نشط' : 'Active'}</span>`
+          }
+        </div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="settings-card settings-card--danger slide-up" style="animation-delay:0.16s">
+        <div class="settings-card__label">${isAr ? 'منطقة الخطر' : 'Danger zone'}</div>
+        <div class="settings-row">
+          <div class="settings-row__info">
+            <span class="settings-row__title">${isAr ? 'تسجيل الخروج' : 'Sign out'}</span>
+            <span class="settings-row__sub">${isAr ? 'إنهاء الجلسة الحالية' : 'End your current session'}</span>
+          </div>
+          <button class="btn btn--danger btn--sm" id="settings-logout">
+            ${isAr ? 'خروج' : 'Sign out'}
           </button>
         </div>
       </div>
 
-      <div class="settings-section">
-        <div class="settings-section__title">${isAr ? '\u0627\u0644\u062d\u0633\u0627\u0628' : 'Account'}</div>
-        <button class="btn btn--danger btn--sm" id="settings-logout">${t('settings.logout')}</button>
-      </div>
-    </div>
-  `;
+    </div>`;
 }
 
-function _setText(selector, value) {
-  const el = document.querySelector(selector);
-  if (el) el.textContent = value;
+function _rerender() {
+  const outlet = document.getElementById('app-outlet');
+  if (outlet) { outlet.innerHTML = Settings(); SettingsEvents(); }
 }
 
 export function SettingsEvents() {
+  // Save profile
   document.getElementById('settings-save')?.addEventListener('click', () => {
-    const nameInput = document.getElementById('settings-name');
-    const nameVal   = nameInput ? nameInput.value.trim() : '';
-    if (!nameVal) return;
-
-    const updatedUser = { ...State.getState('user'), name: nameVal };
+    const val = document.getElementById('settings-name')?.value.trim();
+    if (!val) return;
+    const updatedUser = { ...State.getState('user'), name: val };
     State.setState('user', updatedUser);
     StorageService.set('session', updatedUser);
-
-    _setText('.sidebar__avatar',    nameVal.charAt(0).toUpperCase());
-    _setText('.sidebar__user-name', nameVal);
-
+    document.querySelector('.sidebar__avatar')?.let?.(el => el.textContent = val.charAt(0).toUpperCase());
+    document.querySelector('.sidebar__user-name')  && (document.querySelector('.sidebar__user-name').textContent = val);
     Toastify({
-      text:     t('settings.saved'),
-      duration: 2500,
-      gravity:  'bottom',
-      position: 'right',
-      style:    { background: 'var(--color-success)' },
+      text: getLang() === 'ar' ? 'تم الحفظ' : 'Saved',
+      duration: 2000, gravity: 'bottom', position: 'right',
+      style: { background: 'var(--color-success)' },
     }).showToast();
   });
 
+  // Theme toggle
   document.getElementById('settings-theme-btn')?.addEventListener('click', () => {
     const cur  = document.documentElement.getAttribute('data-theme') || 'light';
     const next = cur === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     StorageService.set('theme', next);
-    const outlet = document.getElementById('app-outlet');
-    if (outlet) {
-      outlet.innerHTML = Settings();
-      SettingsEvents();
-    }
+    _rerender();
   });
 
-  document.getElementById('settings-lang-btn')?.addEventListener('click', () => {
-    const nextLang = getLang() === 'ar' ? 'en' : 'ar';
-    setLang(nextLang);
-    StorageService.set('lang', nextLang);
-    mountLayout();
-    const outlet = document.getElementById('app-outlet');
-    if (outlet) {
-      outlet.innerHTML = Settings();
-      SettingsEvents();
-    }
+  // Language pills
+  document.querySelectorAll('.settings-lang-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const nextLang = btn.dataset.lang;
+      if (nextLang === getLang()) return;
+      setLang(nextLang);
+      StorageService.set('lang', nextLang);
+      mountLayout();
+      _rerender();
+    });
   });
 
+  // Logout
   document.getElementById('settings-logout')?.addEventListener('click', () => {
-    const isArabic   = getLang() === 'ar';
-    const swalConfig = {
-      title:              isArabic ? '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c\u061f' : 'Sign out?',
-      text:               isArabic ? '\u0633\u064a\u062a\u0645 \u0625\u0646\u0647\u0627\u0621 \u062c\u0644\u0633\u062a\u0643' : 'Your session will end.',
-      icon:               'question',
-      showCancelButton:   true,
-      confirmButtonText:  isArabic ? '\u062e\u0631\u0648\u062c' : 'Sign out',
-      cancelButtonText:   isArabic ? '\u0625\u0644\u063a\u0627\u0621' : 'Cancel',
-      confirmButtonColor: '#ef4444',
-    };
-
-    Swal.fire(swalConfig).then(function (swalResult) {
-      if (swalResult.isConfirmed) {
+    const isAr = getLang() === 'ar';
+    Swal.fire({
+      title:             isAr ? 'تسجيل الخروج؟' : 'Sign out?',
+      text:              isAr ? 'سيتم إنهاء جلستك' : 'Your session will end.',
+      icon:              'question',
+      showCancelButton:  true,
+      confirmButtonText: isAr ? 'خروج' : 'Sign out',
+      cancelButtonText:  isAr ? 'إلغاء' : 'Cancel',
+      confirmButtonColor:'#ef4444',
+    }).then(r => {
+      if (r.isConfirmed) {
         AuthService.logout();
         unmountLayout();
         Router.navigate('/login');
