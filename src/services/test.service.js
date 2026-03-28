@@ -1,51 +1,53 @@
-import { getState, setState } from '../state.js';
-import { TEST_QUESTIONS } from '../data/mock/testQuestions.js';
+import State from '../state.js';
+import { MOCK_TEST_QUESTIONS } from '../data/mock/testQuestions.js';
+import { MOCK_TRACKS } from '../data/mock/tracks.js';
 
-export function startTest() {
-  setState('testSession', {
-    questions:  TEST_QUESTIONS,
-    answers:    {},
-    currentIdx: 0,
-    startedAt:  Date.now(),
-  });
-  setState('testResult', null);
-}
+export const TestService = {
+  startTest() {
+    const session = {
+      questions: [...MOCK_TEST_QUESTIONS],
+      answers: {},
+      startedAt: Date.now(),
+    };
+    State.setState('testSession', session);
+    State.setState('testResult', null);
+    return session;
+  },
 
-export function answerQuestion(questionId, value) {
-  const session = getState('testSession');
-  if (!session) return;
-  setState('testSession', {
-    ...session,
-    answers:    { ...session.answers, [questionId]: value },
-    currentIdx: Math.min(session.currentIdx + 1, session.questions.length - 1),
-  });
-}
+  answerQuestion(session, questionId, optionIndex) {
+    session.answers[questionId] = optionIndex;
+    return session;
+  },
 
-export function submitTest() {
-  const session = getState('testSession');
-  if (!session) return null;
+  submitTest(session) {
+    const scores = {};
+    Object.entries(session.answers).forEach(([qId, optIndex]) => {
+      const q = MOCK_TEST_QUESTIONS.find(q => q.id === qId);
+      if (!q) return;
+      const option = q.options[optIndex];
+      if (!option?.weight) return;
+      Object.entries(option.weight).forEach(([trackId, pts]) => {
+        scores[trackId] = (scores[trackId] || 0) + pts;
+      });
+    });
 
-  const scores = {};
-  Object.entries(session.answers).forEach(([qId, val]) => {
-    const q = TEST_QUESTIONS.find(q => q.id === qId);
-    if (!q) return;
-    const track = q.weightMap[val] || q.weightMap['default'];
-    if (!track) return;
-    scores[track] = (scores[track] || 0) + 1;
-  });
+    const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    const topTrackId = sorted[0]?.[0] || 'track-1';
+    const recommendedTrack = MOCK_TRACKS.find(t => t.id === topTrackId) || MOCK_TRACKS[0];
 
-  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-  const result = {
-    topTrackId:  sorted[0]?.[0] || 'frontend',
-    scores,
-    completedAt: Date.now(),
-  };
+    const result = {
+      scores,
+      topTrackId,
+      recommendedTrack,
+      completedAt: Date.now(),
+    };
 
-  setState('testResult', result);
-  setState('testSession', null);
-  return result;
-}
+    State.setState('testResult', result);
+    State.setState('testSession', null);
+    return result;
+  },
 
-export function getTestResult() {
-  return getState('testResult');
-}
+  getResult() {
+    return State.getState('testResult');
+  },
+};
