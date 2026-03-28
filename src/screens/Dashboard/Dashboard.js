@@ -74,6 +74,35 @@ function _insight(result, track, isAr) {
   return copies[Math.floor(Date.now() / 3600000) % copies.length];
 }
 
+// ── First-Run Banner (shown once after test completion) ───────────────
+function _firstRunBanner(track, isAr) {
+  const shown = StorageService.get('first_run_dismissed');
+  if (shown || !track) return '';
+
+  return `
+    <div class="db-first-run" id="db-first-run">
+      <div class="db-first-run__icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="db-first-run__body">
+        <strong>${isAr ? 'مرحباً بك في مسارك' : 'Welcome to your track'}</strong>
+        <span>${isAr
+          ? `تم تخصيص لوحة تحكمك لمسار ${track.nameAr || track.name}. ابدأ بخارطة الطريق أو سجّل في دورة.`
+          : `Your dashboard is set up for ${track.name}. Start with your roadmap or enroll in a course.`
+        }</span>
+      </div>
+      <div class="db-first-run__actions">
+        <a href="#/roadmap" class="btn btn--primary btn--sm">${isAr ? 'فتح الخارطة' : 'Open Roadmap'}</a>
+        <button class="btn btn--ghost btn--sm" id="db-first-run-dismiss">
+          ${isAr ? 'إغلاق' : 'Dismiss'}
+        </button>
+      </div>
+    </div>`;
+}
+
 export function Dashboard() {
   const user        = State.getState('user') || {};
   const lang        = document.documentElement.getAttribute('lang') || 'en';
@@ -105,6 +134,9 @@ export function Dashboard() {
 
   return `
     <div class="dashboard fade-in">
+
+      <!-- First-run guidance banner -->
+      ${_firstRunBanner(track, isAr)}
 
       <div class="dashboard-hero">
         <div class="dashboard-hero__text">
@@ -224,7 +256,7 @@ export function Dashboard() {
           { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>`, label: isAr ? 'خارطة الطريق' : 'Roadmap',    href: '#/roadmap',    color: '#6366f1' },
           { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`, label: isAr ? 'الدورات' : 'Courses',    href: '#/courses',    color: '#f59e0b' },
           { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>`, label: isAr ? 'الإرشاد' : 'Mentorship', href: '#/mentorship', color: '#ec4899' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,                                                                                                                                                                                                                                                         label: isAr ? 'التقدم' : 'Progress',   href: '#/progress',   color: '#10b981' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,  label: isAr ? 'التقدم' : 'Progress',   href: '#/progress',   color: '#10b981' },
         ].map(item => `
           <a href="${item.href}" class="db-quicknav__item">
             <span class="db-quicknav__icon" style="color:${item.color};background:${item.color}14">${item.icon}</span>
@@ -269,11 +301,21 @@ export function DashboardEvents() {
     });
   });
 
-  // Demo Mode — all static imports, no dynamic import() chains
+  // First-run dismiss
+  document.getElementById('db-first-run-dismiss')?.addEventListener('click', () => {
+    StorageService.set('first_run_dismissed', true);
+    const banner = document.getElementById('db-first-run');
+    if (banner) {
+      banner.style.transition = 'opacity 0.3s ease, max-height 0.4s ease';
+      banner.style.opacity = '0';
+      setTimeout(() => banner.remove(), 400);
+    }
+  });
+
+  // Demo Mode
   document.getElementById('demo-mode-btn')?.addEventListener('click', () => {
     const isAr = document.documentElement.getAttribute('lang') === 'ar';
 
-    // 1. Inject full test result
     const demoResult = {
       topTrackId: 'frontend',
       top3: [
@@ -294,24 +336,21 @@ export function DashboardEvents() {
     };
     State.setState('testResult', demoResult);
     StorageService.set('testResult', demoResult);
+    StorageService.set('first_run_dismissed', false); // reset banner for demo
 
-    // 2. Enroll in frontend track (sets user.activeTrackId)
     TrackService.enrollInTrack('frontend');
 
-    // 3. Inject course enrollments into storage
     const demoEnrollments = [
       { courseId: 'c-fe-1', progress: 100, status: 'completed', enrolledAt: Date.now() - 86400000 },
       { courseId: 'c-fe-2', progress: 42,  status: 'active',    enrolledAt: Date.now() },
     ];
     StorageService.set('enrollments', demoEnrollments);
 
-    // 4. Inject mentor bookings into storage
     const demoBookings = [
       { mentorId: 'm1', mentorName: 'Sarah El-Rashidy', bookedAt: Date.now(), status: 'confirmed' },
     ];
     StorageService.set('bookings', demoBookings);
 
-    // 5. Toast + re-render
     Toastify({
       text:     isAr ? 'تم تفعيل وضع العرض' : 'Demo mode activated',
       duration: 2000,
