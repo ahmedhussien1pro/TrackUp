@@ -1,36 +1,44 @@
-import { getState, setState } from '../state.js';
-import { COURSES } from '../data/mock/courses.js';
+import State from '../state.js';
+import { MOCK_COURSES } from '../data/mock/courses.js';
 
-export function getCourses() {
-  return COURSES;
-}
+const _courses = [...MOCK_COURSES];
 
-export function getCoursesForTrack(trackId) {
-  return COURSES.filter(c => c.trackId === trackId || c.trackId === 'all');
-}
+export const CourseService = {
+  getAllCourses() {
+    return _courses;
+  },
 
-export function getCourseById(id) {
-  return COURSES.find(c => c.id === id) || null;
-}
+  getCoursesForTrack(trackId) {
+    return _courses.filter(c => c.trackId === trackId);
+  },
 
-export function enrollInCourse(courseId) {
-  const enrollments = { ...getState('enrollments') };
-  if (!enrollments[courseId]) {
-    enrollments[courseId] = {
-      progress:   0,
-      status:     'enrolled',
-      enrolledAt: Date.now(),
-    };
-    setState('enrollments', enrollments);
-  }
-}
+  getCourseById(id) {
+    return _courses.find(c => c.id === id) || null;
+  },
 
-export function updateCourseProgress(courseId, progress) {
-  const enrollments = { ...getState('enrollments') };
-  enrollments[courseId] = {
-    ...enrollments[courseId],
-    progress,
-    status: progress >= 100 ? 'completed' : 'enrolled',
-  };
-  setState('enrollments', enrollments);
-}
+  enrollInCourse(courseId) {
+    const enrollments = [...(State.getState('enrollments') || [])];
+    if (enrollments.find(e => e.courseId === courseId))
+      return { success: false, message: 'Already enrolled.' };
+    enrollments.push({ courseId, progress: 0, status: 'enrolled', enrolledAt: Date.now() });
+    State.setState('enrollments', enrollments);
+    return { success: true, message: 'Enrolled successfully.' };
+  },
+
+  updateProgress(courseId, progress) {
+    const enrollments = (State.getState('enrollments') || []).map(e =>
+      e.courseId === courseId
+        ? { ...e, progress, status: progress >= 100 ? 'completed' : 'enrolled' }
+        : e
+    );
+    State.setState('enrollments', enrollments);
+  },
+
+  isEnrolled(courseId) {
+    return !!(State.getState('enrollments') || []).find(e => e.courseId === courseId);
+  },
+
+  getEnrollmentProgress(courseId) {
+    return (State.getState('enrollments') || []).find(e => e.courseId === courseId)?.progress || 0;
+  },
+};
