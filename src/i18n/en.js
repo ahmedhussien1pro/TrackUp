@@ -1,4 +1,14 @@
 export const en = {
+  nav: {
+    dashboard:     'Dashboard',
+    career:        'Career Tracks',
+    roadmap:       'Roadmap',
+    courses:       'Courses',
+    mentorship:    'Mentorship',
+    progress:      'Progress',
+    notifications: 'Notifications',
+    settings:      'Settings',
+  },
   common: {
     next: 'Next',
     back: 'Back',
@@ -10,7 +20,6 @@ export const en = {
     error: 'Something went wrong.',
     empty: 'Nothing here yet.',
   },
-
   landing: {
     hero: {
       title: 'Discover Your Career Path',
@@ -19,7 +28,6 @@ export const en = {
       pricingLink: 'View pricing plans',
     },
   },
-
   auth: {
     email: 'Email address',
     password: 'Password',
@@ -43,128 +51,92 @@ export const en = {
       weakPassword: 'Password must be at least 6 characters.',
     },
   },
-
   onboarding: {
-    goal: {
-      title: 'What is your career goal?',
-      description: 'Tell us what you want to achieve so we can tailor your path.',
-    },
-    background: {
-      title: 'What is your background?',
-      description: 'Your current experience level helps us find the right starting point.',
-    },
-    availability: {
-      title: 'How much time can you commit?',
-      description: 'We will build a realistic timeline based on your schedule.',
-    },
+    goal:         { title: 'What is your career goal?',          description: 'Tell us what you want to achieve so we can tailor your path.' },
+    background:   { title: 'What is your background?',          description: 'Your current experience level helps us find the right starting point.' },
+    availability: { title: 'How much time can you commit?',     description: 'We will build a realistic timeline based on your schedule.' },
   },
-
   test: {
-    title: 'Career Assessment',
+    title:    'Career Assessment',
     subtitle: 'Answer 5 quick questions to find your best-fit career track.',
   },
-
   results: {
-    title: 'Your Career Match',
+    title:    'Your Career Match',
     subtitle: 'Based on your answers, here is the track we recommend for you.',
-    cta: {
-      start: 'Start This Track',
-      retake: 'Retake Assessment',
-    },
+    cta: { start: 'Start This Track', retake: 'Retake Assessment' },
   },
-
   pricing: {
-    title: 'Choose Your Plan',
-    subtitle: 'Start free. Upgrade when you are ready.',
-    free: 'Free',
+    title:       'Choose Your Plan',
+    subtitle:    'Start free. Upgrade when you are ready.',
+    free:        'Free',
     recommended: 'Most Popular',
-    month: 'month',
-    select: 'Get Started',
+    month:       'month',
+    select:      'Get Started',
   },
-
   payment: {
-    title: 'Complete Your Purchase',
+    title:      'Complete Your Purchase',
     cardNumber: 'Card number',
-    expiry: 'Expiry date',
-    cvv: 'CVV',
-    submit: 'Pay Now',
-    success: 'Payment successful. Welcome to Pro.',
-    error: 'Payment failed. Please check your card details.',
+    expiry:     'Expiry date',
+    cvv:        'CVV',
+    submit:     'Pay Now',
+    success:    'Payment successful. Welcome to Pro.',
+    error:      'Payment failed. Please check your card details.',
   },
-
   dashboard: {
-    welcome: 'Welcome',
-    subtitle: 'Here is your learning overview for today.',
-    yourTracks: 'Your Career Tracks',
-    stats: {
-      tracks: 'Tracks',
-      progress: 'Progress',
-      sessions: 'Sessions',
-    },
+    welcome:     'Welcome',
+    subtitle:    'Here is your learning overview for today.',
+    yourTracks:  'Your Career Tracks',
+    stats: { tracks: 'Tracks', progress: 'Progress', sessions: 'Sessions' },
   },
-
   career: {
-    title: 'Career Tracks',
-    subtitle: 'Explore all available learning paths.',
+    title:       'Career Tracks',
+    subtitle:    'Explore all available learning paths.',
     viewRoadmap: 'View Roadmap',
   },
-
   roadmap: {
     subtitle: 'Your step-by-step learning plan.',
-    noTrack: 'No track selected. Go to Career Tracks first.',
-    start: 'Start',
-    review: 'Review',
-    status: {
-      completed: 'Completed',
-      active: 'In Progress',
-      locked: 'Locked',
-    },
+    noTrack:  'No track selected. Go to Career Tracks first.',
+    start:    'Start',
+    review:   'Review',
+    status:   { completed: 'Completed', active: 'In Progress', locked: 'Locked' },
   },
-
   courses: {
-    title: 'Courses',
+    title:    'Courses',
     subtitle: 'Structured lessons to build your skills.',
-    free: 'Free',
-    paid: 'Pro',
-    lessons: 'lessons',
-    enroll: 'Enroll Now',
+    free:     'Free',
+    paid:     'Pro',
+    lessons:  'lessons',
+    enroll:   'Enroll Now',
     enrolled: 'Enrolled',
   },
-
   mentorship: {
-    title: 'Mentors',
+    title:    'Mentors',
     subtitle: 'Book a 1-on-1 session with an expert.',
-    session: 'session',
-    book: 'Book Session',
-    booked: 'Session Booked',
+    session:  'session',
+    book:     'Book Session',
+    booked:   'Session Booked',
   },
-
   progress: {
-    title: 'My Progress',
-    subtitle: 'Track your learning journey.',
+    title:         'My Progress',
+    subtitle:      'Track your learning journey.',
     roadmapStatus: 'Roadmap Status',
-    stats: {
-      completed: 'Steps Completed',
-      enrolled: 'Courses Enrolled',
-    },
+    stats: { completed: 'Steps Completed', enrolled: 'Courses Enrolled' },
   },
-
   notifications: {
-    title: 'Notifications',
+    title:       'Notifications',
     markAllRead: 'Mark all as read',
-    empty: 'You have no notifications.',
+    empty:       'You have no notifications.',
   },
-
   settings: {
-    title: 'Settings',
-    profile: 'Profile',
+    title:       'Settings',
+    profile:     'Profile',
     preferences: 'Preferences',
-    theme: 'Theme',
-    language: 'Language',
-    dark: 'Dark mode',
-    light: 'Light mode',
-    save: 'Save changes',
-    saved: 'Changes saved.',
-    logout: 'Sign out',
+    theme:       'Theme',
+    language:    'Language',
+    dark:        'Dark mode',
+    light:       'Light mode',
+    save:        'Save changes',
+    saved:       'Changes saved.',
+    logout:      'Sign out',
   },
 };

@@ -7,29 +7,23 @@
   <meta name="theme-color" content="#6366f1" />
   <title>TrackUp</title>
 
-  <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://api.fontshare.com" />
 
-  <!-- Fonts -->
   <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,600,700,800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
 
-  <!-- Styles -->
   <link rel="stylesheet" href="./styles/tokens.css" />
   <link rel="stylesheet" href="./styles/base.css" />
+  <link rel="stylesheet" href="./styles/layout.css" />
   <link rel="stylesheet" href="./styles/animations.css" />
   <link rel="stylesheet" href="./styles/components.css" />
 
-  <!-- Toastify -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/toastify-js" defer></script>
-
-  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
 
-  <!-- Theme bootstrap: runs before first paint to prevent flash -->
   <script>
     (function () {
       try {
@@ -44,22 +38,16 @@
   </script>
 </head>
 <body>
-  <a href="#app-outlet" class="sr-only focus:not-sr-only">Skip to content</a>
+  <a href="#app-outlet" class="sr-only">Skip to content</a>
 
   <div id="app-root">
-    <!-- Sidebar: injected by Layout component when authenticated -->
     <aside id="app-sidebar" class="app-sidebar" aria-hidden="true"></aside>
-
     <div id="app-body">
-      <!-- Topbar: injected by Layout component when authenticated -->
       <header id="app-topbar" class="app-topbar" aria-hidden="true"></header>
-
-      <!-- Router outlet: every screen renders here -->
       <main id="app-outlet" role="main" aria-live="polite"></main>
     </div>
   </div>
 
-  <!-- Global loader shown during bootstrap -->
   <div id="app-loader" style="
     position:fixed;inset:0;display:flex;align-items:center;
     justify-content:center;background:var(--color-bg,#fff);z-index:9999;
@@ -71,7 +59,6 @@
   <script type="module" src="./src/app.js"></script>
 
   <script>
-    // Hide loader once app.js fires DOMContentLoaded bootstrap
     document.addEventListener('DOMContentLoaded', function () {
       setTimeout(function () {
         var loader = document.getElementById('app-loader');
