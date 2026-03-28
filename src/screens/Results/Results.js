@@ -3,34 +3,10 @@ import { TestService } from '../../services/test.service.js';
 import { TrackService } from '../../services/track.service.js';
 import { StorageService } from '../../services/storage.service.js';
 import State from '../../state.js';
-
-const WHY = {
-  frontend: {
-    en: 'Your answers show a strong preference for visual output, creative problem-solving, and building things users interact with directly. Frontend Engineering aligns closely with how you think and what excites you.',
-    ar: 'إجاباتك تكشف تفضيلاً قوياً للمخرجات المرئية والإبداع وبناء ما يتفاعل معه المستخدمون مباشرةً.',
-  },
-  backend: {
-    en: 'Your responses reflect systematic thinking, a love for logic, and satisfaction in building things that work invisibly at scale. Backend Engineering matches your cognitive style.',
-    ar: 'إجاباتك تعكس تفكيراً منظومياً وحبّاً للمنطق والبناء على نطاق واسع.',
-  },
-  data: {
-    en: 'You gravitate toward curiosity, evidence, and patterns. You want to understand why things happen before acting. Data Analysis is where your mindset thrives.',
-    ar: 'أنت تميل نحو الفضول والأدلة والأنماط. تحليل البيانات هو المجال الذي يزدهر فيه عقلك.',
-  },
-  ux: {
-    en: 'Your empathy-driven thinking and visual orientation strongly align with UX Design. You naturally think about users first, which is the foundation of great design.',
-    ar: 'تفكيرك المتمحور حول التعاطف يتوافق بشدة مع تصميم تجربة المستخدم.',
-  },
-  devops: {
-    en: 'You think about reliability, automation, and infrastructure at a system level. DevOps Engineering channels your need to make complex systems work predictably.',
-    ar: 'تفكيرك في الانتظام والأتمتة والبنية التحتية يجعل DevOps المجال المثالي لك.',
-  },
-};
+import { t } from '../../i18n.js';
 
 export function Results() {
-  const result = TestService.getResult();
-  const lang   = document.documentElement.getAttribute('lang') || 'en';
-  const isAr   = lang === 'ar';
+  const result   = TestService.getResult();
 
   if (!result) {
     return `
@@ -40,9 +16,9 @@ export function Results() {
             <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
           </svg>
         </div>
-        <h3>${isAr ? 'لا توجد نتائج بعد' : 'No results yet'}</h3>
-        <p>${isAr ? 'أكمل التقييم أولاً لمعرفة مسارك المهني' : 'Complete the assessment first to discover your career fit'}</p>
-        <a href="#/test" class="btn btn--primary">${isAr ? 'ابدأ التقييم' : 'Start Assessment'}</a>
+        <h3>${t('results.noResult')}</h3>
+        <p>${t('results.noResultSub')}</p>
+        <a href="#/test" class="btn btn--primary">${t('test.title')}</a>
       </div>`;
   }
 
@@ -50,54 +26,36 @@ export function Results() {
   const top3       = result.top3 || [];
   const topTrack   = allTracks.find(tr => tr.id === result.topTrackId) || allTracks[0];
   const confidence = result.confidence || { level: 'high', gap: 30 };
-  const confLabelMap = {
-    high:   isAr ? 'ثقة عالية'   : 'High Confidence',
-    medium: isAr ? 'ثقة متوسطة' : 'Medium Confidence',
-    low:    isAr ? 'ثقة معقولة'  : 'Moderate Confidence',
-  };
+  const dimensions = result.dimensions || {};
+
   const confColorMap = {
     high:   'var(--color-success)',
     medium: 'var(--color-warning)',
     low:    'var(--color-primary)',
   };
-  const confLabel = confLabelMap[confidence.level] || confLabelMap.high;
   const confColor = confColorMap[confidence.level] || confColorMap.high;
 
-  const trackCards = top3.map((item, i) => {
-    const tr    = allTracks.find(t => t.id === item.id);
-    if (!tr) return '';
-    const isTop = i === 0;
-    const name  = isAr ? tr.nameAr : tr.name;
-    const desc  = isAr ? tr.descriptionAr : tr.description;
-    const why   = WHY[tr.id]?.[lang] || WHY[tr.id]?.en || '';
+  // Build dimension insight rows from top 3 scoring dims
+  const dimEntries = Object.entries(dimensions)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
 
-    return `
-      <div class="rc-card rc-card--rank-${i + 1}" data-rank="${i}" style="opacity:0;transform:translateY(24px)">
-        <div class="rc-card__header">
-          <div class="rc-card__rank">${i + 1}</div>
-          <div class="rc-card__icon" style="background:${tr.color}18;color:${tr.color};border-color:${tr.color}30">${tr.icon}</div>
-          <div class="rc-card__meta">
-            <div class="rc-card__name">${name}</div>
-            <div class="rc-card__sub">${tr.level} &middot; ${isAr ? tr.durationAr : tr.duration}</div>
-          </div>
-          ${isTop ? `<span class="rc-badge">${isAr ? 'الأنسب لك' : 'Best Fit'}</span>` : ''}
-        </div>
-        <div class="rc-bar-row">
-          <div class="rc-bar-bg">
-            <div class="rc-bar-fill" data-pct="${item.pct}" style="width:0%;background:${tr.color}"></div>
-          </div>
-          <span class="rc-pct ltr-text" data-target="${item.pct}">0%</span>
-        </div>
-        <p class="rc-desc">${desc}</p>
-        <details class="rc-why">
-          <summary class="rc-why__toggle">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
-            ${isAr ? 'لماذا هذه النتيجة؟' : 'Why this result?'}
-          </summary>
-          <p class="rc-why__body">${why}</p>
-        </details>
-      </div>`;
-  }).join('');
+  const dimRows = dimEntries.map(([key, pct]) => `
+    <div class="rc-reason">
+      <div class="rc-reason__header">
+        <span class="rc-reason__dim">${TestService.getDimensionLabel(key)}</span>
+        <span class="rc-reason__score">${pct}%</span>
+      </div>
+      <div class="rc-reason__bar">
+        <div class="rc-reason__fill" data-pct="${pct}" style="width:0%;background:${topTrack.color}"></div>
+      </div>
+    </div>
+  `).join('');
+
+  const runnerUp = top3[1] ? allTracks.find(tr => tr.id === top3[1].id) : null;
+
+  const strengthText = result.strengthSentence?.[document.documentElement.getAttribute('lang') || 'en']
+    || result.strengthSentence?.en || '';
 
   return `
     <div class="results-screen">
@@ -106,56 +64,111 @@ export function Results() {
       <div class="rc-overlay" id="rc-overlay">
         <div class="rc-overlay__inner">
           <div class="rc-overlay__dots"><span></span><span></span><span></span></div>
-          <p class="rc-overlay__label" id="rc-overlay-label">
-            ${isAr ? 'جاري تحليل ملفك المهني...' : 'Analysing your career profile...'}
-          </p>
+          <p class="rc-overlay__label" id="rc-overlay-label">${t('test.analysing')}</p>
         </div>
       </div>
 
-      <!-- Results (revealed after overlay) -->
+      <!-- Decision Reveal -->
       <div class="rc-results" id="rc-results" style="opacity:0">
 
+        <!-- Hero -->
         <div class="rc-hero">
-          <div class="rc-hero__eyebrow">${isAr ? 'نتائج تقييمك' : 'Your Assessment Results'}</div>
+          <div class="rc-hero__eyebrow">${t('results.eyebrow')}</div>
           <h1 class="rc-hero__title">
-            ${isAr ? 'المسار الأنسب لك:' : 'Your best-fit track is'}
-            <span style="color:${topTrack.color}">&nbsp;${isAr ? topTrack.nameAr : topTrack.name}</span>
+            ${t('results.headline')}
+            <span style="color:${topTrack.color}">&nbsp;${topTrack.name}</span>
           </h1>
-          <p class="rc-hero__sub">
-            ${isAr
-              ? 'تم تحليل إجاباتك عبر 7 أبعاد معرفية لتحديد أقوى توافق مهني'
-              : 'Your answers were analysed across 7 cognitive dimensions to surface your strongest career alignment.'}
-          </p>
+          <p class="rc-hero__sub">${t('results.sub')}</p>
+
           <div class="rc-confidence" style="border-color:${confColor}20;background:${confColor}0d">
             <span class="rc-confidence__dot" style="background:${confColor}"></span>
-            <span class="rc-confidence__label" style="color:${confColor}">${confLabel}</span>
-            <span class="rc-confidence__copy">${TestService.getConfidenceCopy(confidence.level, lang)}</span>
+            <span class="rc-confidence__label" style="color:${confColor}">
+              ${TestService.getConfidenceCopy(confidence.level)}
+            </span>
           </div>
         </div>
 
-        <div class="rc-tracks" id="rc-tracks">
-          ${trackCards}
+        <!-- Primary Track Decision Card -->
+        <div class="rc-decision-card" style="border-color:${topTrack.color}30;background:${topTrack.color}05">
+          <div class="rc-decision-card__header">
+            <div class="rc-decision-card__icon" style="background:${topTrack.color}18;color:${topTrack.color}">
+              ${topTrack.icon}
+            </div>
+            <div class="rc-decision-card__meta">
+              <div class="rc-decision-card__name">${topTrack.name}</div>
+              <div class="rc-decision-card__sub">${topTrack.level} &middot; ${topTrack.duration}</div>
+            </div>
+            <span class="rc-badge" style="background:${topTrack.color}18;color:${topTrack.color};border-color:${topTrack.color}30">
+              ${top3[0]?.pct || 0}%
+            </span>
+          </div>
+
+          <!-- Why This Track — dimension reasons -->
+          <div class="rc-why-section">
+            <p class="rc-why-section__title">${t('results.whyThis')}</p>
+            <div class="rc-reasons">${dimRows}</div>
+            ${strengthText ? `<p class="rc-strength">${strengthText}</p>` : ''}
+          </div>
         </div>
 
-        <!-- GATEWAY ACTIONS — 3 clear next steps, no dead end -->
+        <!-- Alternative Track -->
+        ${runnerUp ? `
+          <div class="rc-alt-track">
+            <div class="rc-alt-track__label">${t('results.altTrack')}</div>
+            <div class="rc-alt-track__row">
+              <div class="rc-alt-track__icon" style="background:${runnerUp.color}18;color:${runnerUp.color}">
+                ${runnerUp.icon}
+              </div>
+              <div class="rc-alt-track__info">
+                <strong>${runnerUp.name}</strong>
+                <span class="badge badge--neutral ltr-text">${top3[1]?.pct || 0}%</span>
+              </div>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- All Tracks list (collapsed) -->
+        <div class="rc-tracks" id="rc-tracks">
+          ${top3.slice(1).map((item, i) => {
+            const tr = allTracks.find(t => t.id === item.id);
+            if (!tr) return '';
+            return `
+              <div class="rc-card rc-card--rank-${i + 2}" style="opacity:0;transform:translateY(16px)">
+                <div class="rc-card__header">
+                  <div class="rc-card__rank">${i + 2}</div>
+                  <div class="rc-card__icon" style="background:${tr.color}18;color:${tr.color};border-color:${tr.color}30">${tr.icon}</div>
+                  <div class="rc-card__meta">
+                    <div class="rc-card__name">${tr.name}</div>
+                    <div class="rc-card__sub">${tr.level} &middot; ${tr.duration}</div>
+                  </div>
+                </div>
+                <div class="rc-bar-row">
+                  <div class="rc-bar-bg">
+                    <div class="rc-bar-fill" data-pct="${item.pct}" style="width:0%;background:${tr.color}"></div>
+                  </div>
+                  <span class="rc-pct ltr-text" data-target="${item.pct}">0%</span>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+
+        <!-- Gateway Actions -->
         <div class="rc-gateway">
           <div class="rc-gateway__primary">
             <button class="btn btn--primary btn--lg" id="rc-start-btn" data-track-id="${topTrack.id}">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              ${isAr ? 'ابدأ مسارك' : 'Start Your Track'}
+              ${t('results.startTrack')}
             </button>
-            <p class="rc-gateway__hint">
-              ${isAr ? 'سينقلك إلى لوحة التحكم مع خارطة طريقك المخصصة' : 'Takes you to your dashboard with a personalised roadmap'}
-            </p>
+            <p class="rc-gateway__hint">${t('results.startHint')}</p>
           </div>
           <div class="rc-gateway__secondary">
             <button class="btn btn--outline" id="rc-summary-btn" data-track-id="${topTrack.id}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-              ${isAr ? 'عرض التحليل الكامل' : 'View Full Analysis'}
+              ${t('results.viewFull')}
             </button>
             <button class="btn btn--ghost btn--sm" id="rc-retake-btn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
-              ${isAr ? 'إعادة التقييم' : 'Retake Assessment'}
+              ${t('results.retake')}
             </button>
           </div>
         </div>
@@ -165,16 +178,15 @@ export function Results() {
 }
 
 export function ResultsEvents() {
-  const lang = document.documentElement.getAttribute('lang') || 'en';
-  const isAr = lang === 'ar';
-
   const overlay    = document.getElementById('rc-overlay');
   const results    = document.getElementById('rc-results');
   const overlayLbl = document.getElementById('rc-overlay-label');
 
-  const phases = isAr
-    ? ['جاري تحليل ملفك المهني...', 'نقيس التوافق عبر 7 أبعاد...', 'نُرتّب نتائجك...']
-    : ['Analysing your career profile...', 'Measuring fit across 7 dimensions...', 'Ranking your results...'];
+  const phases = [
+    t('test.analysing'),
+    t('results.measuringFit'),
+    t('results.rankingResults'),
+  ];
 
   let phaseIdx = 0;
   const phaseInterval = setInterval(() => {
@@ -193,10 +205,21 @@ export function ResultsEvents() {
       results.style.transition = 'opacity 0.4s ease';
       results.style.opacity    = '1';
     }
-    // Staggered card reveal + bar animation
+
+    // Animate reason bars
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.rc-reason__fill').forEach(el => {
+          el.style.transition = 'width 0.7s cubic-bezier(0.4,0,0.2,1)';
+          el.style.width = el.dataset.pct + '%';
+        });
+      });
+    });
+
+    // Animate secondary track cards
     document.querySelectorAll('.rc-card').forEach((card, i) => {
       setTimeout(() => {
-        card.style.transition = 'opacity 0.45s ease, transform 0.45s ease';
+        card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
         card.style.opacity    = '1';
         card.style.transform  = 'translateY(0)';
         const fill   = card.querySelector('.rc-bar-fill');
@@ -204,27 +227,28 @@ export function ResultsEvents() {
         const target = parseInt(fill?.dataset.pct || '0');
         setTimeout(() => {
           if (fill)  fill.style.width = target + '%';
-          if (pctEl) _countUp(pctEl, 0, target, 800);
+          if (pctEl) _countUp(pctEl, 0, target, 700);
         }, 100);
-      }, i * 220);
+      }, i * 200);
     });
   }, 2200);
 
-  // PRIMARY: Start Track → enroll + go to Dashboard
+  // Start Track → enroll + Dashboard
   document.getElementById('rc-start-btn')?.addEventListener('click', (e) => {
     const trackId = e.currentTarget.dataset.trackId;
     if (trackId) TrackService.enrollInTrack(trackId);
-    Router.navigate('/dashboard');
+    const user = State.getState('user');
+    Router.navigate(user ? '/dashboard' : '/register');
   });
 
-  // SECONDARY: View Full Analysis → enroll + go to Decision Summary
+  // View Full Analysis → Decision Summary
   document.getElementById('rc-summary-btn')?.addEventListener('click', (e) => {
     const trackId = e.currentTarget.dataset.trackId;
     if (trackId) TrackService.enrollInTrack(trackId);
     Router.navigate('/decision-summary');
   });
 
-  // TERTIARY: Retake → clear state + restart test
+  // Retake
   document.getElementById('rc-retake-btn')?.addEventListener('click', () => {
     State.setState('testResult', null);
     StorageService.set('testResult', null);
