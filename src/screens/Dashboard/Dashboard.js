@@ -42,9 +42,9 @@ function _nba(user, track, prog, enrollments, result, isAr) {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
     label: isAr ? 'سجّل في أول دورة على مسارك' : 'Enroll in your first course',
     sub:   isAr ? 'الدورات المختارة لمسارك متاحة' : 'Hand-picked courses for your track are ready',
-    href:  '#/roadmap',
-    cta:   isAr ? 'فتح الخارطة' : 'Open Roadmap',
-    color: 'var(--color-warning)',
+    href:  '#/courses',
+    cta:   isAr ? 'استعرض الدورات' : 'Browse Courses',
+    color: '#f59e0b',
   };
   return {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
@@ -66,7 +66,7 @@ function _insight(result, track, isAr) {
   const copies = isAr ? [
     `تُظهر نتائجك توافقاً بنسبة ${pct}% مع مسار ${track.nameAr || track.name}.`,
     `درجة الثقة ${conf === 'high' ? 'عالية' : conf === 'medium' ? 'متوسطة' : 'معقولة'} بفارق ${gap} نقطة عن المسار التالي.`,
-    `نمط إجاباتك: ${result.strengthSentence?.ar || ''}`,
+    `إجاباتك تكشف نمطاً واضحاً — ${result.strengthSentence?.ar || ''}`,
   ] : [
     `Your results show a ${pct}% alignment with ${track.name} — a strong signal you are on the right path.`,
     `Confidence is ${conf} with a ${gap}-point gap over the next track.`,
@@ -85,6 +85,10 @@ export function Dashboard() {
   const enrollments = CourseService.getEnrollments();
   const bookings    = MentorService.getBookings();
   const result      = TestService.getResult();
+  const allTracks   = TrackService.getAllTracks();
+
+  // B1 FIX: Demo Mode button only visible when no real testResult exists
+  const showDemoBtn = !result;
 
   const nba     = _nba(user, track, prog, enrollments, result, isAr);
   const insight = _insight(result, track, isAr);
@@ -93,9 +97,6 @@ export function Dashboard() {
   const greeting = isAr
     ? (hour < 12 ? 'صباح الخير' : 'مساء الخير')
     : (hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening');
-
-  // B1: Demo Mode button only shows when NO real testResult exists
-  const showDemoBtn = !result;
 
   return `
     <div class="dashboard fade-in">
@@ -110,13 +111,12 @@ export function Dashboard() {
           </p>` : ''}
         </div>
         ${showDemoBtn ? `
-          <button class="btn btn--outline btn--sm" id="demo-mode-btn">
+          <button class="btn btn--outline btn--sm" id="demo-mode-btn" style="flex-shrink:0;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             ${isAr ? 'وضع العرض' : 'Demo Mode'}
           </button>` : ''}
       </div>
 
-      <!-- Next Step Hero Card -->
       <div class="db-nextstep slide-up" style="animation-delay:0.04s;border-left:4px solid ${nba.color};background:${nba.color}06">
         <div class="db-nextstep__badge" style="background:${nba.color}14;color:${nba.color}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -129,10 +129,9 @@ export function Dashboard() {
         <a href="${nba.href}" class="btn btn--lg" style="background:${nba.color};color:#fff;border-color:${nba.color};flex-shrink:0">${nba.cta}</a>
       </div>
 
-      <!-- Stats -->
       <div class="dashboard-stats">
         <div class="stat-card slide-up" style="animation-delay:0.1s">
-          <div class="stat-card__icon" style="background:var(--color-primary-subtle);color:var(--color-primary)">
+          <div class="stat-card__icon" style="background:var(--color-primary-subtle,#6366f122);color:var(--color-primary)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           </div>
           <div class="stat-card__body">
@@ -141,7 +140,7 @@ export function Dashboard() {
           </div>
         </div>
         <div class="stat-card slide-up" style="animation-delay:0.13s">
-          <div class="stat-card__icon" style="background:var(--color-success-subtle,#10b98118);color:var(--color-success,#10b981)">
+          <div class="stat-card__icon" style="background:var(--color-success-subtle,#10b98122);color:var(--color-success,#10b981)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
           <div class="stat-card__body">
@@ -150,7 +149,7 @@ export function Dashboard() {
           </div>
         </div>
         <div class="stat-card slide-up" style="animation-delay:0.16s">
-          <div class="stat-card__icon" style="background:var(--color-warning-subtle,#f59e0b18);color:var(--color-warning,#f59e0b)">
+          <div class="stat-card__icon" style="background:var(--color-warning-subtle,#f59e0b22);color:var(--color-warning,#f59e0b)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
           </div>
           <div class="stat-card__body">
@@ -159,7 +158,7 @@ export function Dashboard() {
           </div>
         </div>
         <div class="stat-card slide-up" style="animation-delay:0.19s">
-          <div class="stat-card__icon" style="background:var(--color-accent-subtle,#ec489918);color:var(--color-accent,#ec4899)">
+          <div class="stat-card__icon" style="background:var(--color-pink-subtle,#ec489922);color:var(--color-pink,#ec4899)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
           </div>
           <div class="stat-card__body">
@@ -169,7 +168,6 @@ export function Dashboard() {
         </div>
       </div>
 
-      <!-- Smart Insight -->
       ${insight ? `
         <div class="db-insight slide-up" style="animation-delay:0.22s">
           <div class="db-insight__icon">
@@ -182,7 +180,6 @@ export function Dashboard() {
           </a>
         </div>` : ''}
 
-      <!-- Active Track Card -->
       ${track ? `
         <div class="card dashboard-track-card slide-up" style="animation-delay:0.26s">
           <div class="dashboard-track-card__header">
@@ -218,13 +215,12 @@ export function Dashboard() {
         </div>`
       }
 
-      <!-- Quick Nav — roadmap only, guidance-focused -->
       <div class="db-quicknav slide-up" style="animation-delay:0.3s">
         ${[
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>`, label: isAr ? 'خارطة الطريق' : 'Roadmap',        href: '#/roadmap',         color: 'var(--color-primary)' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,                label: isAr ? 'نتائجي' : 'My Results',      href: '#/results',         color: 'var(--color-primary)' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`, label: isAr ? 'ملخص القرار' : 'Decision Summary', href: '#/decision-summary', color: 'var(--color-primary)' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`, label: isAr ? 'الإعدادات' : 'Settings',         href: '#/settings',        color: 'var(--color-text-muted)' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>`, label: isAr ? 'خارطة الطريق' : 'Roadmap',    href: '#/roadmap',    color: 'var(--color-primary)' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, label: isAr ? 'نتائج التقييم' : 'My Results',   href: '#/results',   color: 'var(--color-success,#10b981)' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`, label: isAr ? 'ملخص القرار' : 'Decision',     href: '#/decision-summary', color: 'var(--color-primary)' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,  label: isAr ? 'الإعدادات' : 'Settings',     href: '#/settings',   color: 'var(--color-text-muted)' },
         ].map(item => `
           <a href="${item.href}" class="db-quicknav__item">
             <span class="db-quicknav__icon" style="color:${item.color};background:${item.color}14">${item.icon}</span>
@@ -245,7 +241,6 @@ export function DashboardEvents() {
     });
   });
 
-  // B1: only rendered when !result, so this handler only fires in demo context
   document.getElementById('demo-mode-btn')?.addEventListener('click', () => {
     const isAr = document.documentElement.getAttribute('lang') === 'ar';
 
