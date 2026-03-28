@@ -1,58 +1,69 @@
 import { t } from '../../i18n.js';
-import { TestService } from '../../services/test.service.js';
 import { Router } from '../../router.js';
+import { TestService } from '../../services/test.service.js';
 import State from '../../state.js';
 
+let _session = null;
+let _currentIdx = 0;
+
 export function Test() {
-  return `
-    <div class="test-screen">
-      <div class="test-screen__header">
-        <h2>${t('test.title')}</h2>
-        <p>${t('test.subtitle')}</p>
-      </div>
-      <div class="test-screen__body" id="test-body"></div>
-    </div>
-  `;
+  _session = TestService.startTest();
+  _currentIdx = 0;
+  return _renderQuestion();
 }
 
-export function TestEvents() {
-  const session = TestService.startTest();
-  State.setState('testSession', session);
-  let currentIndex = 0;
+function _renderQuestion() {
+  const q = _session.questions[_currentIdx];
+  const total = _session.questions.length;
+  const progress = Math.round((_currentIdx / total) * 100);
 
-  function renderQuestion(index) {
-    const q = session.questions[index];
-    const body = document.getElementById('test-body');
-    if (!body || !q) return;
-    body.innerHTML = `
-      <div class="test-question">
-        <span class="test-question__count">${index + 1} / ${session.questions.length}</span>
-        <h3 class="test-question__text">${q.text}</h3>
+  return `
+    <div class="test-screen">
+      <div class="test-screen__header" style="max-width:640px;margin:0 auto var(--space-6)">
+        <h1>${t('test.title')}</h1>
+        <p>${t('test.subtitle')}</p>
+        <div style="margin-top:var(--space-4);height:4px;background:var(--color-surface-2);border-radius:var(--radius-full)">
+          <div style="height:100%;width:${progress}%;background:var(--color-primary);border-radius:var(--radius-full);transition:width 0.3s"></div>
+        </div>
+      </div>
+      <div class="test-question" id="test-question-wrap">
+        <div class="test-question__count">${t('test.title')} &mdash; ${_currentIdx + 1} / ${total}</div>
+        <div class="test-question__text">${q.text}</div>
         <div class="test-question__options">
           ${q.options.map((opt, i) => `
-            <button class="test-option" data-index="${i}" data-qid="${q.id}">
+            <button class="test-option" data-q-id="${q.id}" data-opt-idx="${i}">
               ${opt.label}
             </button>
           `).join('')}
         </div>
       </div>
-    `;
-    body.querySelectorAll('.test-option').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const qId = btn.dataset.qid;
-        const optIndex = parseInt(btn.dataset.index);
-        TestService.answerQuestion(session, qId, optIndex);
-        if (currentIndex < session.questions.length - 1) {
-          currentIndex++;
-          renderQuestion(currentIndex);
-        } else {
-          const result = TestService.submitTest(session);
-          State.setState('testResult', result);
-          Router.navigate('/results');
-        }
-      });
-    });
-  }
+    </div>
+  `;
+}
 
-  renderQuestion(currentIndex);
+export function TestEvents() {
+  document.querySelectorAll('.test-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const qId   = btn.dataset.qId;
+      const optIdx = parseInt(btn.dataset.optIdx, 10);
+
+      _session = TestService.answerQuestion(_session, qId, optIdx);
+      _currentIdx++;
+
+      if (_currentIdx >= _session.questions.length) {
+        const result = TestService.submitTest(_session);
+        Router.navigate('/results');
+        return;
+      }
+
+      // Re-render question in place with fade
+      const wrap = document.getElementById('test-question-wrap');
+      if (!wrap) return;
+      const outlet = document.getElementById('app-outlet');
+      if (outlet) {
+        outlet.innerHTML = _renderQuestion();
+        TestEvents();
+      }
+    });
+  });
 }

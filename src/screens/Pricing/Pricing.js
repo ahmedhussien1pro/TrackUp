@@ -1,21 +1,23 @@
 import { t } from '../../i18n.js';
-import { PaymentService } from '../../services/payment.service.js';
 import { Router } from '../../router.js';
+import { PaymentService } from '../../services/payment.service.js';
 import State from '../../state.js';
 
 export function Pricing() {
   const plans = PaymentService.getPlans();
+  const activePlan = PaymentService.getActivePlan();
+
   return `
-    <div class="pricing-screen">
-      <div class="pricing-screen__header">
-        <h2>${t('pricing.title')}</h2>
+    <div class="pricing-screen" style="max-width:960px;margin:0 auto;padding:var(--space-8) var(--space-4)">
+      <div class="pricing-screen__header" style="text-align:center;margin-bottom:var(--space-10)">
+        <h1>${t('pricing.title')}</h1>
         <p>${t('pricing.subtitle')}</p>
       </div>
       <div class="pricing-screen__plans">
         ${plans.map(plan => `
           <div class="pricing-card ${plan.recommended ? 'pricing-card--featured' : ''}">
-            ${plan.recommended ? `<span class="pricing-card__badge">${t('pricing.recommended')}</span>` : ''}
-            <h3 class="pricing-card__name">${plan.name}</h3>
+            ${plan.recommended ? `<div class="pricing-card__badge">${t('pricing.recommended')}</div>` : ''}
+            <div class="pricing-card__name">${plan.name}</div>
             <div class="pricing-card__price">
               <span class="pricing-card__amount">${plan.price === 0 ? t('pricing.free') : '$' + plan.price}</span>
               ${plan.price > 0 ? `<span class="pricing-card__period">/ ${t('pricing.month')}</span>` : ''}
@@ -24,9 +26,11 @@ export function Pricing() {
               ${plan.features.map(f => `<li>${f}</li>`).join('')}
             </ul>
             <button
-              class="btn ${plan.recommended ? 'btn--primary' : 'btn--outline'} btn--full"
-              onclick="selectPlan('${plan.id}')">
-              ${t('pricing.select')}
+              class="btn ${plan.recommended ? 'btn--primary' : 'btn--outline'} btn--full pricing-select-btn"
+              data-plan-id="${plan.id}"
+              ${activePlan?.id === plan.id ? 'disabled' : ''}
+            >
+              ${activePlan?.id === plan.id ? 'Current Plan' : t('pricing.select')}
             </button>
           </div>
         `).join('')}
@@ -36,16 +40,16 @@ export function Pricing() {
 }
 
 export function PricingEvents() {
-  window.selectPlan = (planId) => {
-    const plans = PaymentService.getPlans();
-    const plan = plans.find(p => p.id === planId);
-    if (!plan) return;
-    if (plan.price === 0) {
-      State.setState('activePlan', plan);
-      Router.navigate('/dashboard');
-    } else {
-      State.setState('activePlan', plan);
+  document.querySelectorAll('.pricing-select-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const planId = btn.dataset.planId;
+      if (planId === 'free') {
+        PaymentService.processPayment(PaymentService.getPlanById('free'));
+        Router.navigate('/register');
+        return;
+      }
+      State.setState('selectedPlanId', planId);
       Router.navigate('/payment');
-    }
-  };
+    });
+  });
 }
