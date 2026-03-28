@@ -39,7 +39,6 @@ export function Results() {
   };
   const confColor = confColorMap[confidence.level] || confColorMap.high;
 
-  // Top 3 scoring dimensions
   const dimEntries = Object.entries(dimensions)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
@@ -56,11 +55,15 @@ export function Results() {
     </div>
   `).join('');
 
-  // ── Mandatory reasoning bridge: connects dimension scores → track decision ──
   const topDim      = dimEntries[0];
   const secondDim   = dimEntries[1];
   const topDimLabel = topDim ? TestService.getDimensionLabel(topDim[0], lang) : '';
   const topDimDelta = topDim && secondDim ? topDim[1] - secondDim[1] : 0;
+
+  // ── Narrative language: connects from test analysis → results discovery ──
+  const narrativeBridge = isAr
+    ? `بناءً على إجاباتك، حللنا أسلوب تفكيرك عبر 6 أبعاد معرفية. إليك ما وجدناه:`
+    : `Based on your answers, we analysed your thinking style across 6 cognitive dimensions. Here is what we found:`;
 
   const whySentence = topDim
     ? (isAr
@@ -73,7 +76,29 @@ export function Results() {
   return `
     <div class="results-screen">
 
-      <!-- Analysing overlay -->
+      <!-- ── DECISION MOMENT OVERLAY — the memorable reveal ── -->
+      <div class="rc-decision-moment" id="rc-decision-moment">
+        <div class="rc-dm__inner">
+          <div class="rc-dm__icon" style="background:${topTrack.color}18;color:${topTrack.color}">
+            ${topTrack.icon}
+          </div>
+          <p class="rc-dm__eyebrow">${isAr ? 'تم اتخاذ القرار' : 'Decision made'}</p>
+          <h2 class="rc-dm__headline">
+            ${isAr ? 'نوصي بـ' : 'We recommend:'}
+            <span class="rc-dm__track" style="color:${topTrack.color}">${trackName}</span>
+          </h2>
+          <div class="rc-dm__score">
+            <span class="rc-dm__score-num ltr-text" id="rc-dm-score">0%</span>
+            <span class="rc-dm__score-label">${isAr ? 'توافق' : 'fit'}</span>
+          </div>
+          <button class="btn btn--primary btn--lg rc-dm__cta" id="rc-dm-cta">
+            ${isAr ? 'عرض التحليل الكامل' : 'See Full Analysis'}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── ANALYSIS OVERLAY (shown first while decision moment prepares) ── -->
       <div class="rc-overlay" id="rc-overlay">
         <div class="rc-overlay__inner">
           <div class="rc-overlay__dots"><span></span><span></span><span></span></div>
@@ -81,8 +106,8 @@ export function Results() {
         </div>
       </div>
 
-      <!-- Decision Reveal -->
-      <div class="rc-results" id="rc-results" style="opacity:0">
+      <!-- ── FULL RESULTS (revealed after decision moment) ── -->
+      <div class="rc-results" id="rc-results" style="opacity:0;pointer-events:none">
 
         <!-- Hero -->
         <div class="rc-hero">
@@ -91,7 +116,7 @@ export function Results() {
             ${t('results.headline')}
             <span style="color:${topTrack.color}">&nbsp;${trackName}</span>
           </h1>
-          <p class="rc-hero__sub">${t('results.sub')}</p>
+          <p class="rc-hero__sub">${narrativeBridge}</p>
 
           <div class="rc-confidence" style="border-color:${confColor}20;background:${confColor}0d">
             <span class="rc-confidence__dot" style="background:${confColor}"></span>
@@ -116,7 +141,6 @@ export function Results() {
             </span>
           </div>
 
-          <!-- Why This Track — dimension bars + mandatory reasoning bridge -->
           <div class="rc-why-section">
             <p class="rc-why-section__title">${t('results.whyThis')}</p>
             <div class="rc-reasons">${dimRows}</div>
@@ -140,7 +164,6 @@ export function Results() {
           </div>
         ` : ''}
 
-        <!-- Runner-up tracks -->
         <div class="rc-tracks" id="rc-tracks">
           ${top3.slice(1).map((item, i) => {
             const tr = allTracks.find(t => t.id === item.id);
@@ -165,14 +188,14 @@ export function Results() {
           }).join('')}
         </div>
 
-        <!-- Gateway Actions — Decision Summary is the PRIMARY CTA -->
+        <!-- Gateway Actions -->
         <div class="rc-gateway">
           <div class="rc-gateway__primary">
             <button class="btn btn--primary btn--lg" id="rc-summary-btn" data-track-id="${topTrack.id}">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
               ${t('results.viewFull')}
             </button>
-            <p class="rc-gateway__hint">${isAr ? 'اعرف بالضبط لماذا هذا المسار مناسب لك' : 'Understand exactly why this track fits you'}</p>
+            <p class="rc-gateway__hint">${isAr ? 'افهم بالضبط لماذا هذا القرار مناسب لك' : 'Understand exactly why this is the right decision for you'}</p>
           </div>
           <div class="rc-gateway__secondary">
             <button class="btn btn--outline" id="rc-start-btn" data-track-id="${topTrack.id}">
@@ -194,6 +217,9 @@ export function ResultsEvents() {
   const overlay    = document.getElementById('rc-overlay');
   const results    = document.getElementById('rc-results');
   const overlayLbl = document.getElementById('rc-overlay-label');
+  const dm         = document.getElementById('rc-decision-moment');
+  const dmScore    = document.getElementById('rc-dm-score');
+  const dmCta      = document.getElementById('rc-dm-cta');
 
   const phases = [
     t('test.analysing'),
@@ -201,57 +227,82 @@ export function ResultsEvents() {
     t('results.rankingResults'),
   ];
 
+  // Phase 1: analysis dots (1.4s)
   let phaseIdx = 0;
   const phaseInterval = setInterval(() => {
     phaseIdx = (phaseIdx + 1) % phases.length;
     if (overlayLbl) overlayLbl.textContent = phases[phaseIdx];
-  }, 700);
+  }, 460);
 
   setTimeout(() => {
     clearInterval(phaseInterval);
+
+    // Phase 2: hide analysis overlay, show Decision Moment
     if (overlay) {
-      overlay.style.transition = 'opacity 0.5s ease';
+      overlay.style.transition = 'opacity 0.35s ease';
       overlay.style.opacity    = '0';
-      setTimeout(() => { overlay.style.display = 'none'; }, 500);
+      setTimeout(() => { overlay.style.display = 'none'; }, 350);
+    }
+
+    if (dm) {
+      dm.style.display = 'flex';
+      requestAnimationFrame(() => {
+        dm.classList.add('rc-dm--visible');
+      });
+      // count up fit score inside the decision moment
+      if (dmScore) {
+        const result = (() => { try { return JSON.parse(localStorage.getItem('testResult')); } catch { return null; } })();
+        const target = result?.top3?.[0]?.pct || 0;
+        _countUp(dmScore, 0, target, 900, '%');
+      }
+    }
+  }, 1400);
+
+  // Phase 3: CTA inside Decision Moment → scroll down to full results
+  dmCta?.addEventListener('click', () => {
+    if (dm) {
+      dm.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      dm.style.opacity    = '0';
+      dm.style.transform  = 'translateY(-24px)';
+      setTimeout(() => { dm.style.display = 'none'; }, 380);
     }
     if (results) {
       results.style.transition = 'opacity 0.4s ease';
       results.style.opacity    = '1';
+      results.style.pointerEvents = 'auto';
     }
-
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       requestAnimationFrame(() => {
-        document.querySelectorAll('.rc-reason__fill').forEach(el => {
-          el.style.transition = 'width 0.7s cubic-bezier(0.4,0,0.2,1)';
-          el.style.width = el.dataset.pct + '%';
+        requestAnimationFrame(() => {
+          document.querySelectorAll('.rc-reason__fill').forEach(el => {
+            el.style.transition = 'width 0.7s cubic-bezier(0.4,0,0.2,1)';
+            el.style.width = el.dataset.pct + '%';
+          });
+          document.querySelectorAll('.rc-card').forEach((card, i) => {
+            setTimeout(() => {
+              card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+              card.style.opacity    = '1';
+              card.style.transform  = 'translateY(0)';
+              const fill   = card.querySelector('.rc-bar-fill');
+              const pctEl  = card.querySelector('.rc-pct');
+              const target = parseInt(fill?.dataset.pct || '0');
+              setTimeout(() => {
+                if (fill)  fill.style.width = target + '%';
+                if (pctEl) _countUp(pctEl, 0, target, 700, '%');
+              }, 100);
+            }, i * 200);
+          });
         });
       });
-    });
+    }, 100);
+  });
 
-    document.querySelectorAll('.rc-card').forEach((card, i) => {
-      setTimeout(() => {
-        card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        card.style.opacity    = '1';
-        card.style.transform  = 'translateY(0)';
-        const fill   = card.querySelector('.rc-bar-fill');
-        const pctEl  = card.querySelector('.rc-pct');
-        const target = parseInt(fill?.dataset.pct || '0');
-        setTimeout(() => {
-          if (fill)  fill.style.width = target + '%';
-          if (pctEl) _countUp(pctEl, 0, target, 700);
-        }, 100);
-      }, i * 200);
-    });
-  }, 2200);
-
-  // PRIMARY: View Full Profile → Decision Summary (understand before committing)
   document.getElementById('rc-summary-btn')?.addEventListener('click', (e) => {
     const trackId = e.currentTarget.dataset.trackId;
     if (trackId) TrackService.enrollInTrack(trackId);
     Router.navigate('/decision-summary');
   });
 
-  // SECONDARY: Skip summary → go straight to Dashboard
   document.getElementById('rc-start-btn')?.addEventListener('click', (e) => {
     const trackId = e.currentTarget.dataset.trackId;
     if (trackId) TrackService.enrollInTrack(trackId);
@@ -266,13 +317,13 @@ export function ResultsEvents() {
   });
 }
 
-function _countUp(el, from, to, duration) {
+function _countUp(el, from, to, duration, suffix = '') {
   const start = performance.now();
   const range = to - from;
   function step(now) {
     const progress = Math.min((now - start) / duration, 1);
     const ease     = 1 - Math.pow(1 - progress, 3);
-    el.textContent = Math.round(from + range * ease) + '%';
+    el.textContent = Math.round(from + range * ease) + suffix;
     if (progress < 1) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);

@@ -8,7 +8,6 @@ import { TestService } from '../../services/test.service.js';
 import { StorageService } from '../../services/storage.service.js';
 import { Router } from '../../router.js';
 
-// ── Next Best Action ─────────────────────────────────────────────────
 function _nba(user, track, prog, enrollments, result, isAr) {
   if (!result) return {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`,
@@ -26,6 +25,20 @@ function _nba(user, track, prog, enrollments, result, isAr) {
     cta:   isAr ? 'عرض النتائج' : 'View Results',
     color: 'var(--color-primary)',
   };
+  // ── First step on roadmap not started yet → highest priority action
+  const firstIncomplete = prog?.steps?.find(s => !s.completed);
+  if (firstIncomplete) return {
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    label: isAr
+      ? `خطوتك التالية: ${firstIncomplete.titleAr || firstIncomplete.title}`
+      : `Your next step: ${firstIncomplete.title}`,
+    sub: isAr
+      ? `الخطوة ${(prog?.steps?.indexOf(firstIncomplete) || 0) + 1} في مسار ${track.nameAr || track.name}`
+      : `Step ${(prog?.steps?.indexOf(firstIncomplete) || 0) + 1} in your ${track.name} roadmap`,
+    href:  '#/roadmap',
+    cta:   isAr ? 'ابدأ الآن' : 'Start Now',
+    color: track?.color || 'var(--color-primary)',
+  };
   if (enrollments.length === 0) return {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
     label: isAr ? 'سجّل في أول دورة على مسارك' : 'Enroll in your first course',
@@ -34,18 +47,10 @@ function _nba(user, track, prog, enrollments, result, isAr) {
     cta:   isAr ? 'استعرض الدورات' : 'Browse Courses',
     color: '#f59e0b',
   };
-  if (MentorService.getBookings().length === 0) return {
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>`,
-    label: isAr ? 'احجز جلسة مع مرشد متخصص' : 'Book a session with an expert mentor',
-    sub:   isAr ? 'مرشدون متاحون لمسارك' : 'Track-matched mentors are available',
-    href:  '#/mentorship',
-    cta:   isAr ? 'استعرض المرشدين' : 'Browse Mentors',
-    color: '#ec4899',
-  };
   return {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
     label: isAr ? 'تابع تقدمك في خارطة الطريق' : 'Continue your roadmap progress',
-    sub:   isAr
+    sub: isAr
       ? `أكملت ${prog?.percent || 0}% من مسارك`
       : `You are ${prog?.percent || 0}% through your track`,
     href:  '#/roadmap',
@@ -54,77 +59,21 @@ function _nba(user, track, prog, enrollments, result, isAr) {
   };
 }
 
-// ── Smart Insight ─────────────────────────────────────────────────────
 function _insight(result, track, isAr) {
   if (!result || !track) return null;
   const pct  = result.top3?.[0]?.pct || 0;
   const conf = result.confidence?.level || 'high';
   const gap  = result.confidence?.gap  || 0;
-
   const copies = isAr ? [
     `تُظهر نتائجك توافقاً بنسبة ${pct}% مع مسار ${track.nameAr || track.name}.`,
-    `درجة الثقة في توصيتك ${conf === 'high' ? 'عالية' : conf === 'medium' ? 'متوسطة' : 'معقولة'} بفارق ${gap} نقطة عن المسار التالي.`,
+    `درجة الثقة ${conf === 'high' ? 'عالية' : conf === 'medium' ? 'متوسطة' : 'معقولة'} بفارق ${gap} نقطة عن المسار التالي.`,
     `إجاباتك تكشف نمطاً واضحاً — ${result.strengthSentence?.ar || ''}`,
   ] : [
     `Your results show a ${pct}% alignment with ${track.name} — a strong signal you are on the right path.`,
-    `Confidence in this recommendation is ${conf} with a ${gap}-point gap over the next track.`,
+    `Confidence is ${conf} with a ${gap}-point gap over the next track.`,
     `Your answer pattern: ${result.strengthSentence?.en || ''}`,
   ];
-
   return copies[Math.floor(Date.now() / 3600000) % copies.length];
-}
-
-// ── First-Run Banner ─────────────────────────────────────────────────
-function _firstRunBanner(track, isAr) {
-  const shown = StorageService.get('first_run_dismissed');
-  if (shown || !track) return '';
-  return `
-    <div class="db-first-run" id="db-first-run">
-      <div class="db-first-run__icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
-        </svg>
-      </div>
-      <div class="db-first-run__body">
-        <strong>${isAr ? 'مرحباً بك في مسارك' : 'Welcome to your track'}</strong>
-        <span>${isAr
-          ? `تم تخصيص لوحة تحكمك لمسار ${track.nameAr || track.name}. ابدأ بخارطة الطريق أو سجّل في دورة.`
-          : `Your dashboard is set up for ${track.name}. Start with your roadmap or enroll in a course.`
-        }</span>
-      </div>
-      <div class="db-first-run__actions">
-        <a href="#/roadmap" class="btn btn--primary btn--sm">${isAr ? 'فتح الخارطة' : 'Open Roadmap'}</a>
-        <button class="btn btn--ghost btn--sm" id="db-first-run-dismiss">${isAr ? 'إغلاق' : 'Dismiss'}</button>
-      </div>
-    </div>`;
-}
-
-// ── Explore Tracks — only shown when no active track ─────────────────
-function _exploreTracks(allTracks, track, isAr) {
-  if (track) return ''; // hide when user already has an active track — reduces noise
-  return `
-    <div class="dashboard-section slide-up" style="animation-delay:0.34s">
-      <div class="section-header">
-        <h2 class="section-header__title">${isAr ? 'استكشف المسارات' : 'Explore Tracks'}</h2>
-        <a href="#/career" class="section-header__link">${isAr ? 'عرض الكل' : 'View all'}</a>
-      </div>
-      <div class="tracks-grid">
-        ${allTracks.map((tr, i) => `
-          <div class="track-card slide-up" style="animation-delay:${0.38 + i * 0.05}s">
-            <div class="track-card__top">
-              <div class="track-card__icon" style="background:${tr.color}22;color:${tr.color}">${tr.icon}</div>
-            </div>
-            <div class="track-card__name">${isAr ? (tr.nameAr || tr.name) : tr.name}</div>
-            <div class="track-card__desc">${isAr ? (tr.descriptionAr || tr.description) : tr.description}</div>
-            <div class="track-card__footer">
-              <span class="badge">${tr.level}</span>
-              <span class="badge ltr-text">${isAr ? (tr.durationAr || tr.duration) : tr.duration}</span>
-            </div>
-            <a href="#/career" class="track-card__cta">${isAr ? 'تفاصيل' : 'Details'}</a>
-          </div>`).join('')}
-      </div>
-    </div>`;
 }
 
 export function Dashboard() {
@@ -147,46 +96,41 @@ export function Dashboard() {
     ? (hour < 12 ? 'صباح الخير' : 'مساء الخير')
     : (hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening');
 
-  const motiveLine = (() => {
-    if (!track) return '';
-    const p = prog?.percent || 0;
-    if (p === 0)  return isAr ? 'الرحلة تبدأ بخطوة. الخطوة الأولى أصعبها.' : 'Every expert was once a beginner. Your roadmap is ready.';
-    if (p < 30)   return isAr ? 'بداية قوية. حافظ على الزخم.' : 'Strong start. Keep the momentum going.';
-    if (p < 70)   return isAr ? 'أكثر من النصف. أنت في المسار الصحيح.' : 'Past the halfway mark. You are on track.';
-    return isAr ? 'تقريباً وصلت. لا تتوقف.' : 'Almost there. Do not stop now.';
-  })();
-
   return `
     <div class="dashboard fade-in">
 
-      ${_firstRunBanner(track, isAr)}
-
-      <div class="dashboard-hero">
-        <div class="dashboard-hero__text">
-          <p class="dashboard-hero__greeting">${greeting},</p>
-          <h1 class="dashboard-hero__name">${firstName}</h1>
-          ${motiveLine ? `<p class="dashboard-hero__motive">${motiveLine}</p>` : ''}
+      <!-- ── HERO: greeting + next step prominent ── -->
+      <div class="db-hero-section">
+        <div class="db-hero-section__left">
+          <p class="db-hero-section__greeting">${greeting},</p>
+          <h1 class="db-hero-section__name">${firstName}</h1>
+          ${track ? `<p class="db-hero-section__track-label">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${track.color};margin-${isAr ? 'left' : 'right'}:6px"></span>
+            ${isAr ? (track.nameAr || track.name) : track.name}
+          </p>` : ''}
         </div>
-        <button class="btn btn--ghost btn--sm" id="demo-mode-btn" style="flex-shrink:0">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <button class="btn btn--outline btn--sm" id="demo-mode-btn" style="flex-shrink:0;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           ${isAr ? 'وضع العرض' : 'Demo Mode'}
         </button>
       </div>
 
-      <!-- NBA — always the first focusable action -->
-      <div class="db-nba slide-up" style="animation-delay:0.05s;border-color:${nba.color}30;background:${nba.color}08">
-        <div class="db-nba__icon" style="color:${nba.color};background:${nba.color}14">${nba.icon}</div>
-        <div class="db-nba__body">
-          <div class="db-nba__label" style="color:${nba.color}">${isAr ? 'الخطوة التالية' : 'Next Best Action'}</div>
-          <div class="db-nba__title">${nba.label}</div>
-          <div class="db-nba__sub">${nba.sub}</div>
+      <!-- ── NEXT STEP HERO CARD — always first, always actionable ── -->
+      <div class="db-nextstep slide-up" style="animation-delay:0.04s;border-left:4px solid ${nba.color};background:${nba.color}06">
+        <div class="db-nextstep__badge" style="background:${nba.color}14;color:${nba.color}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          ${isAr ? 'الخطوة التالية' : 'Next Step'}
         </div>
-        <a href="${nba.href}" class="btn btn--sm" style="background:${nba.color};color:#fff;border-color:${nba.color};flex-shrink:0">${nba.cta}</a>
+        <div class="db-nextstep__body">
+          <h2 class="db-nextstep__title">${nba.label}</h2>
+          <p class="db-nextstep__sub">${nba.sub}</p>
+        </div>
+        <a href="${nba.href}" class="btn btn--lg" style="background:${nba.color};color:#fff;border-color:${nba.color};flex-shrink:0">${nba.cta}</a>
       </div>
 
-      <!-- Stats -->
+      <!-- ── STATS (secondary — not the focus) ── -->
       <div class="dashboard-stats">
-        <div class="stat-card slide-up" style="animation-delay:0.08s">
+        <div class="stat-card slide-up" style="animation-delay:0.1s">
           <div class="stat-card__icon" style="background:#6366f122;color:#6366f1">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           </div>
@@ -195,7 +139,7 @@ export function Dashboard() {
             <span class="stat-card__label">${isAr ? 'المسار النشط' : 'Active Track'}</span>
           </div>
         </div>
-        <div class="stat-card slide-up" style="animation-delay:0.12s">
+        <div class="stat-card slide-up" style="animation-delay:0.13s">
           <div class="stat-card__icon" style="background:#10b98122;color:#10b981">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
@@ -213,7 +157,7 @@ export function Dashboard() {
             <span class="stat-card__label">${isAr ? 'الدورات المسجلة' : 'Courses Enrolled'}</span>
           </div>
         </div>
-        <div class="stat-card slide-up" style="animation-delay:0.2s">
+        <div class="stat-card slide-up" style="animation-delay:0.19s">
           <div class="stat-card__icon" style="background:#ec489922;color:#ec4899">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
           </div>
@@ -232,7 +176,7 @@ export function Dashboard() {
           </div>
           <p class="db-insight__text">${insight}</p>
           <a href="#/decision-summary" class="db-insight__link">
-            ${isAr ? 'عرض ملخص القرار' : 'View Decision Summary'}
+            ${isAr ? 'ملخص القرار' : 'Decision Summary'}
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
         </div>` : ''}
@@ -287,9 +231,6 @@ export function Dashboard() {
           </a>`).join('')}
       </div>
 
-      <!-- Explore Tracks — only visible before track selection -->
-      ${_exploreTracks(allTracks, track, isAr)}
-
     </div>`;
 }
 
@@ -303,43 +244,30 @@ export function DashboardEvents() {
     });
   });
 
-  document.getElementById('db-first-run-dismiss')?.addEventListener('click', () => {
-    StorageService.set('first_run_dismissed', true);
-    const banner = document.getElementById('db-first-run');
-    if (banner) {
-      banner.style.transition = 'opacity 0.3s ease, max-height 0.4s ease';
-      banner.style.opacity = '0';
-      setTimeout(() => banner.remove(), 400);
-    }
-  });
-
   document.getElementById('demo-mode-btn')?.addEventListener('click', () => {
     const isAr = document.documentElement.getAttribute('lang') === 'ar';
 
     const demoResult = {
       topTrackId: 'frontend',
       top3: [
-        { id: 'frontend', score: 30, pct: 100 },
+        { id: 'frontend', score: 30, pct: 92 },
         { id: 'ux',       score: 22, pct: 73 },
         { id: 'backend',  score: 16, pct: 53 },
       ],
       scores:      { frontend: 30, ux: 22, backend: 16, data: 10, devops: 8 },
-      percentages: { frontend: 100, ux: 73, backend: 53, data: 33, devops: 27 },
-      confidence:  { level: 'high', gap: 27 },
+      percentages: { frontend: 92, ux: 73, backend: 53, data: 33, devops: 27 },
+      confidence:  { level: 'high', gap: 19 },
       dimensions:  { visual: 86, creative: 79, empathetic: 57, analytical: 43, logical: 36, systematic: 21 },
       strengthSentence: {
         en: 'You think in visuals, care about output, and love building things people interact with.',
         ar: 'تفكّر بصرياً، تهتم بالمخرجات، وتحب بناء ما يتفاعل معه الناس.',
       },
-      recommendedTrack: TrackService.getTrackById('frontend'),
       completedAt: Date.now(),
     };
     State.setState('testResult', demoResult);
     StorageService.set('testResult', demoResult);
     StorageService.set('first_run_dismissed', false);
-
     TrackService.enrollInTrack('frontend');
-
     StorageService.set('enrollments', [
       { courseId: 'c-fe-1', progress: 100, status: 'completed', enrolledAt: Date.now() - 86400000 },
       { courseId: 'c-fe-2', progress: 42,  status: 'active',    enrolledAt: Date.now() },
@@ -348,14 +276,15 @@ export function DashboardEvents() {
       { mentorId: 'm1', mentorName: 'Sarah El-Rashidy', bookedAt: Date.now(), status: 'confirmed' },
     ]);
 
-    Toastify({
-      text:     isAr ? 'تم تفعيل وضع العرض' : 'Demo mode activated',
-      duration: 2000,
-      gravity:  'bottom',
-      position: 'right',
-      style:    { background: 'var(--color-primary)' },
-    }).showToast();
-
+    if (window.Toastify) {
+      Toastify({
+        text:     isAr ? 'تم تفعيل وضع العرض' : 'Demo mode activated',
+        duration: 2000,
+        gravity:  'bottom',
+        position: 'right',
+        style:    { background: 'var(--color-primary)' },
+      }).showToast();
+    }
     setTimeout(() => Router.navigate('/dashboard'), 600);
   });
 }
