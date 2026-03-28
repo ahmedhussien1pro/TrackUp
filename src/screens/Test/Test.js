@@ -8,66 +8,111 @@ let _current = 0;
 export function Test() {
   _session = TestService.startTest();
   _current = 0;
-  return _renderQuestion();
-}
-
-function _renderQuestion() {
-  const q     = _session.questions[_current];
+  const q = _session.questions[_current];
+  const lang = document.documentElement.getAttribute('lang') || 'en';
+  const isAr = lang === 'ar';
   const total = _session.questions.length;
-  const pct   = Math.round((_current / total) * 100);
 
   return `
-    <div class="test-screen">
-      ${_current > 0 ? `<button class="btn btn--ghost btn--sm" id="test-back" style="margin-bottom:var(--space-6)">&larr; ${t('common.back')}</button>` : ''}
-
-      <div style="margin-bottom:var(--space-6)">
-        <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2)">
-          <span>${t('test.title')}</span>
-          <span class="ltr-text">${_current + 1} / ${total}</span>
+    <div class="test-screen fade-in">
+      <div class="test-header">
+        <div class="test-header__left">
+          <div class="test-header__label">${isAr ? 'تقييم المسار المهني' : 'Career Assessment'}</div>
+          <h2 class="test-header__title">${isAr ? 'كشف أفضل مسار لك' : 'Discover your best career fit'}</h2>
         </div>
-        <div style="height:4px;background:var(--color-surface-2);border-radius:var(--radius-full);overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:var(--color-primary);border-radius:var(--radius-full);transition:width 0.3s ease"></div>
-        </div>
+        <a href="#/" class="btn btn--ghost btn--sm">${isAr ? 'خروج' : 'Exit'}</a>
       </div>
 
-      <div class="test-question">
-        <p class="test-question__count">${t('test.subtitle')}</p>
-        <p class="test-question__text">${q.text}</p>
-        <div class="test-question__options">
-          ${q.options.map((opt, i) => `
-            <button class="test-option ${_session.answers[q.id] === i ? 'test-option--selected' : ''}" data-index="${i}">${opt.label}</button>
-          `).join('')}
+      <div class="test-progress">
+        <div class="test-progress__track">
+          <div class="test-progress__fill" id="test-progress-fill" style="width:${(1/total)*100}%"></div>
         </div>
+        <span class="test-progress__label" id="test-progress-label">${isAr ? `سؤال 1 من ${total}` : `Question 1 of ${total}`}</span>
       </div>
-    </div>
-  `;
+
+      <div class="test-body" id="test-body">
+        ${_renderQuestion(q, 0, isAr)}
+      </div>
+    </div>`;
+}
+
+function _renderQuestion(q, idx, isAr) {
+  const text = isAr ? (q.textAr || q.text) : q.text;
+  return `
+    <div class="test-question slide-up" id="test-question-wrap">
+      <div class="test-question__num">${isAr ? `سؤال ${idx + 1}` : `Question ${idx + 1}`}</div>
+      <h3 class="test-question__text">${text}</h3>
+      <div class="test-options" id="test-options">
+        ${q.options.map((opt, i) => `
+          <button class="test-option" data-index="${i}" data-qid="${q.id}">
+            <span class="test-option__letter">${String.fromCharCode(65 + i)}</span>
+            <span class="test-option__label">${isAr ? (opt.labelAr || opt.label) : opt.label}</span>
+          </button>`).join('')}
+      </div>
+    </div>`;
 }
 
 export function TestEvents() {
-  document.getElementById('test-back')?.addEventListener('click', () => {
-    _current = Math.max(0, _current - 1);
-    _rerender();
-  });
+  const lang = document.documentElement.getAttribute('lang') || 'en';
+  const isAr = lang === 'ar';
 
-  document.querySelectorAll('.test-option').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const q   = _session.questions[_current];
-      _session  = TestService.answerQuestion(_session, q.id, Number(btn.dataset.index));
+  document.getElementById('test-body')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.test-option');
+    if (!btn) return;
 
-      if (_current < _session.questions.length - 1) {
-        _current++;
-        _rerender();
+    const qid   = btn.dataset.qid;
+    const idx   = parseInt(btn.dataset.index);
+    const total = _session.questions.length;
+
+    // Highlight selection
+    document.querySelectorAll('.test-option').forEach(b => b.classList.remove('test-option--selected'));
+    btn.classList.add('test-option--selected');
+
+    _session = TestService.answerQuestion(_session, qid, idx);
+
+    // Short delay then advance
+    setTimeout(() => {
+      _current++;
+      const fill   = document.getElementById('test-progress-fill');
+      const label  = document.getElementById('test-progress-label');
+
+      if (_current < total) {
+        const q = _session.questions[_current];
+        const pct = ((_current + 1) / total) * 100;
+        if (fill)  fill.style.width = pct + '%';
+        if (label) label.textContent = isAr ? `سؤال ${_current + 1} من ${total}` : `Question ${_current + 1} of ${total}`;
+
+        const body = document.getElementById('test-body');
+        if (body) {
+          body.style.opacity = '0';
+          body.style.transform = 'translateY(12px)';
+          setTimeout(() => {
+            body.innerHTML = _renderQuestion(q, _current, isAr);
+            body.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            body.style.opacity = '1';
+            body.style.transform = 'translateY(0)';
+          }, 200);
+        }
       } else {
-        TestService.submitTest(_session);
-        Router.navigate('/results');
+        // Submit
+        if (fill) fill.style.width = '100%';
+        const body = document.getElementById('test-body');
+        if (body) {
+          body.innerHTML = `
+            <div style="text-align:center;padding:var(--space-16) var(--space-4)">
+              <div class="test-thinking">
+                <div class="test-thinking__dots"><span></span><span></span><span></span></div>
+                <p style="margin-top:var(--space-4);color:var(--color-text-secondary);font-size:var(--text-sm)">
+                  ${isAr ? 'جاري تحليل إجاباتك...' : 'Analysing your answers...'}
+                </p>
+              </div>
+            </div>`;
+        }
+        setTimeout(() => {
+          TestService.submitTest(_session);
+          Router.navigate('/results');
+        }, 1600);
       }
-    });
+    }, 280);
   });
-}
-
-function _rerender() {
-  const outlet = document.getElementById('app-outlet');
-  if (!outlet) return;
-  outlet.innerHTML = _renderQuestion();
-  TestEvents();
 }
