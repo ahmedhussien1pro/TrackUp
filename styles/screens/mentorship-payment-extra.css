@@ -1,0 +1,273 @@
+/* ============================================================
+   MENTORSHIP — Booking flow extras
+============================================================ */
+
+/* Booked sessions panel */
+.bk-panel {
+  background: color-mix(in srgb, var(--color-success) 6%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.bk-panel__title {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-success);
+  margin-bottom: var(--space-3);
+}
+
+.bk-panel__list { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.bk-session {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.bk-session__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-success);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.bk-session__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.bk-session__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--color-text);
+}
+
+.bk-session__slot {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.bk-session__note {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* Booked ribbon on card */
+.mentor-card { position: relative; overflow: hidden; }
+
+.mentor-card__booked-ribbon {
+  position: absolute;
+  top: 10px;
+  inset-inline-end: -18px;
+  background: var(--color-success);
+  color: #fff;
+  font-size: 10px;
+  font-weight: var(--weight-semi);
+  padding: 2px 22px;
+  transform: rotate(35deg);
+  transform-origin: center;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+/* Slot picker */
+.bk-section-label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+}
+
+.bk-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.bk-slot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface-2);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.bk-slot:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+}
+
+.bk-slot--active {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  color: var(--color-primary);
+  font-weight: var(--weight-semi);
+}
+
+/* ============================================================
+   PAYMENT — Card flip
+============================================================ */
+
+.pay-card-scene {
+  width: 100%;
+  perspective: 900px;
+  margin-bottom: var(--space-6);
+}
+
+.pay-card-3d {
+  position: relative;
+  height: 190px;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-2xl);
+}
+
+.pay-card-3d--flipped { transform: rotateY(180deg); }
+
+.pay-card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-2xl);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  padding: var(--space-5) var(--space-6);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #fff;
+  overflow: hidden;
+}
+
+/* subtle grid shimmer */
+.pay-card-face::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.pay-card-face--back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.pay-card-face__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.pay-card-chip { opacity: 0.85; }
+
+.pay-card-brand {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-black);
+  letter-spacing: 0.12em;
+  opacity: 0.8;
+}
+
+.pay-card-num {
+  font-family: 'Courier New', monospace;
+  font-size: var(--text-lg);
+  letter-spacing: 0.18em;
+  margin-bottom: var(--space-5);
+}
+
+.pay-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.pay-card-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.55;
+  margin-bottom: 3px;
+}
+
+.pay-card-value {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  letter-spacing: 0.04em;
+}
+
+/* Back face */
+.pay-card-stripe {
+  height: 40px;
+  background: rgba(0,0,0,0.6);
+  margin: var(--space-6) calc(-1 * var(--space-6));
+  margin-top: var(--space-4);
+}
+
+.pay-card-cvv-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.pay-card-cvv-label {
+  font-size: var(--text-xs);
+  opacity: 0.55;
+  letter-spacing: 0.06em;
+}
+
+.pay-card-cvv-box {
+  background: #fff;
+  color: #1e293b;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: 'Courier New', monospace;
+  font-size: var(--text-sm);
+  letter-spacing: 0.15em;
+  min-width: 52px;
+  text-align: center;
+}
+
+/* Spinner on submit button */
+.pay-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-inline-end: var(--space-2);
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Plan name in summary */
+.pay-summary__plan-name {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semi);
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+}
