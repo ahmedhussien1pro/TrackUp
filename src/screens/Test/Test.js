@@ -1,39 +1,41 @@
 import { t } from '../../i18n.js';
 import { Router } from '../../router.js';
 import { TestService } from '../../services/test.service.js';
-import State from '../../state.js';
 
 let _session = null;
-let _currentIdx = 0;
+let _current = 0;
 
 export function Test() {
   _session = TestService.startTest();
-  _currentIdx = 0;
+  _current = 0;
   return _renderQuestion();
 }
 
 function _renderQuestion() {
-  const q = _session.questions[_currentIdx];
+  const q     = _session.questions[_current];
   const total = _session.questions.length;
-  const progress = Math.round((_currentIdx / total) * 100);
+  const pct   = Math.round((_current / total) * 100);
 
   return `
     <div class="test-screen">
-      <div class="test-screen__header" style="max-width:640px;margin:0 auto var(--space-6)">
-        <h1>${t('test.title')}</h1>
-        <p>${t('test.subtitle')}</p>
-        <div style="margin-top:var(--space-4);height:4px;background:var(--color-surface-2);border-radius:var(--radius-full)">
-          <div style="height:100%;width:${progress}%;background:var(--color-primary);border-radius:var(--radius-full);transition:width 0.3s"></div>
+      ${_current > 0 ? `<button class="btn btn--ghost btn--sm" id="test-back" style="margin-bottom:var(--space-6)">&larr; ${t('common.back')}</button>` : ''}
+
+      <div style="margin-bottom:var(--space-6)">
+        <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2)">
+          <span>${t('test.title')}</span>
+          <span class="ltr-text">${_current + 1} / ${total}</span>
+        </div>
+        <div style="height:4px;background:var(--color-surface-2);border-radius:var(--radius-full);overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:var(--color-primary);border-radius:var(--radius-full);transition:width 0.3s ease"></div>
         </div>
       </div>
-      <div class="test-question" id="test-question-wrap">
-        <div class="test-question__count">${t('test.title')} &mdash; ${_currentIdx + 1} / ${total}</div>
-        <div class="test-question__text">${q.text}</div>
+
+      <div class="test-question">
+        <p class="test-question__count">${t('test.subtitle')}</p>
+        <p class="test-question__text">${q.text}</p>
         <div class="test-question__options">
           ${q.options.map((opt, i) => `
-            <button class="test-option" data-q-id="${q.id}" data-opt-idx="${i}">
-              ${opt.label}
-            </button>
+            <button class="test-option ${_session.answers[q.id] === i ? 'test-option--selected' : ''}" data-index="${i}">${opt.label}</button>
           `).join('')}
         </div>
       </div>
@@ -42,28 +44,30 @@ function _renderQuestion() {
 }
 
 export function TestEvents() {
+  document.getElementById('test-back')?.addEventListener('click', () => {
+    _current = Math.max(0, _current - 1);
+    _rerender();
+  });
+
   document.querySelectorAll('.test-option').forEach(btn => {
     btn.addEventListener('click', () => {
-      const qId   = btn.dataset.qId;
-      const optIdx = parseInt(btn.dataset.optIdx, 10);
+      const q   = _session.questions[_current];
+      _session  = TestService.answerQuestion(_session, q.id, Number(btn.dataset.index));
 
-      _session = TestService.answerQuestion(_session, qId, optIdx);
-      _currentIdx++;
-
-      if (_currentIdx >= _session.questions.length) {
-        const result = TestService.submitTest(_session);
+      if (_current < _session.questions.length - 1) {
+        _current++;
+        _rerender();
+      } else {
+        TestService.submitTest(_session);
         Router.navigate('/results');
-        return;
-      }
-
-      // Re-render question in place with fade
-      const wrap = document.getElementById('test-question-wrap');
-      if (!wrap) return;
-      const outlet = document.getElementById('app-outlet');
-      if (outlet) {
-        outlet.innerHTML = _renderQuestion();
-        TestEvents();
       }
     });
   });
+}
+
+function _rerender() {
+  const outlet = document.getElementById('app-outlet');
+  if (!outlet) return;
+  outlet.innerHTML = _renderQuestion();
+  TestEvents();
 }

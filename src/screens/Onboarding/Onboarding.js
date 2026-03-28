@@ -1,26 +1,21 @@
 import { t } from '../../i18n.js';
 import { Router } from '../../router.js';
-import State from '../../state.js';
-import { StorageService } from '../../services/storage.service.js';
 
 const STEPS = [
   {
     id: 'goal',
-    titleKey: 'onboarding.goal.title',
-    descKey: 'onboarding.goal.description',
-    options: ['Get a tech job', 'Switch careers', 'Level up skills', 'Build a startup'],
+    question: 'What is your main goal?',
+    options: ['Get a new job in tech', 'Grow in my current role', 'Learn new skills', 'Start freelancing'],
   },
   {
     id: 'background',
-    titleKey: 'onboarding.background.title',
-    descKey: 'onboarding.background.description',
-    options: ['Complete beginner', 'Some basics', 'Intermediate', 'Advanced'],
+    question: 'What is your background?',
+    options: ['Complete beginner', 'Some coding experience', 'Working in tech already', 'Switching from another field'],
   },
   {
-    id: 'availability',
-    titleKey: 'onboarding.availability.title',
-    descKey: 'onboarding.availability.description',
-    options: ['1-5 hrs/week', '5-10 hrs/week', '10-20 hrs/week', '20+ hrs/week'],
+    id: 'time',
+    question: 'How much time can you dedicate weekly?',
+    options: ['Less than 5 hours', '5 to 10 hours', '10 to 20 hours', 'More than 20 hours'],
   },
 ];
 
@@ -34,26 +29,31 @@ export function Onboarding() {
 }
 
 function _renderStep() {
-  const step = STEPS[_step];
-  const progress = Math.round(((_step) / STEPS.length) * 100);
+  const step   = STEPS[_step];
+  const total  = STEPS.length;
+  const pct    = Math.round((_step / total) * 100);
 
   return `
-    <div class="onboarding-screen" style="max-width:560px;margin:var(--space-10) auto;padding:0 var(--space-4)">
+    <div style="max-width:600px;margin:0 auto;padding:var(--space-10) var(--space-4)">
+      <!-- Back button -->
+      ${_step > 0 ? `<button class="btn btn--ghost btn--sm" id="onboarding-back" style="margin-bottom:var(--space-6)">&larr; ${t('common.back')}</button>` : ''}
+
       <div style="margin-bottom:var(--space-6)">
-        <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-2)">
-          <span>Step ${_step + 1} of ${STEPS.length}</span>
-          <span>${progress}%</span>
+        <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2)">
+          <span>${t('onboarding.step')} <span class="ltr-text">${_step + 1}</span> ${t('onboarding.of')} <span class="ltr-text">${total}</span></span>
+          <span class="ltr-text">${pct}%</span>
         </div>
-        <div style="height:4px;background:var(--color-surface-2);border-radius:var(--radius-full)">
-          <div style="height:100%;width:${progress}%;background:var(--color-primary);border-radius:var(--radius-full);transition:width 0.3s"></div>
+        <div style="height:4px;background:var(--color-surface-2);border-radius:var(--radius-full);overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:var(--color-primary);border-radius:var(--radius-full);transition:width 0.4s ease"></div>
         </div>
       </div>
-      <div class="card">
-        <h2 style="margin-bottom:var(--space-2)">${t(step.titleKey)}</h2>
-        <p style="margin-bottom:var(--space-6)">${t(step.descKey)}</p>
-        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+
+      <div class="test-question" id="onboarding-card">
+        <p class="test-question__count">${t('onboarding.title')}</p>
+        <p class="test-question__text">${step.question}</p>
+        <div class="test-question__options">
           ${step.options.map((opt, i) => `
-            <button class="test-option onboarding-opt" data-step-id="${step.id}" data-opt-idx="${i}">${opt}</button>
+            <button class="test-option" data-index="${i}">${opt}</button>
           `).join('')}
         </div>
       </div>
@@ -62,21 +62,27 @@ function _renderStep() {
 }
 
 export function OnboardingEvents() {
-  document.querySelectorAll('.onboarding-opt').forEach(btn => {
+  document.getElementById('onboarding-back')?.addEventListener('click', () => {
+    _step = Math.max(0, _step - 1);
+    _rerenderOnboarding();
+  });
+
+  document.querySelectorAll('.test-option').forEach(btn => {
     btn.addEventListener('click', () => {
-      _answers[btn.dataset.stepId] = parseInt(btn.dataset.optIdx, 10);
-      _step++;
-
-      if (_step >= STEPS.length) {
-        const user = { ...State.getState('user'), onboardingAnswers: _answers };
-        State.setState('user', user);
-        StorageService.set('session', user);
+      _answers[STEPS[_step].id] = btn.dataset.index;
+      if (_step < STEPS.length - 1) {
+        _step++;
+        _rerenderOnboarding();
+      } else {
         Router.navigate('/test');
-        return;
       }
-
-      const outlet = document.getElementById('app-outlet');
-      if (outlet) { outlet.innerHTML = _renderStep(); OnboardingEvents(); }
     });
   });
+}
+
+function _rerenderOnboarding() {
+  const outlet = document.getElementById('app-outlet');
+  if (!outlet) return;
+  outlet.innerHTML = _renderStep();
+  OnboardingEvents();
 }

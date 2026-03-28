@@ -1,12 +1,9 @@
 import { t } from '../../i18n.js';
-import { Router } from '../../router.js';
 import { TrackService } from '../../services/track.service.js';
-import State from '../../state.js';
+import { Router } from '../../router.js';
 
 export function Career() {
   const tracks = TrackService.getAllTracks();
-  const user = State.getState('user');
-
   return `
     <div class="career-screen">
       <div class="career-screen__header">
@@ -14,20 +11,14 @@ export function Career() {
         <p>${t('career.subtitle')}</p>
       </div>
       <div class="career-screen__grid">
-        ${tracks.map(track => `
-          <div class="track-card" data-track-id="${track.id}">
-            <div class="track-card__icon">${track.icon || track.name.slice(0,2)}</div>
-            <div class="track-card__name">${track.name}</div>
-            <div class="track-card__desc">${track.description}</div>
+        ${tracks.map(tr => `
+          <div class="track-card" data-id="${tr.id}" role="button" tabindex="0" style="cursor:pointer">
+            <div class="track-card__icon">${tr.icon}</div>
+            <div class="track-card__name">${tr.name}</div>
+            <div class="track-card__desc">${tr.description}</div>
             <div class="track-card__footer">
-              <span class="badge badge--${track.level || 'beginner'}">${track.level || 'Beginner'}</span>
-              <span class="badge badge--neutral">${track.duration || '3 months'}</span>
-              ${user?.activeTrackId === track.id ? '<span class="badge badge--active">Active</span>' : ''}
-            </div>
-            <div style="display:flex;gap:var(--space-2);margin-top:var(--space-2)">
-              <button class="btn btn--outline btn--sm btn--full career-enroll-btn" data-track-id="${track.id}">
-                ${user?.activeTrackId === track.id ? t('roadmap.status.active') : t('career.viewRoadmap')}
-              </button>
+              <span class="badge">${tr.level}</span>
+              <span class="badge ltr-text">${tr.duration}</span>
             </div>
           </div>
         `).join('')}
@@ -37,14 +28,13 @@ export function Career() {
 }
 
 export function CareerEvents() {
-  document.querySelectorAll('.career-enroll-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const trackId = btn.dataset.trackId;
-      const result = TrackService.enrollInTrack(trackId);
-      if (result.success) {
-        Toastify({ text: 'Track selected. Loading your roadmap...', duration: 2000, gravity: 'bottom', position: 'right', style: { background: 'var(--color-primary)' } }).showToast();
-        setTimeout(() => Router.navigate('/roadmap'), 800);
-      }
-    });
+  document.querySelectorAll('.track-card[data-id]').forEach(card => {
+    const enroll = () => {
+      const id = card.dataset.id;
+      TrackService.enrollInTrack(id);
+      Router.navigate('/roadmap');
+    };
+    card.addEventListener('click', enroll);
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') enroll(); });
   });
 }
