@@ -22,12 +22,11 @@ export function Results() {
       </div>`;
   }
 
-  const lang       = document.documentElement.getAttribute('lang') || 'en';
-  const isAr       = lang === 'ar';
-  const allTracks  = TrackService.getAllTracks();
-  const top3       = result.top3 || [];
+  const lang      = document.documentElement.getAttribute('lang') || 'en';
+  const isAr      = lang === 'ar';
+  const allTracks = TrackService.getAllTracks();
+  const top3      = result.top3 || [];
 
-  // Guard: find topTrack by topTrackId, fallback to top3[0].id, then first track
   const topTrack =
     allTracks.find(tr => tr.id === result.topTrackId) ||
     allTracks.find(tr => tr.id === top3[0]?.id) ||
@@ -36,7 +35,6 @@ export function Results() {
   const confidence = result.confidence || { level: 'high', gap: 30 };
   const dimensions = result.dimensions || {};
   const trackName  = isAr ? (topTrack.nameAr || topTrack.name) : topTrack.name;
-  // fitPct: always read from top3[0].pct; top track is always 100% relative
   const fitPct     = typeof top3[0]?.pct === 'number' ? top3[0].pct : 100;
 
   const confColorMap = {
@@ -46,9 +44,7 @@ export function Results() {
   };
   const confColor = confColorMap[confidence.level] || confColorMap.high;
 
-  const dimEntries = Object.entries(dimensions)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3);
+  const dimEntries = Object.entries(dimensions).sort((a, b) => b[1] - a[1]).slice(0, 3);
 
   const dimRows = dimEntries.map(([key, pct]) => `
     <div class="rc-reason">
@@ -73,16 +69,13 @@ export function Results() {
 
   const whySentence = topDim
     ? (isAr
-        ? `توافقك مع مسار ${trackName} مدفوع بدرجة "${topDimLabel}" لديك (${topDim[1]}%)، وهي أعلى بـ ${topDimDelta} نقطة من أقوى أبعادك الأخرى — إشارة واضحة على توافق طبيعي مع هذا المسار.`
+        ? `توافقك مع مسار ${trackName} مدفوع بدرجة "ك${topDimLabel}ك" لديك (${topDim[1]}%)، وهي أعلى بـ ${topDimDelta} نقطة من أقوى أبعادك الأخرى — إشارة واضحة على توافق طبيعي مع هذا المسار.`
         : `Your fit with ${trackName} is driven by your "${topDimLabel}" score (${topDim[1]}%), which is ${topDimDelta} points above your next strongest dimension — a clear signal of natural alignment.`)
     : '';
-
-  const runnerUp = top3[1] ? allTracks.find(tr => tr.id === top3[1].id) : null;
 
   return `
     <div class="results-screen">
 
-      <!-- ── DECISION MOMENT OVERLAY — the memorable reveal ── -->
       <div class="rc-decision-moment" id="rc-decision-moment">
         <div class="rc-dm__inner">
           <div class="rc-dm__icon" style="background:${topTrack.color}18;color:${topTrack.color}">
@@ -104,7 +97,6 @@ export function Results() {
         </div>
       </div>
 
-      <!-- ── ANALYSIS OVERLAY (shown first while decision moment prepares) ── -->
       <div class="rc-overlay" id="rc-overlay">
         <div class="rc-overlay__inner">
           <div class="rc-overlay__dots"><span></span><span></span><span></span></div>
@@ -112,7 +104,6 @@ export function Results() {
         </div>
       </div>
 
-      <!-- ── FULL RESULTS (revealed after decision moment) ── -->
       <div class="rc-results" id="rc-results" style="opacity:0;pointer-events:none">
 
         <div class="rc-hero">
@@ -152,21 +143,7 @@ export function Results() {
           </div>
         </div>
 
-        ${runnerUp ? `
-          <div class="rc-alt-track">
-            <div class="rc-alt-track__label">${t('results.altTrack')}</div>
-            <div class="rc-alt-track__row">
-              <div class="rc-alt-track__icon" style="background:${runnerUp.color}18;color:${runnerUp.color}">
-                ${runnerUp.icon}
-              </div>
-              <div class="rc-alt-track__info">
-                <strong>${isAr ? (runnerUp.nameAr || runnerUp.name) : runnerUp.name}</strong>
-                <span class="badge badge--neutral ltr-text">${top3[1]?.pct || 0}%</span>
-              </div>
-            </div>
-          </div>
-        ` : ''}
-
+        <!-- Runner-up tracks — NO alt track section above these -->
         <div class="rc-tracks" id="rc-tracks">
           ${top3.slice(1).map((item, i) => {
             const tr = allTracks.find(t => t.id === item.id);
@@ -237,19 +214,15 @@ export function ResultsEvents() {
 
   setTimeout(() => {
     clearInterval(phaseInterval);
-
     if (overlay) {
       overlay.style.transition = 'opacity 0.35s ease';
       overlay.style.opacity    = '0';
       setTimeout(() => { overlay.style.display = 'none'; }, 350);
     }
-
     if (dm) {
       dm.style.display = 'flex';
       requestAnimationFrame(() => { dm.classList.add('rc-dm--visible'); });
-
       if (dmScore) {
-        // ✓ Use StorageService — respects the trackup__ prefix
         const result = StorageService.get('testResult');
         const target = typeof result?.top3?.[0]?.pct === 'number' ? result.top3[0].pct : 100;
         _countUp(dmScore, 0, target, 900, '%');

@@ -2,24 +2,23 @@ import { Router } from '../../router.js';
 import { TestService } from '../../services/test.service.js';
 import State from '../../state.js';
 
-// Dimension labels shown during test — maps question index to cognitive focus
+// Profile-building context labels — replaces "Question X of Y" framing
 const DIMENSION_CONTEXT = [
-  { en: 'Analysing your creative style',       ar: 'نحلل أسلوبك الإبداعي' },
-  { en: 'Measuring your systems thinking',     ar: 'نقيس تفكيرك المنظومي' },
-  { en: 'Understanding your problem approach', ar: 'نفهم طريقتك في حل المشكلات' },
-  { en: 'Detecting your output preference',    ar: 'نكتشف تفضيلاتك الإنتاجية' },
-  { en: 'Reading your curiosity patterns',     ar: 'نقرأ أنماط فضولك' },
-  { en: 'Measuring your empathy index',        ar: 'نقيس مؤشر تعاطفك' },
-  { en: 'Finalising your career profile',      ar: 'نكتمل بناء ملفك المهني' },
+  { en: 'Building your creativity profile',    ar: 'نبني ملفك الإبداعي' },
+  { en: 'Mapping your systems thinking',       ar: 'نرسم تفكيرك المنظومي' },
+  { en: 'Identifying your problem style',      ar: 'نحدد أسلوب حلك للمشكلات' },
+  { en: 'Capturing your output preference',    ar: 'نكتشف تفضيلاتك الإنتاجية' },
+  { en: 'Detecting your curiosity patterns',   ar: 'نقرأ أنماط فضولك' },
+  { en: 'Measuring your empathy signal',       ar: 'نقيس إشارة تعاطفك' },
+  { en: 'Completing your career profile',      ar: 'نكتمل بناء ملفك المهني' },
 ];
 
-// Human-readable goal label derived from onboarding context
 const GOAL_LABELS = {
-  get_job:       { en: 'Find a job',        ar: 'الحصول على وظيفة' },
-  switch_career: { en: 'Switch careers',    ar: 'تغيير المسار المهني' },
-  freelance:     { en: 'Go freelance',      ar: 'العمل الحر' },
-  upskill:       { en: 'Level up skills',   ar: 'تطوير المهارات' },
-  explore:       { en: 'Explore options',   ar: 'استكشاف الخيارات' },
+  get_job:       { en: 'Find a job',      ar: 'الحصول على وظيفة' },
+  switch_career: { en: 'Switch careers',  ar: 'تغيير المسار المهني' },
+  freelance:     { en: 'Go freelance',    ar: 'العمل الحر' },
+  upskill:       { en: 'Level up skills', ar: 'تطوير المهارات' },
+  explore:       { en: 'Explore options', ar: 'استكشاف الخيارات' },
 };
 
 let _session = null;
@@ -37,20 +36,27 @@ function _goalHint(isAr) {
     </div>`;
 }
 
+// Progress dots — replaces "X of Y" countdown feel
+function _progressDots(current, total) {
+  return Array.from({ length: total }, (_, i) => `
+    <span class="test-dot${i < current ? ' test-dot--done' : i === current ? ' test-dot--active' : ''}"></span>
+  `).join('');
+}
+
 export function Test() {
   _session = TestService.startTest();
   _current = 0;
-  const q    = _session.questions[_current];
-  const lang = document.documentElement.getAttribute('lang') || 'en';
-  const isAr = lang === 'ar';
+  const q     = _session.questions[_current];
+  const lang  = document.documentElement.getAttribute('lang') || 'en';
+  const isAr  = lang === 'ar';
   const total = _session.questions.length;
 
   return `
     <div class="test-screen fade-in">
       <div class="test-header">
         <div class="test-header__left">
-          <div class="test-header__label">${isAr ? 'تقييم المسار المهني' : 'Career Assessment'}</div>
-          <h2 class="test-header__title">${isAr ? 'نبني قرارك المهني' : 'We are building your career decision'}</h2>
+          <div class="test-header__label">${isAr ? 'تقييم ذكي' : 'Smart Assessment'}</div>
+          <h2 class="test-header__title">${isAr ? 'نبني ملفك المهني' : 'Building your career profile'}</h2>
           ${_goalHint(isAr)}
         </div>
         <a href="#/" class="btn btn--ghost btn--sm">${isAr ? 'خروج' : 'Exit'}</a>
@@ -64,23 +70,22 @@ export function Test() {
           <span class="test-progress__context" id="test-progress-context">
             ${DIMENSION_CONTEXT[0]?.[isAr ? 'ar' : 'en'] || ''}
           </span>
-          <span class="test-progress__label" id="test-progress-label">
-            ${isAr ? `سؤال 1 من ${total}` : `Question 1 of ${total}`}
+          <span class="test-progress__dots" id="test-progress-dots">
+            ${_progressDots(0, total)}
           </span>
         </div>
       </div>
 
       <div class="test-body" id="test-body">
-        ${_renderQuestion(q, 0, isAr)}
+        ${_renderQuestion(q, isAr)}
       </div>
     </div>`;
 }
 
-function _renderQuestion(q, idx, isAr) {
+function _renderQuestion(q, isAr) {
   const text = isAr ? (q.textAr || q.text) : q.text;
   return `
     <div class="test-question slide-up" id="test-question-wrap">
-      <div class="test-question__num">${isAr ? `سؤال ${idx + 1}` : `Question ${idx + 1}`}</div>
       <h3 class="test-question__text">${text}</h3>
       <div class="test-options" id="test-options">
         ${q.options.map((opt, i) => `
@@ -112,33 +117,32 @@ export function TestEvents() {
     setTimeout(() => {
       _current++;
       const fill    = document.getElementById('test-progress-fill');
-      const label   = document.getElementById('test-progress-label');
       const context = document.getElementById('test-progress-context');
+      const dots    = document.getElementById('test-progress-dots');
 
       if (_current < total) {
         const q   = _session.questions[_current];
         const pct = ((_current + 1) / total) * 100;
 
         if (fill)    fill.style.width    = pct + '%';
-        if (label)   label.textContent   = isAr ? `سؤال ${_current + 1} من ${total}` : `Question ${_current + 1} of ${total}`;
         if (context) context.textContent = DIMENSION_CONTEXT[_current]?.[isAr ? 'ar' : 'en'] || '';
+        if (dots)    dots.innerHTML      = _progressDots(_current, total);
 
         const body = document.getElementById('test-body');
         if (body) {
           body.style.opacity   = '0';
           body.style.transform = 'translateY(12px)';
           setTimeout(() => {
-            body.innerHTML = _renderQuestion(q, _current, isAr);
+            body.innerHTML = _renderQuestion(q, isAr);
             body.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
             body.style.opacity    = '1';
             body.style.transform  = 'translateY(0)';
           }, 200);
         }
       } else {
-        // All answered — show thinking state then submit
         if (fill) fill.style.width = '100%';
-        if (label) label.textContent = isAr ? 'نبني قرارك...' : 'Building your decision...';
-        if (context) context.textContent = isAr ? 'تحليل نهائي' : 'Final analysis';
+        if (context) context.textContent = isAr ? 'تحليل نهائي' : 'Finalising your profile';
+        if (dots)    dots.innerHTML = _progressDots(total, total);
 
         const body = document.getElementById('test-body');
         if (body) {
