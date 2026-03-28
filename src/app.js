@@ -33,6 +33,29 @@ function isPublic(path) {
 
 let _layoutMounted = false;
 
+// ─── Lightweight active-link update (no full remount) ───────────────────────
+function _updateActiveLink() {
+  const path = window.location.hash.slice(1).split('?')[0] || '/';
+  document.querySelectorAll('.sidebar__link').forEach(link => {
+    const active = link.dataset.path === path;
+    link.classList.toggle('sidebar__link--active', active);
+    link.setAttribute('aria-current', active ? 'page' : 'false');
+  });
+  const PAGE_KEYS = {
+    '/dashboard':     'nav.dashboard',
+    '/career':        'nav.career',
+    '/roadmap':       'nav.roadmap',
+    '/courses':       'nav.courses',
+    '/mentorship':    'nav.mentorship',
+    '/progress':      'nav.progress',
+    '/notifications': 'nav.notifications',
+    '/settings':      'nav.settings',
+  };
+  const { t } = window.__trackup_i18n__ || {};
+  const titleEl = document.getElementById('topbar-page-title');
+  if (titleEl && t && PAGE_KEYS[path]) titleEl.textContent = t(PAGE_KEYS[path]);
+}
+
 function bootstrap() {
   // Theme
   const savedTheme = StorageService.get('theme') ||
@@ -47,7 +70,6 @@ function bootstrap() {
 
   // Session restore
   AuthService.restoreSession();
-  // Restore testResult
   const testResult = StorageService.get('testResult');
   if (testResult) State.setState('testResult', testResult);
 
@@ -58,18 +80,19 @@ function bootstrap() {
     if (!isPublic(path) && !loggedIn) return '/login';
     if (loggedIn && (path === '/login' || path === '/register')) return '/dashboard';
 
-    // Mount / unmount layout — only when auth state changes
     const needsLayout = !isPublic(path) && loggedIn;
+
     if (needsLayout && !_layoutMounted) {
+      // First authenticated route — full mount
       _layoutMounted = true;
-      // defer so outlet render happens first
       setTimeout(() => mountLayout(), 0);
     } else if (!needsLayout && _layoutMounted) {
+      // Logged out or public route
       _layoutMounted = false;
       unmountLayout();
     } else if (needsLayout && _layoutMounted) {
-      // refresh sidebar active link on every navigation
-      setTimeout(() => mountLayout(), 0);
+      // ✅ Only update active link — no full remount
+      setTimeout(() => _updateActiveLink(), 0);
     }
 
     return null;
