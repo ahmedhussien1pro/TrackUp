@@ -5,10 +5,11 @@ import { RoadmapService } from '../../services/roadmap.service.js';
 import { CourseService } from '../../services/course.service.js';
 import { MentorService } from '../../services/mentor.service.js';
 import { TestService } from '../../services/test.service.js';
+import { StorageService } from '../../services/storage.service.js';
+import { Router } from '../../router.js';
 
-// ── Next Best Action logic ──────────────────────────────────────────────────
+// ── Next Best Action ─────────────────────────────────────────────────
 function _nba(user, track, prog, enrollments, result, isAr) {
-  // Priority: no test → no track → progress stalled → no courses → no mentor
   if (!result) return {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`,
     label: isAr ? 'اكتشف مسارك المهني' : 'Discover your career path',
@@ -28,7 +29,7 @@ function _nba(user, track, prog, enrollments, result, isAr) {
   if (enrollments.length === 0) return {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
     label: isAr ? 'سجّل في أول دورة على مسارك' : 'Enroll in your first course',
-    sub:   isAr ? 'الدورات المختارة لمسارك متاحة — سجّل وابدأ التعلم' : 'Hand-picked courses for your track are ready — enroll and start building',
+    sub:   isAr ? 'الدورات المختارة لمسارك متاحة' : 'Hand-picked courses for your track are ready',
     href:  '#/courses',
     cta:   isAr ? 'استعرض الدورات' : 'Browse Courses',
     color: '#f59e0b',
@@ -36,7 +37,7 @@ function _nba(user, track, prog, enrollments, result, isAr) {
   if (MentorService.getBookings().length === 0) return {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>`,
     label: isAr ? 'احجز جلسة مع مرشد متخصص' : 'Book a session with an expert mentor',
-    sub:   isAr ? 'المرشدون المتاحون لمسارك جاهزون — جلسة واحدة تفتح أبواباً' : 'Track-matched mentors are available — one session changes perspective',
+    sub:   isAr ? 'مرشدون متاحون لمسارك' : 'Track-matched mentors are available',
     href:  '#/mentorship',
     cta:   isAr ? 'استعرض المرشدين' : 'Browse Mentors',
     color: '#ec4899',
@@ -45,29 +46,29 @@ function _nba(user, track, prog, enrollments, result, isAr) {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
     label: isAr ? 'تابع تقدمك في خارطة الطريق' : 'Continue your roadmap progress',
     sub:   isAr
-      ? `أكملت ${prog?.percent || 0}% من مسارك — واصل الزخم`
-      : `You are ${prog?.percent || 0}% through your track — keep the momentum`,
+      ? `أكملت ${prog?.percent || 0}% من مسارك`
+      : `You are ${prog?.percent || 0}% through your track`,
     href:  '#/roadmap',
     cta:   isAr ? 'فتح الخارطة' : 'Open Roadmap',
     color: track?.color || 'var(--color-primary)',
   };
 }
 
-// ── Smart Insight copy ──────────────────────────────────────────────────────
-function _insight(result, track, prog, isAr) {
+// ── Smart Insight ──────────────────────────────────────────────────────
+function _insight(result, track, isAr) {
   if (!result || !track) return null;
   const pct  = result.top3?.[0]?.pct || 0;
   const conf = result.confidence?.level || 'high';
   const gap  = result.confidence?.gap || 0;
 
   const copies = isAr ? [
-    `تُظهر نتائجك توافقاً بنسبة ${pct}% مع مسار ${track.nameAr || track.name} — هذا مؤشر قوي على المسار الصحيح.`,
+    `تُظهر نتائجك توافقاً بنسبة ${pct}% مع مسار ${track.nameAr || track.name}.`,
     `درجة الثقة في توصيتك ${conf === 'high' ? 'عالية' : conf === 'medium' ? 'متوسطة' : 'معقولة'} بفارق ${gap} نقطة عن المسار التالي.`,
-    `إجاباتك تكشف نمطاً واضحاً في ${result.strengthSentence?.ar?.split('،')[0] || 'أسلوب تفكيرك'}.`,
+    `إجاباتك تكشف نمطاً واضحاً — ${result.strengthSentence?.ar || ''}`,
   ] : [
     `Your results show a ${pct}% alignment with ${track.name} — a strong signal you are on the right path.`,
     `Confidence in this recommendation is ${conf} with a ${gap}-point gap over the next track.`,
-    `Your answer pattern reveals a clear strength in ${result.strengthSentence?.en?.split(',')[0]?.toLowerCase() || 'your thinking style'}.`,
+    `Your answer pattern: ${result.strengthSentence?.en || ''}`,
   ];
 
   return copies[Math.floor(Date.now() / 3600000) % copies.length];
@@ -86,41 +87,38 @@ export function Dashboard() {
   const allTracks   = TrackService.getAllTracks();
 
   const nba     = _nba(user, track, prog, enrollments, result, isAr);
-  const insight = _insight(result, track, prog, isAr);
+  const insight = _insight(result, track, isAr);
 
   const hour     = new Date().getHours();
   const greeting = isAr
     ? (hour < 12 ? 'صباح الخير' : 'مساء الخير')
     : (hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening');
 
-  // Motivation line based on progress
   const motiveLine = (() => {
     if (!track) return '';
     const p = prog?.percent || 0;
-    if (p === 0) return isAr ? 'الرحلة تبدأ بخطوة. الخطوة الأولى أصعبها.' : 'Every expert was once a beginner. Your roadmap is ready.';
-    if (p < 30)  return isAr ? 'بداية قوية. حافظ على الزخم.' : 'Strong start. Keep the momentum going.';
-    if (p < 70)  return isAr ? 'أكثر من النصف. أنت في المسار الصحيح.' : 'Past the halfway mark. You are on track.';
-    return isAr ? 'تقريباً وصلت. لا تتوقف الآن.' : 'Almost there. Do not stop now.';
+    if (p === 0)  return isAr ? 'الرحلة تبدأ بخطوة. الخطوة الأولى أصعبها.' : 'Every expert was once a beginner. Your roadmap is ready.';
+    if (p < 30)   return isAr ? 'بداية قوية. حافظ على الزخم.' : 'Strong start. Keep the momentum going.';
+    if (p < 70)   return isAr ? 'أكثر من النصف. أنت في المسار الصحيح.' : 'Past the halfway mark. You are on track.';
+    return isAr ? 'تقريباً وصلت. لا تتوقف.' : 'Almost there. Do not stop now.';
   })();
 
   return `
     <div class="dashboard fade-in">
 
-      <!-- Hero -->
       <div class="dashboard-hero">
         <div class="dashboard-hero__text">
           <p class="dashboard-hero__greeting">${greeting},</p>
           <h1 class="dashboard-hero__name">${firstName}</h1>
           ${motiveLine ? `<p class="dashboard-hero__motive">${motiveLine}</p>` : ''}
         </div>
-        <!-- Demo mode button -->
-        <button class="btn btn--ghost btn--sm demo-mode-btn" id="demo-mode-btn" style="flex-shrink:0">
+        <button class="btn btn--ghost btn--sm" id="demo-mode-btn" style="flex-shrink:0">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           ${isAr ? 'وضع العرض' : 'Demo Mode'}
         </button>
       </div>
 
-      <!-- NBA card -->
+      <!-- NBA -->
       <div class="db-nba slide-up" style="animation-delay:0.05s;border-color:${nba.color}30;background:${nba.color}08">
         <div class="db-nba__icon" style="color:${nba.color};background:${nba.color}14">${nba.icon}</div>
         <div class="db-nba__body">
@@ -184,7 +182,7 @@ export function Dashboard() {
           </a>
         </div>` : ''}
 
-      <!-- Active Track Progress -->
+      <!-- Track card -->
       ${track ? `
         <div class="card dashboard-track-card slide-up" style="animation-delay:0.26s">
           <div class="dashboard-track-card__header">
@@ -220,13 +218,13 @@ export function Dashboard() {
         </div>`
       }
 
-      <!-- Quick nav -->
+      <!-- Quick Nav -->
       <div class="db-quicknav slide-up" style="animation-delay:0.3s">
         ${[
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>`, label: isAr ? 'خارطة الطريق' : 'Roadmap', href: '#/roadmap', color: '#6366f1' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`, label: isAr ? 'الدورات' : 'Courses', href: '#/courses', color: '#f59e0b' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>`, label: isAr ? 'خارطة الطريق' : 'Roadmap',    href: '#/roadmap',    color: '#6366f1' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`, label: isAr ? 'الدورات' : 'Courses',    href: '#/courses',    color: '#f59e0b' },
           { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>`, label: isAr ? 'الإرشاد' : 'Mentorship', href: '#/mentorship', color: '#ec4899' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`, label: isAr ? 'التقدم' : 'Progress', href: '#/progress', color: '#10b981' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,                                                                                                                                                                                                                                                         label: isAr ? 'التقدم' : 'Progress',   href: '#/progress',   color: '#10b981' },
         ].map(item => `
           <a href="${item.href}" class="db-quicknav__item">
             <span class="db-quicknav__icon" style="color:${item.color};background:${item.color}14">${item.icon}</span>
@@ -271,65 +269,57 @@ export function DashboardEvents() {
     });
   });
 
-  // Demo Mode — injects a complete user state for presentations
+  // Demo Mode — all static imports, no dynamic import() chains
   document.getElementById('demo-mode-btn')?.addEventListener('click', () => {
-    import('../../services/track.service.js').then(({ TrackService: TS }) => {
-      import('../../services/storage.service.js').then(({ StorageService }) => {
-        import('../../state.js').then(({ default: S }) => {
-          // Inject demo test result
-          const demoResult = {
-            topTrackId: 'frontend',
-            top3: [
-              { id: 'frontend', score: 30, pct: 100 },
-              { id: 'ux',       score: 22, pct: 73 },
-              { id: 'backend',  score: 16, pct: 53 },
-            ],
-            scores: { frontend: 30, ux: 22, backend: 16, data: 10, devops: 8 },
-            percentages: { frontend: 100, ux: 73, backend: 53, data: 33, devops: 27 },
-            confidence: { level: 'high', gap: 27 },
-            dimensions: { visual: 86, creative: 79, empathetic: 57, analytical: 43, logical: 36, systematic: 21 },
-            strengthSentence: {
-              en: 'You think in visuals, care about output, and love building things people interact with.',
-              ar: 'تفكّر بصرياً، تهتم بالمخرجات، وتحب بناء ما يتفاعل معه الناس.',
-            },
-            recommendedTrack: TS.getTrackById('frontend'),
-            completedAt: Date.now(),
-          };
-          S.setState('testResult', demoResult);
-          StorageService.set('testResult', demoResult);
+    const isAr = document.documentElement.getAttribute('lang') === 'ar';
 
-          // Enroll in frontend track
-          TS.enrollInTrack('frontend');
+    // 1. Inject full test result
+    const demoResult = {
+      topTrackId: 'frontend',
+      top3: [
+        { id: 'frontend', score: 30, pct: 100 },
+        { id: 'ux',       score: 22, pct: 73 },
+        { id: 'backend',  score: 16, pct: 53 },
+      ],
+      scores:      { frontend: 30, ux: 22, backend: 16, data: 10, devops: 8 },
+      percentages: { frontend: 100, ux: 73, backend: 53, data: 33, devops: 27 },
+      confidence:  { level: 'high', gap: 27 },
+      dimensions:  { visual: 86, creative: 79, empathetic: 57, analytical: 43, logical: 36, systematic: 21 },
+      strengthSentence: {
+        en: 'You think in visuals, care about output, and love building things people interact with.',
+        ar: 'تفكّر بصرياً، تهتم بالمخرجات، وتحب بناء ما يتفاعل معه الناس.',
+      },
+      recommendedTrack: TrackService.getTrackById('frontend'),
+      completedAt: Date.now(),
+    };
+    State.setState('testResult', demoResult);
+    StorageService.set('testResult', demoResult);
 
-          // Enroll in 2 courses
-          const demoEnrollments = [
-            { courseId: 'c-fe-1', progress: 100, status: 'completed', enrolledAt: Date.now() - 86400000 },
-            { courseId: 'c-fe-2', progress: 42,  status: 'active',    enrolledAt: Date.now() },
-          ];
-          S.setState('enrollments', demoEnrollments);
-          StorageService.set('enrollments', demoEnrollments);
+    // 2. Enroll in frontend track (sets user.activeTrackId)
+    TrackService.enrollInTrack('frontend');
 
-          // Book a mentor
-          const demoBookings = [{ mentorId: 'm1', mentorName: 'Sarah El-Rashidy', bookedAt: Date.now(), status: 'confirmed' }];
-          S.setState('bookings', demoBookings);
-          StorageService.set('bookings', demoBookings);
+    // 3. Inject course enrollments into storage
+    const demoEnrollments = [
+      { courseId: 'c-fe-1', progress: 100, status: 'completed', enrolledAt: Date.now() - 86400000 },
+      { courseId: 'c-fe-2', progress: 42,  status: 'active',    enrolledAt: Date.now() },
+    ];
+    StorageService.set('enrollments', demoEnrollments);
 
-          Toastify({
-            text: document.documentElement.getAttribute('lang') === 'ar'
-              ? 'تم تفعيل وضع العرض'
-              : 'Demo mode activated',
-            duration: 2000,
-            gravity: 'bottom',
-            position: 'right',
-            style: { background: 'var(--color-primary)' },
-          }).showToast();
+    // 4. Inject mentor bookings into storage
+    const demoBookings = [
+      { mentorId: 'm1', mentorName: 'Sarah El-Rashidy', bookedAt: Date.now(), status: 'confirmed' },
+    ];
+    StorageService.set('bookings', demoBookings);
 
-          // Re-render dashboard
-          setTimeout(() => {
-            import('../../router.js').then(({ Router }) => Router.navigate('/dashboard'));
-          }, 600);
-        });
-      });
-    });
+    // 5. Toast + re-render
+    Toastify({
+      text:     isAr ? 'تم تفعيل وضع العرض' : 'Demo mode activated',
+      duration: 2000,
+      gravity:  'bottom',
+      position: 'right',
+      style:    { background: 'var(--color-primary)' },
+    }).showToast();
+
+    setTimeout(() => Router.navigate('/dashboard'), 600);
   });
 }
