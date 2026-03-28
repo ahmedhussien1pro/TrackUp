@@ -2,7 +2,6 @@ import { Router } from '../../router.js';
 import { TestService } from '../../services/test.service.js';
 import { TrackService } from '../../services/track.service.js';
 
-// Work style indicators per track
 const WORK_STYLE = {
   frontend: {
     en: ['Visual & Output-Driven', 'Iterative Builder', 'Detail-Oriented', 'Loves Fast Feedback'],
@@ -26,11 +25,10 @@ const WORK_STYLE = {
   },
 };
 
-// Preference signals to show what user cares about
 const PREFERENCES = {
   frontend: {
     en: { builds: 'Visual interfaces & animations', avoids: 'Database design & DevOps', thrives: 'Creative & fast-moving teams' },
-    ar: { builds: 'الواجهات المرئية والحركات', avoids: 'تصميم قواعد البيانات وDevOps', thrives: 'الفرق الإبداعية سريعة الإيقاع' },
+    ar: { builds: 'الواجهات المرئية والحركات', avoids: 'تصميم قواعد البيانات', thrives: 'الفرق الإبداعية سريعة الإيقاع' },
   },
   backend: {
     en: { builds: 'APIs, databases & infrastructure', avoids: 'UI design & pixel work', thrives: 'Complex technical challenges' },
@@ -38,16 +36,22 @@ const PREFERENCES = {
   },
   data: {
     en: { builds: 'Dashboards, models & analysis', avoids: 'Front-end styling & DevOps', thrives: 'Data-heavy, insight-focused work' },
-    ar: { builds: 'لوحات التحكم والنماذج والتحليل', avoids: 'تنسيق الواجهة وDevOps', thrives: 'العمل المكثف بالبيانات' },
+    ar: { builds: 'لوحات التحكم والنماذج', avoids: 'تنسيق الواجهة', thrives: 'العمل المكثف بالبيانات' },
   },
   ux: {
     en: { builds: 'Prototypes, flows & research', avoids: 'Backend architecture & data models', thrives: 'User-centric, design-forward teams' },
-    ar: { builds: 'النماذج والتدفقات والبحث', avoids: 'البنية الخلفية ونماذج البيانات', thrives: 'الفرق المتمحورة حول المستخدم' },
+    ar: { builds: 'النماذج والتدفقات والبحث', avoids: 'البنية الخلفية', thrives: 'الفرق المتمحورة حول المستخدم' },
   },
   devops: {
     en: { builds: 'Pipelines, automation & monitoring', avoids: 'Product design & UX research', thrives: 'High-reliability, infrastructure teams' },
-    ar: { builds: 'المسارات والأتمتة والمراقبة', avoids: 'تصميم المنتج وبحث UX', thrives: 'فرق البنية التحتية عالية الاطمئنان' },
+    ar: { builds: 'المسارات والأتمتة والمراقبة', avoids: 'تصميم المنتج', thrives: 'فرق البنية التحتية عالية الاطمئنان' },
   },
+};
+
+const CONF_LABEL = {
+  high:   { en: 'High',     ar: 'عالية' },
+  medium: { en: 'Medium',   ar: 'متوسطة' },
+  low:    { en: 'Moderate', ar: 'معقولة' },
 };
 
 function _dimBar(label, pct, color) {
@@ -64,9 +68,9 @@ function _dimBar(label, pct, color) {
 }
 
 export function DecisionSummary() {
-  const result   = TestService.getResult();
-  const lang     = document.documentElement.getAttribute('lang') || 'en';
-  const isAr     = lang === 'ar';
+  const result = TestService.getResult();
+  const lang   = document.documentElement.getAttribute('lang') || 'en';
+  const isAr   = lang === 'ar';
 
   if (!result) {
     return `<div class="empty-state">
@@ -77,33 +81,29 @@ export function DecisionSummary() {
   }
 
   const allTracks  = TrackService.getAllTracks();
-  const topTrack   = allTracks.find(t => t.id === result.topTrackId) || allTracks[0];
+  const topTrack   = allTracks.find(tr => tr.id === result.topTrackId) || allTracks[0];
   const top3       = result.top3 || [];
   const confidence = result.confidence || { level: 'high' };
   const dims       = result.dimensions || {};
   const strength   = result.strengthSentence?.[lang] || result.strengthSentence?.en || '';
   const style      = WORK_STYLE[topTrack.id]?.[lang] || WORK_STYLE[topTrack.id]?.en || [];
   const pref       = PREFERENCES[topTrack.id]?.[lang] || PREFERENCES[topTrack.id]?.en || {};
-
-  const confColor  = { high: 'var(--color-success)', medium: 'var(--color-warning)', low: 'var(--color-primary)' };
   const color      = topTrack.color;
 
-  // Top 6 strongest dimensions
-  const dimEntries = Object.entries(dims)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6);
+  const confColorMap = { high: 'var(--color-success)', medium: 'var(--color-warning)', low: 'var(--color-primary)' };
+  const confColor    = confColorMap[confidence.level] || confColorMap.high;
+  const confLabel    = CONF_LABEL[confidence.level]?.[lang] || CONF_LABEL.high[lang];
 
-  const dimBars = dimEntries.map(([key, pct]) =>
+  const dimEntries = Object.entries(dims).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const dimBars    = dimEntries.map(([key, pct]) =>
     _dimBar(TestService.getDimensionLabel(key, lang), pct, color)
   ).join('');
 
-  // Runner-up track
-  const runnerUp = top3[1] ? allTracks.find(t => t.id === top3[1].id) : null;
+  const runnerUp = top3[1] ? allTracks.find(tr => tr.id === top3[1].id) : null;
 
   return `
     <div class="ds-screen fade-in">
 
-      <!-- Top banner -->
       <div class="ds-banner" style="border-color:${color}30;background:${color}08">
         <div class="ds-banner__left">
           <div class="ds-banner__eyebrow">${isAr ? 'ملخص القرار المهني' : 'Career Decision Summary'}</div>
@@ -118,34 +118,28 @@ export function DecisionSummary() {
         </div>
       </div>
 
-      <!-- Confidence + quick stats -->
       <div class="ds-stats">
         <div class="ds-stat">
           <div class="ds-stat__value ltr-text" style="color:${color}">${top3[0]?.pct || 0}%</div>
           <div class="ds-stat__label">${isAr ? 'درجة التوافق' : 'Fit Score'}</div>
         </div>
         <div class="ds-stat">
-          <div class="ds-stat__value" style="color:${confColor[confidence.level]}">
-            ${{ high: isAr ? 'عالية' : 'High', medium: isAr ? 'متوسطة' : 'Medium', low: isAr ? 'معقولة' : 'Moderate' }[confidence.level]}
-          </div>
+          <div class="ds-stat__value" style="color:${confColor}">${confLabel}</div>
           <div class="ds-stat__label">${isAr ? 'الثقة' : 'Confidence'}</div>
         </div>
         <div class="ds-stat">
-          <div class="ds-stat__value ltr-text">${topTrack.salaryRange}</div>
+          <div class="ds-stat__value ltr-text">${topTrack.salaryRange || '$60k–$120k'}</div>
           <div class="ds-stat__label">${isAr ? 'النطاق المرتبي' : 'Salary Range'}</div>
         </div>
         <div class="ds-stat">
-          <div class="ds-stat__value">${isAr ? topTrack.durationAr : topTrack.duration}</div>
+          <div class="ds-stat__value">${isAr ? (topTrack.durationAr || topTrack.duration) : topTrack.duration}</div>
           <div class="ds-stat__label">${isAr ? 'مدة التحضير' : 'Prep Duration'}</div>
         </div>
       </div>
 
       <div class="ds-body">
-
-        <!-- Left column -->
         <div class="ds-col">
 
-          <!-- Cognitive Dimensions -->
           <div class="ds-card">
             <div class="ds-card__title">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
@@ -154,7 +148,6 @@ export function DecisionSummary() {
             <div class="ds-dims">${dimBars}</div>
           </div>
 
-          <!-- Work Style -->
           <div class="ds-card">
             <div class="ds-card__title">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -167,10 +160,8 @@ export function DecisionSummary() {
 
         </div>
 
-        <!-- Right column -->
         <div class="ds-col">
 
-          <!-- Preferences -->
           <div class="ds-card">
             <div class="ds-card__title">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -183,7 +174,7 @@ export function DecisionSummary() {
                 </span>
                 <div>
                   <div class="ds-pref__key">${isAr ? 'تبني' : 'You build'}</div>
-                  <div class="ds-pref__val">${pref.builds}</div>
+                  <div class="ds-pref__val">${pref.builds || ''}</div>
                 </div>
               </div>
               <div class="ds-pref__row">
@@ -192,7 +183,7 @@ export function DecisionSummary() {
                 </span>
                 <div>
                   <div class="ds-pref__key">${isAr ? 'تتجنب' : 'You avoid'}</div>
-                  <div class="ds-pref__val">${pref.avoids}</div>
+                  <div class="ds-pref__val">${pref.avoids || ''}</div>
                 </div>
               </div>
               <div class="ds-pref__row">
@@ -201,13 +192,12 @@ export function DecisionSummary() {
                 </span>
                 <div>
                   <div class="ds-pref__key">${isAr ? 'تزدهر في' : 'You thrive in'}</div>
-                  <div class="ds-pref__val">${pref.thrives}</div>
+                  <div class="ds-pref__val">${pref.thrives || ''}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Runner-up track -->
           ${runnerUp ? `
           <div class="ds-card ds-card--alt">
             <div class="ds-card__title">
@@ -218,33 +208,29 @@ export function DecisionSummary() {
               <div class="ds-alt-track__icon" style="background:${runnerUp.color}18;color:${runnerUp.color}">${runnerUp.icon}</div>
               <div>
                 <div class="ds-alt-track__name">${isAr ? runnerUp.nameAr : runnerUp.name}</div>
-                <div class="ds-alt-track__fit">${top3[1]?.pct}% ${isAr ? 'توافق' : 'fit'}</div>
+                <div class="ds-alt-track__fit">${top3[1]?.pct || 0}% ${isAr ? 'توافق' : 'fit'}</div>
               </div>
             </div>
             <p class="ds-alt-track__desc">${isAr ? runnerUp.descriptionAr : runnerUp.description}</p>
           </div>` : ''}
 
-          <!-- Skills unlocked -->
           <div class="ds-card">
             <div class="ds-card__title">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
               ${isAr ? 'المهارات التي ستبنيها' : 'Skills You Will Build'}
             </div>
             <div class="ds-tags">
-              ${(topTrack.skills || []).map(s =>
-                `<span class="ds-tag ds-tag--skill">${s}</span>`
-              ).join('')}
+              ${(topTrack.skills || []).map(s => `<span class="ds-tag ds-tag--skill">${s}</span>`).join('')}
             </div>
           </div>
 
         </div>
       </div>
 
-      <!-- CTA -->
       <div class="ds-cta">
         <div class="ds-cta__left">
           <div class="ds-cta__headline">${isAr ? 'جاهز لتحويل هذا القرار إلى خطة عمل؟' : 'Ready to turn this decision into an action plan?'}</div>
-          <div class="ds-cta__sub">${isAr ? 'افتح التقرير الكامل للحصول على خارطة طريق مخصصة، وتحليل عمق المسار، وجلسات إرشاد' : 'Unlock the full report for a personalised roadmap, deep track analysis, and mentorship access.'}</div>
+          <div class="ds-cta__sub">${isAr ? 'افتح التقرير الكامل للحصول على خارطة طريق مخصصة' : 'Unlock the full report for a personalised roadmap, deep track analysis, and mentorship access.'}</div>
         </div>
         <div class="ds-cta__actions">
           <a href="#/pricing" class="btn btn--primary btn--lg">${isAr ? 'فتح التقرير الكامل' : 'Unlock Full Report'}</a>
@@ -258,7 +244,6 @@ export function DecisionSummary() {
 }
 
 export function DecisionSummaryEvents() {
-  // Animate dimension bars
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       document.querySelectorAll('.ds-dim__fill').forEach(el => {
@@ -268,11 +253,10 @@ export function DecisionSummaryEvents() {
     });
   });
 
+  // Use static TrackService — no dynamic import
   document.getElementById('ds-start-free-btn')?.addEventListener('click', (e) => {
     const trackId = e.currentTarget.dataset.trackId;
-    import('../../services/track.service.js').then(({ TrackService: TS }) => {
-      if (trackId) TS.enrollInTrack(trackId);
-      Router.navigate('/roadmap');
-    });
+    if (trackId) TrackService.enrollInTrack(trackId);
+    Router.navigate('/roadmap');
   });
 }
