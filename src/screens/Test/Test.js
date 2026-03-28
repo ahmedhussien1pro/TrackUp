@@ -1,19 +1,41 @@
 import { Router } from '../../router.js';
 import { TestService } from '../../services/test.service.js';
+import State from '../../state.js';
 
 // Dimension labels shown during test — maps question index to cognitive focus
 const DIMENSION_CONTEXT = [
-  { en: 'Analysing your creative style',     ar: 'نحلل أسلوبك الإبداعي' },
-  { en: 'Measuring your systems thinking',   ar: 'نقيس تفكيرك المنظومي' },
+  { en: 'Analysing your creative style',       ar: 'نحلل أسلوبك الإبداعي' },
+  { en: 'Measuring your systems thinking',     ar: 'نقيس تفكيرك المنظومي' },
   { en: 'Understanding your problem approach', ar: 'نفهم طريقتك في حل المشكلات' },
-  { en: 'Detecting your output preference',  ar: 'نكتشف تفضيلاتك الإنتاجية' },
-  { en: 'Reading your curiosity patterns',   ar: 'نقرأ أنماط فضولك' },
-  { en: 'Measuring your empathy index',      ar: 'نقيس مؤشر تعاطفك' },
-  { en: 'Finalising your career profile',    ar: 'نكتمل بناء ملفك المهني' },
+  { en: 'Detecting your output preference',    ar: 'نكتشف تفضيلاتك الإنتاجية' },
+  { en: 'Reading your curiosity patterns',     ar: 'نقرأ أنماط فضولك' },
+  { en: 'Measuring your empathy index',        ar: 'نقيس مؤشر تعاطفك' },
+  { en: 'Finalising your career profile',      ar: 'نكتمل بناء ملفك المهني' },
 ];
+
+// Human-readable goal label derived from onboarding context
+const GOAL_LABELS = {
+  get_job:       { en: 'Find a job',        ar: 'الحصول على وظيفة' },
+  switch_career: { en: 'Switch careers',    ar: 'تغيير المسار المهني' },
+  freelance:     { en: 'Go freelance',      ar: 'العمل الحر' },
+  upskill:       { en: 'Level up skills',   ar: 'تطوير المهارات' },
+  explore:       { en: 'Explore options',   ar: 'استكشاف الخيارات' },
+};
 
 let _session = null;
 let _current = 0;
+
+function _goalHint(isAr) {
+  const ctx = State.getState('onboarding_context');
+  if (!ctx?.goal) return '';
+  const label = GOAL_LABELS[ctx.goal]?.[isAr ? 'ar' : 'en'];
+  if (!label) return '';
+  return `
+    <div class="test-goal-hint">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      <span>${isAr ? `هدفك: ${label}` : `Your goal: ${label}`}</span>
+    </div>`;
+}
 
 export function Test() {
   _session = TestService.startTest();
@@ -29,6 +51,7 @@ export function Test() {
         <div class="test-header__left">
           <div class="test-header__label">${isAr ? 'تقييم المسار المهني' : 'Career Assessment'}</div>
           <h2 class="test-header__title">${isAr ? 'نبني قرارك المهني' : 'We are building your career decision'}</h2>
+          ${_goalHint(isAr)}
         </div>
         <a href="#/" class="btn btn--ghost btn--sm">${isAr ? 'خروج' : 'Exit'}</a>
       </div>
