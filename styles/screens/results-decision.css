@@ -232,14 +232,65 @@
   margin-top: var(--space-1);
 }
 
-/* ---- Actions ---- */
-.rc-actions {
+/* ============================================================
+   RESULTS GATEWAY — 3-action block (no dead end)
+============================================================ */
+
+.rc-gateway {
+  margin-top: var(--space-10);
+  padding: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--space-5);
 }
 
+.rc-gateway__primary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.rc-gateway__primary .btn--lg {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.rc-gateway__hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.rc-gateway__secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.rc-gateway__secondary .btn--outline,
+.rc-gateway__secondary .btn--ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rc-gateway__secondary .btn--ghost {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
 
 /* ============================================================
    DECISION SUMMARY SCREEN
@@ -249,6 +300,30 @@
   max-width: 900px;
   margin: 0 auto;
   padding: var(--space-8) var(--space-4) var(--space-16);
+}
+
+/* ---- Breadcrumb ---- */
+.ds-breadcrumb {
+  margin-bottom: var(--space-5);
+}
+
+.ds-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.ds-back-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface-2);
 }
 
 /* ---- Banner ---- */
@@ -457,9 +532,102 @@
   flex-direction: column;
   gap: var(--space-2);
   flex-shrink: 0;
+  align-items: stretch;
 }
 
-/* ---- Responsive ---- */
+.ds-cta__actions .btn--ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* ============================================================
+   DASHBOARD FIRST-RUN BANNER
+============================================================ */
+
+.db-first-run {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
+  margin-bottom: var(--space-6);
+  animation: slide-up 0.35s ease both;
+}
+
+.db-first-run__icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-success) 16%, transparent);
+  color: var(--color-success);
+}
+
+.db-first-run__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.db-first-run__body strong {
+  color: var(--color-text);
+  font-weight: var(--weight-semi);
+}
+
+.db-first-run__body span {
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.db-first-run__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   TEST PROGRESS META ROW
+============================================================ */
+
+.test-progress__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+}
+
+.test-progress__context {
+  font-size: var(--text-xs);
+  color: var(--color-primary);
+  font-weight: var(--weight-medium);
+  font-style: italic;
+  transition: opacity 0.2s ease;
+  flex: 1;
+}
+
+.test-progress__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
 @media (max-width: 680px) {
   .ds-body { grid-template-columns: 1fr; }
   .ds-stats { grid-template-columns: repeat(2, 1fr); }
@@ -467,4 +635,8 @@
   .ds-banner__icon { display: none; }
   .ds-cta { flex-direction: column; align-items: flex-start; }
   .rc-hero__title { font-size: var(--text-2xl); }
+  .rc-gateway__secondary { flex-direction: column; align-items: stretch; }
+  .rc-gateway__secondary .btn { justify-content: center; }
+  .db-first-run { flex-direction: column; }
+  .db-first-run__actions { width: 100%; justify-content: flex-end; }
 }
