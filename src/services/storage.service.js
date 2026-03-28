@@ -1,34 +1,23 @@
-const NS = 'trackup__';
+const PREFIX = 'trackup__';
 
 export const StorageService = {
+  set(key, value) {
+    try { localStorage.setItem(PREFIX + key, JSON.stringify(value)); } catch (e) {}
+  },
   get(key) {
     try {
-      const v = localStorage.getItem(NS + key);
+      const v = localStorage.getItem(PREFIX + key);
       return v ? JSON.parse(v) : null;
-    } catch { return null; }
+    } catch (e) { return null; }
   },
-
-  set(key, value) {
-    try { localStorage.setItem(NS + key, JSON.stringify(value)); } catch {}
-  },
-
   remove(key) {
-    try { localStorage.removeItem(NS + key); } catch {}
+    try { localStorage.removeItem(PREFIX + key); } catch (e) {}
   },
-
   clear() {
     try {
       Object.keys(localStorage)
-        .filter(k => k.startsWith(NS))
+        .filter(k => k.startsWith(PREFIX))
         .forEach(k => localStorage.removeItem(k));
-    } catch {}
-  },
-
-  keys() {
-    return Object.keys(localStorage)
-      .filter(k => k.startsWith(NS))
-      .map(k => k.replace(NS, ''));
+    } catch (e) {}
   },
 };
-
-export default StorageService;

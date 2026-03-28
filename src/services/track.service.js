@@ -1,43 +1,33 @@
 import State from '../state.js';
 import { StorageService } from './storage.service.js';
-import { MOCK_TRACKS } from '../data/mock/tracks.js';
-
-const _tracks = [...MOCK_TRACKS];
+import { tracks } from '../data/mock/tracks.js';
 
 export const TrackService = {
   getAllTracks() {
-    return _tracks;
+    return tracks;
   },
 
   getTrackById(id) {
-    return _tracks.find(t => t.id === id) || null;
-  },
-
-  setActiveTrack(id) {
-    const track = this.getTrackById(id);
-    State.setState('activeTrack', track);
-    StorageService.set('activeTrackId', id);
-    return track;
-  },
-
-  restoreActiveTrack() {
-    const id = StorageService.get('activeTrackId');
-    if (id) this.setActiveTrack(id);
+    return tracks.find(t => t.id === id) || null;
   },
 
   enrollInTrack(trackId) {
-    const user = State.getState('user');
-    if (!user) return { success: false, message: 'Not authenticated.' };
     const track = this.getTrackById(trackId);
     if (!track) return { success: false, message: 'Track not found.' };
+
+    const user = State.getState('user');
+    if (!user) return { success: false, message: 'Not authenticated.' };
+
     const updated = { ...user, activeTrackId: trackId };
     State.setState('user', updated);
     StorageService.set('session', updated);
-    this.setActiveTrack(trackId);
+
     return { success: true, track };
   },
 
-  getTracksByCategory(category) {
-    return _tracks.filter(t => t.category === category);
+  getActiveTrack() {
+    const user = State.getState('user');
+    if (!user?.activeTrackId) return null;
+    return this.getTrackById(user.activeTrackId);
   },
 };

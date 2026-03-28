@@ -1,51 +1,84 @@
 import State from '../state.js';
 import { StorageService } from './storage.service.js';
-import { MOCK_USERS } from '../data/mock/users.js';
 
-const _users = [...MOCK_USERS];
+// Demo account — always works
+const DEMO_USER = {
+  id: 'demo',
+  name: 'Ahmed Hussien',
+  email: 'demo@trackup.io',
+  password: 'demo1234',
+  plan: 'pro',
+  activeTrackId: null,
+};
+
+function _getUsers() {
+  return StorageService.get('users') || [DEMO_USER];
+}
+
+function _saveUsers(users) {
+  // Don't persist demo user password in storage
+  StorageService.set('users', users.filter(u => u.id !== 'demo'));
+}
 
 export const AuthService = {
-  login(email, password) {
-    const match = _users.find(u => u.email === email && u.password === password);
-    if (!match) return { success: false, message: 'Invalid email or password.' };
-    const { password: _, ...safe } = match;
-    State.setState('user', safe);
-    StorageService.set('session', safe);
-    return { success: true, user: safe };
-  },
-
   register({ name, email, password }) {
-    if (_users.find(u => u.email === email))
+    const users = _getUsers();
+    if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
       return { success: false, message: 'An account with this email already exists.' };
-    const newUser = {
-      id: 'u' + Date.now(),
+    }
+    const user = {
+      id: 'u_' + Date.now(),
       name,
       email,
       password,
-      careerField: null,
-      activeTrackId: null,
       plan: 'free',
-      joinedAt: new Date().toISOString().split('T')[0],
+      activeTrackId: null,
     };
-    _users.push(newUser);
-    const { password: _, ...safe } = newUser;
-    State.setState('user', safe);
-    StorageService.set('session', safe);
-    return { success: true, user: safe };
+    _saveUsers([...users, user]);
+    const safeUser = { ...user };
+    delete safeUser.password;
+    State.setState('user', safeUser);
+    StorageService.set('session', safeUser);
+    return { success: true, user: safeUser };
+  },
+
+  login(email, password) {
+    const users = _getUsers();
+    const found = users.find(
+      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    );
+    if (!found) {
+      return { success: false, message: 'Incorrect email or password.' };
+    }
+    const safeUser = { ...found };
+    delete safeUser.password;
+    State.setState('user', safeUser);
+    StorageService.set('session', safeUser);
+    return { success: true, user: safeUser };
   },
 
   logout() {
     State.setState('user', null);
+    State.setState('enrollments', []);
+    State.setState('bookings', []);
     StorageService.remove('session');
   },
 
   restoreSession() {
-    const saved = StorageService.get('session');
-    if (saved) State.setState('user', saved);
-    return saved || null;
+    const session = StorageService.get('session');
+    if (session) {
+      State.setState('user', session);
+    }
+    // Restore enrollments + bookings
+    const enrollments = StorageService.get('enrollments') || [];
+    const bookings    = StorageService.get('bookings')    || [];
+    const roadmapData = StorageService.get('roadmapData') || {};
+    State.setState('enrollments', enrollments);
+    State.setState('bookings', bookings);
+    State.setState('roadmapData', roadmapData);
   },
 
-  getUser() {
+  getCurrentUser() {
     return State.getState('user');
   },
 };

@@ -1,44 +1,44 @@
 import State from '../state.js';
-import { MOCK_ROADMAP_STEPS } from '../data/mock/roadmapSteps.js';
-
-const _steps = [...MOCK_ROADMAP_STEPS];
+import { StorageService } from './storage.service.js';
+import { roadmaps } from '../data/mock/roadmaps.js';
 
 export const RoadmapService = {
   getStepsForTrack(trackId) {
-    return _steps
-      .filter(s => s.trackId === trackId)
-      .sort((a, b) => a.order - b.order);
-  },
+    const template = roadmaps[trackId] || [];
+    const savedData = State.getState('roadmapData') || {};
+    const completed = savedData[trackId] || [];
 
-  loadStepsForTrack(trackId) {
-    const steps = this.getStepsForTrack(trackId);
-    State.setState('roadmapSteps', steps);
-    return steps;
-  },
-
-  markStepActive(stepId) {
-    const idx = _steps.findIndex(s => s.id === stepId);
-    if (idx === -1) return;
-    _steps[idx] = { ..._steps[idx], status: 'active' };
-    const trackId = _steps[idx].trackId;
-    this.loadStepsForTrack(trackId);
-  },
-
-  completeStep(stepId) {
-    const idx = _steps.findIndex(s => s.id === stepId);
-    if (idx === -1) return;
-    _steps[idx] = { ..._steps[idx], status: 'completed' };
-    const next = _steps.find(s => s.trackId === _steps[idx].trackId && s.order === _steps[idx].order + 1);
-    if (next && next.status === 'locked') {
-      const ni = _steps.findIndex(s => s.id === next.id);
-      _steps[ni] = { ..._steps[ni], status: 'active' };
-    }
-    this.loadStepsForTrack(_steps[idx].trackId);
+    let firstActive = false;
+    return template.map((step, i) => {
+      if (completed.includes(step.id)) {
+        return { ...step, status: 'completed' };
+      }
+      if (!firstActive) {
+        firstActive = true;
+        return { ...step, status: 'active' };
+      }
+      return { ...step, status: 'locked' };
+    });
   },
 
   getProgressForTrack(trackId) {
     const steps = this.getStepsForTrack(trackId);
+    const total     = steps.length;
     const completed = steps.filter(s => s.status === 'completed').length;
-    return { total: steps.length, completed, percent: steps.length ? Math.round((completed / steps.length) * 100) : 0 };
+    const percent   = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { total, completed, percent };
+  },
+
+  completeStep(stepId) {
+    const user = State.getState('user');
+    if (!user?.activeTrackId) return;
+    const trackId    = user.activeTrackId;
+    const savedData  = { ...(State.getState('roadmapData') || {}) };
+    const completed  = savedData[trackId] || [];
+    if (!completed.includes(stepId)) {
+      savedData[trackId] = [...completed, stepId];
+      State.setState('roadmapData', savedData);
+      StorageService.set('roadmapData', savedData);
+    }
   },
 };

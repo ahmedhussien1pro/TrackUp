@@ -1,45 +1,35 @@
 import State from '../state.js';
-import { MOCK_MENTORS } from '../data/mock/mentors.js';
-
-const _mentors = [...MOCK_MENTORS];
+import { StorageService } from './storage.service.js';
+import { mentors } from '../data/mock/mentors.js';
 
 export const MentorService = {
   getAllMentors() {
-    return _mentors;
-  },
-
-  getMentorsForTrack(trackId) {
-    return _mentors.filter(m => m.tracks.includes(trackId));
+    return mentors;
   },
 
   getMentorById(id) {
-    return _mentors.find(m => m.id === id) || null;
+    return mentors.find(m => m.id === id) || null;
   },
 
-  bookSession(mentorId, slot = null) {
+  getMentorsForTrack(trackId) {
+    return mentors.filter(m => m.trackIds?.includes(trackId));
+  },
+
+  bookSession(mentorId) {
     const mentor = this.getMentorById(mentorId);
     if (!mentor) return { success: false, message: 'Mentor not found.' };
-    const bookings = [...(State.getState('bookings') || [])];
+
     const booking = {
-      id: 'b' + Date.now(),
+      id: 'b_' + Date.now(),
       mentorId,
       mentorName: mentor.name,
-      slot: slot || mentor.availability[0],
-      status: 'pending',
       bookedAt: Date.now(),
+      status: 'confirmed',
     };
-    bookings.push(booking);
+    const bookings = [...(State.getState('bookings') || []), booking];
     State.setState('bookings', bookings);
-    return { success: true, message: 'Session booked successfully.', booking };
-  },
+    StorageService.set('bookings', bookings);
 
-  cancelBooking(bookingId) {
-    const bookings = (State.getState('bookings') || []).filter(b => b.id !== bookingId);
-    State.setState('bookings', bookings);
-    return { success: true, message: 'Booking cancelled.' };
-  },
-
-  getBookings() {
-    return State.getState('bookings') || [];
+    return { success: true, message: `Session booked with ${mentor.name}` };
   },
 };
