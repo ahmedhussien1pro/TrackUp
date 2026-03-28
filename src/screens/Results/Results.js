@@ -6,7 +6,7 @@ import State from '../../state.js';
 import { t } from '../../i18n.js';
 
 export function Results() {
-  const result   = TestService.getResult();
+  const result = TestService.getResult();
 
   if (!result) {
     return `
@@ -29,6 +29,8 @@ export function Results() {
   const topTrack   = allTracks.find(tr => tr.id === result.topTrackId) || allTracks[0];
   const confidence = result.confidence || { level: 'high', gap: 30 };
   const dimensions = result.dimensions || {};
+  const trackName  = isAr ? (topTrack.nameAr || topTrack.name) : topTrack.name;
+  const fitPct     = top3[0]?.pct || 0;
 
   const confColorMap = {
     high:   'var(--color-success)',
@@ -54,18 +56,16 @@ export function Results() {
     </div>
   `).join('');
 
-  // ── Mandatory reasoning bridge ───────────────────────────────────────
-  const topDim      = dimEntries[0];   // ["visual", 86]
-  const secondDim   = dimEntries[1];   // ["creative", 79]
+  // ── Mandatory reasoning bridge: connects dimension scores → track decision ──
+  const topDim      = dimEntries[0];
+  const secondDim   = dimEntries[1];
   const topDimLabel = topDim ? TestService.getDimensionLabel(topDim[0], lang) : '';
   const topDimDelta = topDim && secondDim ? topDim[1] - secondDim[1] : 0;
-  const trackName   = isAr ? (topTrack.nameAr || topTrack.name) : topTrack.name;
-  const fitPct      = top3[0]?.pct || 0;
 
   const whySentence = topDim
     ? (isAr
-        ? `توافقك ${fitPct}% مع مسار ${trackName} مدفوع بدرجة ${topDimLabel} لديك (${topDim[1]}%)، وهي أعلى بـ ${topDimDelta} نقطة من أقوى أبعادك الأخرى — إشارة واضحة على توافق طبيعي مع هذا المسار.`
-        : `Your ${fitPct}% fit with ${trackName} is driven by your ${topDimLabel} score (${topDim[1]}%), which is ${topDimDelta} points above your next strongest dimension — a clear signal of natural alignment.`)
+        ? `توافقك ${fitPct}% مع مسار ${trackName} مدفوع بدرجة "${topDimLabel}" لديك (${topDim[1]}%)، وهي أعلى بـ ${topDimDelta} نقطة من أقوى أبعادك الأخرى — إشارة واضحة على توافق طبيعي مع هذا المسار.`
+        : `Your ${fitPct}% fit with ${trackName} is driven by your "${topDimLabel}" score (${topDim[1]}%), which is ${topDimDelta} points above your next strongest dimension — a clear signal of natural alignment.`)
     : '';
 
   const runnerUp = top3[1] ? allTracks.find(tr => tr.id === top3[1].id) : null;
@@ -116,11 +116,11 @@ export function Results() {
             </span>
           </div>
 
-          <!-- Why This Track — dimension reasons + reasoning bridge -->
+          <!-- Why This Track — dimension bars + mandatory reasoning bridge -->
           <div class="rc-why-section">
             <p class="rc-why-section__title">${t('results.whyThis')}</p>
             <div class="rc-reasons">${dimRows}</div>
-            ${whySentence ? `<p class="rc-why-bridge">${whySentence}</p>` : ''}
+            <p class="rc-why-bridge">${whySentence}</p>
           </div>
         </div>
 
@@ -140,7 +140,7 @@ export function Results() {
           </div>
         ` : ''}
 
-        <!-- All Tracks list (collapsed) -->
+        <!-- Runner-up tracks -->
         <div class="rc-tracks" id="rc-tracks">
           ${top3.slice(1).map((item, i) => {
             const tr = allTracks.find(t => t.id === item.id);
@@ -165,7 +165,7 @@ export function Results() {
           }).join('')}
         </div>
 
-        <!-- Gateway Actions — Decision Summary is PRIMARY -->
+        <!-- Gateway Actions — Decision Summary is the PRIMARY CTA -->
         <div class="rc-gateway">
           <div class="rc-gateway__primary">
             <button class="btn btn--primary btn--lg" id="rc-summary-btn" data-track-id="${topTrack.id}">
@@ -219,7 +219,6 @@ export function ResultsEvents() {
       results.style.opacity    = '1';
     }
 
-    // Animate reason bars
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         document.querySelectorAll('.rc-reason__fill').forEach(el => {
@@ -229,7 +228,6 @@ export function ResultsEvents() {
       });
     });
 
-    // Animate secondary track cards
     document.querySelectorAll('.rc-card').forEach((card, i) => {
       setTimeout(() => {
         card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
@@ -246,14 +244,14 @@ export function ResultsEvents() {
     });
   }, 2200);
 
-  // PRIMARY: View Full Analysis → Decision Summary
+  // PRIMARY: View Full Profile → Decision Summary (understand before committing)
   document.getElementById('rc-summary-btn')?.addEventListener('click', (e) => {
     const trackId = e.currentTarget.dataset.trackId;
     if (trackId) TrackService.enrollInTrack(trackId);
     Router.navigate('/decision-summary');
   });
 
-  // SECONDARY: Start Track → Dashboard (skip summary)
+  // SECONDARY: Skip summary → go straight to Dashboard
   document.getElementById('rc-start-btn')?.addEventListener('click', (e) => {
     const trackId = e.currentTarget.dataset.trackId;
     if (trackId) TrackService.enrollInTrack(trackId);
@@ -261,7 +259,6 @@ export function ResultsEvents() {
     Router.navigate(user ? '/dashboard' : '/register');
   });
 
-  // Retake
   document.getElementById('rc-retake-btn')?.addEventListener('click', () => {
     State.setState('testResult', null);
     StorageService.set('testResult', null);

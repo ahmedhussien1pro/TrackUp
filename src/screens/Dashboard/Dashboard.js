@@ -54,12 +54,12 @@ function _nba(user, track, prog, enrollments, result, isAr) {
   };
 }
 
-// ── Smart Insight ──────────────────────────────────────────────────────
+// ── Smart Insight ─────────────────────────────────────────────────────
 function _insight(result, track, isAr) {
   if (!result || !track) return null;
   const pct  = result.top3?.[0]?.pct || 0;
   const conf = result.confidence?.level || 'high';
-  const gap  = result.confidence?.gap || 0;
+  const gap  = result.confidence?.gap  || 0;
 
   const copies = isAr ? [
     `تُظهر نتائجك توافقاً بنسبة ${pct}% مع مسار ${track.nameAr || track.name}.`,
@@ -74,11 +74,10 @@ function _insight(result, track, isAr) {
   return copies[Math.floor(Date.now() / 3600000) % copies.length];
 }
 
-// ── First-Run Banner (shown once after test completion) ───────────────
+// ── First-Run Banner ─────────────────────────────────────────────────
 function _firstRunBanner(track, isAr) {
   const shown = StorageService.get('first_run_dismissed');
   if (shown || !track) return '';
-
   return `
     <div class="db-first-run" id="db-first-run">
       <div class="db-first-run__icon">
@@ -96,9 +95,34 @@ function _firstRunBanner(track, isAr) {
       </div>
       <div class="db-first-run__actions">
         <a href="#/roadmap" class="btn btn--primary btn--sm">${isAr ? 'فتح الخارطة' : 'Open Roadmap'}</a>
-        <button class="btn btn--ghost btn--sm" id="db-first-run-dismiss">
-          ${isAr ? 'إغلاق' : 'Dismiss'}
-        </button>
+        <button class="btn btn--ghost btn--sm" id="db-first-run-dismiss">${isAr ? 'إغلاق' : 'Dismiss'}</button>
+      </div>
+    </div>`;
+}
+
+// ── Explore Tracks — only shown when no active track ─────────────────
+function _exploreTracks(allTracks, track, isAr) {
+  if (track) return ''; // hide when user already has an active track — reduces noise
+  return `
+    <div class="dashboard-section slide-up" style="animation-delay:0.34s">
+      <div class="section-header">
+        <h2 class="section-header__title">${isAr ? 'استكشف المسارات' : 'Explore Tracks'}</h2>
+        <a href="#/career" class="section-header__link">${isAr ? 'عرض الكل' : 'View all'}</a>
+      </div>
+      <div class="tracks-grid">
+        ${allTracks.map((tr, i) => `
+          <div class="track-card slide-up" style="animation-delay:${0.38 + i * 0.05}s">
+            <div class="track-card__top">
+              <div class="track-card__icon" style="background:${tr.color}22;color:${tr.color}">${tr.icon}</div>
+            </div>
+            <div class="track-card__name">${isAr ? (tr.nameAr || tr.name) : tr.name}</div>
+            <div class="track-card__desc">${isAr ? (tr.descriptionAr || tr.description) : tr.description}</div>
+            <div class="track-card__footer">
+              <span class="badge">${tr.level}</span>
+              <span class="badge ltr-text">${isAr ? (tr.durationAr || tr.duration) : tr.duration}</span>
+            </div>
+            <a href="#/career" class="track-card__cta">${isAr ? 'تفاصيل' : 'Details'}</a>
+          </div>`).join('')}
       </div>
     </div>`;
 }
@@ -135,7 +159,6 @@ export function Dashboard() {
   return `
     <div class="dashboard fade-in">
 
-      <!-- First-run guidance banner -->
       ${_firstRunBanner(track, isAr)}
 
       <div class="dashboard-hero">
@@ -150,7 +173,7 @@ export function Dashboard() {
         </button>
       </div>
 
-      <!-- NBA -->
+      <!-- NBA — always the first focusable action -->
       <div class="db-nba slide-up" style="animation-delay:0.05s;border-color:${nba.color}30;background:${nba.color}08">
         <div class="db-nba__icon" style="color:${nba.color};background:${nba.color}14">${nba.icon}</div>
         <div class="db-nba__body">
@@ -214,7 +237,7 @@ export function Dashboard() {
           </a>
         </div>` : ''}
 
-      <!-- Track card -->
+      <!-- Active Track Card -->
       ${track ? `
         <div class="card dashboard-track-card slide-up" style="animation-delay:0.26s">
           <div class="dashboard-track-card__header">
@@ -264,34 +287,13 @@ export function Dashboard() {
           </a>`).join('')}
       </div>
 
-      <!-- Explore Tracks -->
-      <div class="dashboard-section slide-up" style="animation-delay:0.34s">
-        <div class="section-header">
-          <h2 class="section-header__title">${isAr ? 'استكشف المسارات' : 'Explore Tracks'}</h2>
-          <a href="#/career" class="section-header__link">${isAr ? 'عرض الكل' : 'View all'}</a>
-        </div>
-        <div class="tracks-grid">
-          ${allTracks.map((tr, i) => `
-            <div class="track-card slide-up" style="animation-delay:${0.38 + i * 0.05}s">
-              <div class="track-card__top">
-                <div class="track-card__icon" style="background:${tr.color}22;color:${tr.color}">${tr.icon}</div>
-                ${track?.id === tr.id ? `<span class="badge badge--active">${isAr ? 'نشط' : 'Active'}</span>` : ''}
-              </div>
-              <div class="track-card__name">${isAr ? (tr.nameAr || tr.name) : tr.name}</div>
-              <div class="track-card__desc">${isAr ? (tr.descriptionAr || tr.description) : tr.description}</div>
-              <div class="track-card__footer">
-                <span class="badge">${tr.level}</span>
-                <span class="badge ltr-text">${isAr ? (tr.durationAr || tr.duration) : tr.duration}</span>
-              </div>
-              <a href="#/career" class="track-card__cta">${isAr ? 'تفاصيل' : 'Details'}</a>
-            </div>`).join('')}
-        </div>
-      </div>
+      <!-- Explore Tracks — only visible before track selection -->
+      ${_exploreTracks(allTracks, track, isAr)}
+
     </div>`;
 }
 
 export function DashboardEvents() {
-  // Animate progress bars
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       document.querySelectorAll('.progress-bar__fill[data-pct]').forEach(el => {
@@ -301,7 +303,6 @@ export function DashboardEvents() {
     });
   });
 
-  // First-run dismiss
   document.getElementById('db-first-run-dismiss')?.addEventListener('click', () => {
     StorageService.set('first_run_dismissed', true);
     const banner = document.getElementById('db-first-run');
@@ -312,7 +313,6 @@ export function DashboardEvents() {
     }
   });
 
-  // Demo Mode
   document.getElementById('demo-mode-btn')?.addEventListener('click', () => {
     const isAr = document.documentElement.getAttribute('lang') === 'ar';
 
@@ -336,20 +336,17 @@ export function DashboardEvents() {
     };
     State.setState('testResult', demoResult);
     StorageService.set('testResult', demoResult);
-    StorageService.set('first_run_dismissed', false); // reset banner for demo
+    StorageService.set('first_run_dismissed', false);
 
     TrackService.enrollInTrack('frontend');
 
-    const demoEnrollments = [
+    StorageService.set('enrollments', [
       { courseId: 'c-fe-1', progress: 100, status: 'completed', enrolledAt: Date.now() - 86400000 },
       { courseId: 'c-fe-2', progress: 42,  status: 'active',    enrolledAt: Date.now() },
-    ];
-    StorageService.set('enrollments', demoEnrollments);
-
-    const demoBookings = [
+    ]);
+    StorageService.set('bookings', [
       { mentorId: 'm1', mentorName: 'Sarah El-Rashidy', bookedAt: Date.now(), status: 'confirmed' },
-    ];
-    StorageService.set('bookings', demoBookings);
+    ]);
 
     Toastify({
       text:     isAr ? 'تم تفعيل وضع العرض' : 'Demo mode activated',
