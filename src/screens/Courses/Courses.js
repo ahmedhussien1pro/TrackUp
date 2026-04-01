@@ -4,7 +4,7 @@ import { CourseService } from '../../services/course.service.js';
 
 let _search = '';
 let _level  = 'all';
-let _type   = 'all'; // 'all' | 'free' | 'paid'
+let _type   = 'all';
 let _sort   = 'default';
 
 const LEVEL_AR = { Beginner: 'مبتدئ', Intermediate: 'متوسط', Advanced: 'متقدم' };
@@ -45,6 +45,7 @@ function _showDetailModal(course, isAr) {
   const isEnrolled = CourseService.isEnrolled(course.id);
   const progress   = CourseService.getEnrollmentProgress(course.id);
   const level      = isAr ? (LEVEL_AR[course.level] || course.level) : course.level;
+  const isExternal = course.url && course.url.startsWith('http');
 
   const modal = document.createElement('div');
   modal.id = 'course-modal';
@@ -103,25 +104,26 @@ function _showDetailModal(course, isAr) {
           <div class="progress-bar" style="height:8px">
             <div class="progress-bar__fill" data-pct="${progress}" style="width:0%;background:${course.color || 'var(--color-primary)'}"></div>
           </div>
-        </div>` : ''
-      }
+        </div>` : ''}
 
       <div class="mentor-modal__footer">
         <button class="btn btn--ghost btn--sm" id="cm-cancel">${isAr ? 'إغلاق' : 'Close'}</button>
-        <button
-          class="btn btn--primary btn--sm course-modal-enroll-btn"
-          data-course-id="${course.id}"
-          ${isEnrolled ? 'disabled' : ''}
+        <a
+          href="${course.url || '#/courses'}"
+          target="${isExternal ? '_blank' : '_self'}"
+          rel="noopener"
+          class="btn btn--primary btn--sm"
+          id="cm-start-btn"
         >
-          ${isEnrolled ? (isAr ? 'تم التسجيل' : 'Already enrolled') : (isAr ? 'سجّل الآن' : 'Enroll now')}
-        </button>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="#fff" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          ${isAr ? 'ابدأ الكورس' : 'Start Course'}
+        </a>
       </div>
     </div>`;
 
   document.body.appendChild(modal);
   requestAnimationFrame(() => modal.classList.add('mentor-modal-overlay--in'));
 
-  // Animate bar
   if (isEnrolled) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
       modal.querySelectorAll('.progress-bar__fill[data-pct]').forEach(el => {
@@ -141,19 +143,6 @@ function _showDetailModal(course, isAr) {
   document.addEventListener('keydown', function _esc(e) {
     if (e.key === 'Escape') { _close(); document.removeEventListener('keydown', _esc); }
   });
-
-  modal.querySelector('.course-modal-enroll-btn:not([disabled])')?.addEventListener('click', () => {
-    const result = CourseService.enrollInCourse(course.id);
-    if (result.success) {
-      _close();
-      Toastify({
-        text: isAr ? 'تم التسجيل بنجاح' : 'Enrolled successfully',
-        duration: 2500, gravity: 'bottom', position: 'right',
-        style: { background: 'var(--color-success)' },
-      }).showToast();
-      _rerender();
-    }
-  });
 }
 
 function _renderCard(course, isAr) {
@@ -162,6 +151,7 @@ function _renderCard(course, isAr) {
   const level      = isAr ? (LEVEL_AR[course.level] || course.level) : course.level;
   const title      = _localTitle(course, isAr);
   const desc       = _localDesc(course, isAr);
+  const isExternal = course.url && course.url.startsWith('http');
 
   return `
     <div class="course-card${isEnrolled ? ' course-card--enrolled' : ''}" data-course-id="${course.id}">
@@ -206,38 +196,41 @@ function _renderCard(course, isAr) {
           </div>` : ''}
 
         <div class="course-card__footer">
-          <button class="btn btn--ghost btn--sm course-detail-btn" data-course-id="${course.id}">${isAr ? 'التفاصيل' : 'Details'}</button>
-          <button
-            class="btn ${isEnrolled ? 'btn--ghost' : 'btn--primary'} btn--sm course-enroll-btn"
-            data-course-id="${course.id}"
-            ${isEnrolled ? 'disabled' : ''}
-          >
-            ${isEnrolled ? (isAr ? 'مسجّل' : 'Enrolled') : (isAr ? 'سجّل' : 'Enroll')}
+          <button class="btn btn--ghost btn--sm course-detail-btn" data-course-id="${course.id}">
+            ${isAr ? 'التفاصيل' : 'Details'}
           </button>
+          <a
+            href="${course.url || '#/courses'}"
+            target="${isExternal ? '_blank' : '_self'}"
+            rel="noopener"
+            class="btn btn--primary btn--sm course-start-btn"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="#fff" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            ${isAr ? 'ابدأ' : 'Start'}
+          </a>
         </div>
       </div>
     </div>`;
 }
 
 function _render() {
-  const isAr       = _isAr();
-  const user       = State.getState('user');
-  const activeId   = user?.activeTrackId;
-  const all        = activeId ? CourseService.getCoursesForTrack(activeId) : CourseService.getAllCourses();
-  const filtered   = _filtered(all);
-  const enrolledN  = all.filter(c => CourseService.isEnrolled(c.id)).length;
-  const freeN      = all.filter(c => c.free).length;
-  const levels     = [...new Set(all.map(c => c.level))];
+  const isAr     = _isAr();
+  const user     = State.getState('user');
+  const activeId = user?.activeTrackId;
+  const all      = activeId ? CourseService.getCoursesForTrack(activeId) : CourseService.getAllCourses();
+  const filtered = _filtered(all);
+  const enrolledN = all.filter(c => CourseService.isEnrolled(c.id)).length;
+  const freeN     = all.filter(c => c.free).length;
+  const levels    = [...new Set(all.map(c => c.level))];
 
   return `
     <div class="courses-screen fade-in">
 
       <div class="screen-header">
         <h1>${isAr ? 'الدورات' : 'Courses'}</h1>
-        <p>${isAr ? 'تصفح الدورات وسجّل لتطوير مهاراتك' : 'Browse and enroll in courses to build your skills'}</p>
+        <p>${isAr ? 'تصفح الدورات وابدأ مباشرة' : 'Browse courses and start right away'}</p>
       </div>
 
-      <!-- Stats bar -->
       <div class="courses-stats slide-up" style="animation-delay:0.04s">
         <div class="courses-stat">
           <span class="courses-stat__value">${all.length}</span>
@@ -253,7 +246,6 @@ function _render() {
         </div>
       </div>
 
-      <!-- Toolbar -->
       <div class="courses-toolbar slide-up" style="animation-delay:0.08s">
         <div class="mentor-search-wrap" style="flex:1;min-width:180px">
           <svg class="mentor-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -301,7 +293,6 @@ function _rerender() {
 export function Courses() { return _render(); }
 
 export function CoursesEvents() {
-  // Animate progress bars
   requestAnimationFrame(() => requestAnimationFrame(() => {
     document.querySelectorAll('.progress-bar__fill[data-pct]').forEach(el => {
       el.style.width = el.dataset.pct + '%';
@@ -314,19 +305,17 @@ export function CoursesEvents() {
     ? CourseService.getCoursesForTrack(user.activeTrackId)
     : CourseService.getAllCourses();
 
-  // Search
   let _debounce;
   document.getElementById('course-search')?.addEventListener('input', e => {
     clearTimeout(_debounce);
     _debounce = setTimeout(() => { _search = e.target.value; _rerender(); }, 240);
   });
 
-  // Selects
   document.getElementById('course-level')?.addEventListener('change', e => { _level = e.target.value; _rerender(); });
   document.getElementById('course-type')?.addEventListener('change',  e => { _type  = e.target.value; _rerender(); });
   document.getElementById('course-sort')?.addEventListener('change',  e => { _sort  = e.target.value; _rerender(); });
 
-  // Details modal
+  // Details modal (card click or details button)
   document.querySelectorAll('.course-detail-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
@@ -335,28 +324,11 @@ export function CoursesEvents() {
     });
   });
 
-  // Card click → modal
   document.querySelectorAll('.course-card').forEach(card => {
     card.addEventListener('click', e => {
-      if (e.target.closest('.course-enroll-btn') || e.target.closest('.course-detail-btn')) return;
+      if (e.target.closest('.course-start-btn') || e.target.closest('.course-detail-btn')) return;
       const course = all.find(c => String(c.id) === String(card.dataset.courseId));
       if (course) _showDetailModal(course, isAr);
-    });
-  });
-
-  // Enroll
-  document.querySelectorAll('.course-enroll-btn:not([disabled])').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const result = CourseService.enrollInCourse(btn.dataset.courseId);
-      if (result.success) {
-        Toastify({
-          text: isAr ? 'تم التسجيل بنجاح' : 'Enrolled successfully',
-          duration: 2500, gravity: 'bottom', position: 'right',
-          style: { background: 'var(--color-success)' },
-        }).showToast();
-        _rerender();
-      }
     });
   });
 }

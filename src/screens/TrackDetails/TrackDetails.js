@@ -11,11 +11,29 @@ const WORK_STYLE_ICON = {
   hybrid: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>`,
 };
 
-const PLACEHOLDER_VIDEOS = [
-  { thumb: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg', title: 'Introduction to the Field' },
-  { thumb: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg', title: 'Day in the Life' },
-  { thumb: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg', title: 'Career Roadmap Overview' },
-];
+// MVP video placeholders — one per track, expandable later
+const TRACK_VIDEOS = {
+  power: [
+    { titleEn: 'What is Power Engineering?',       titleAr: 'إيه هي هندسة القوى؟',              ytId: 'lENE9l3LMXY' },
+    { titleEn: 'A Day in the Life — Power Engineer', titleAr: 'يوم في حياة مهندس قوى',      ytId: 'ZM8ECpBuQYE' },
+    { titleEn: 'Pros and Cons of Power Systems',   titleAr: 'مميزات وعيوب مسار القوى',  ytId: 'AWhDJkMvZis' },
+  ],
+  embedded: [
+    { titleEn: 'What is Embedded Systems?',        titleAr: 'إيه هي الأنظمة المدمجة؟',     ytId: 'mGPBu9kXnhU' },
+    { titleEn: 'A Day in the Life — Embedded Engineer', titleAr: 'يوم في حياة مهندس مدمج', ytId: '3l3Z3MNJNB4' },
+    { titleEn: 'Pros and Cons of Embedded Systems', titleAr: 'مميزات وعيوب مسار المدمج',  ytId: 'OvLZoFIBRBQ' },
+  ],
+  communications: [
+    { titleEn: 'What is Communications Engineering?', titleAr: 'إيه هي هندسة الاتصالات؟',   ytId: 'tHc1_SiJeNs' },
+    { titleEn: 'A Day in the Life — Comms Engineer', titleAr: 'يوم في حياة مهندس اتصالات', ytId: 'ZVHysmIJiaU' },
+    { titleEn: 'Pros and Cons of Communications',    titleAr: 'مميزات وعيوب مسار الاتصالات', ytId: 'MWk3T-aE8Ic' },
+  ],
+  'career-shift': [
+    { titleEn: 'How to Shift into Engineering',      titleAr: 'كيف تحوّل لمسار هندسي؟',       ytId: 'W5NQ55JLHKQ' },
+    { titleEn: 'A Day in the Life — Career Changer', titleAr: 'يوم في حياة محوّل مسار',         ytId: 'dQw4w9WgXcQ' },
+    { titleEn: 'Pros and Cons of Career Shifting',   titleAr: 'مميزات وعيوب تحويل المسار',  ytId: 'dQw4w9WgXcQ' },
+  ],
+};
 
 export function TrackDetails(query = {}) {
   const id   = query.id || '';
@@ -34,8 +52,9 @@ export function TrackDetails(query = {}) {
   const future   = isAr ? (track.futureOutlookAr || track.futureOutlook) : track.futureOutlook;
   const wsLabel  = isAr ? (track.workStyleAr || track.workStyle) : track.workStyle;
 
-  const trackCourses  = courses.filter(c => c.trackId === track.id).slice(0, 3);
-  const roadmapSteps  = (roadmaps[track.id] || []).slice(0, 4);
+  const trackCourses = courses.filter(c => c.trackId === track.id).slice(0, 3);
+  const roadmapSteps = (roadmaps[track.id] || []).slice(0, 4);
+  const videos       = TRACK_VIDEOS[track.id] || [];
 
   const ctaLabel = isActive
     ? (isAr ? 'عرض الخارطة' : 'View Roadmap')
@@ -119,6 +138,41 @@ export function TrackDetails(query = {}) {
           <p class="td-future">${future}</p>
         </section>
 
+        <!-- INTRO VIDEOS (MVP Placeholders) -->
+        ${videos.length ? `
+          <section class="td-section">
+            <h2 class="td-section__title">${isAr ? 'فيديوهات تعريفية' : 'Intro Videos'}</h2>
+            <p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-4)">
+              ${isAr ? 'شاهد قبل ما تبدأ — فيديوهات قصيرة بتعطيك تصور كامل' : 'Watch before you start — short videos that give you the full picture'}
+            </p>
+            <div class="td-videos">
+              ${videos.map((v, i) => `
+                <a
+                  href="https://www.youtube.com/watch?v=${v.ytId}"
+                  target="_blank"
+                  rel="noopener"
+                  class="td-video-card"
+                >
+                  <div class="td-video-card__thumb" style="background:${track.color}14">
+                    <img
+                      src="https://img.youtube.com/vi/${v.ytId}/mqdefault.jpg"
+                      alt="${isAr ? v.titleAr : v.titleEn}"
+                      loading="lazy"
+                      onerror="this.style.display='none'"
+                    />
+                    <div class="td-video-card__play" style="background:${track.color}">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    </div>
+                    <span class="td-video-card__num" style="background:${track.color}">${i + 1}</span>
+                  </div>
+                  <div class="td-video-card__info">
+                    <div class="td-video-card__title">${isAr ? v.titleAr : v.titleEn}</div>
+                    <div class="td-video-card__sub">${isAr ? 'فيديو تعريفي' : 'Intro video'}</div>
+                  </div>
+                </a>`).join('')}
+            </div>
+          </section>` : ''}
+
         <!-- ROADMAP PREVIEW -->
         ${roadmapSteps.length ? `
           <section class="td-section">
@@ -153,7 +207,15 @@ export function TrackDetails(query = {}) {
                       <span class="badge ${c.free ? 'badge--success' : 'badge--neutral'}">${c.free ? (isAr ? 'مجاني' : 'Free') : (isAr ? 'مدفوع' : 'Paid')}</span>
                     </div>
                   </div>
-                  <div class="td-course__rating ltr-text">★ ${c.rating}</div>
+                  <a
+                    href="${c.url || '#/courses'}"
+                    target="${c.url && c.url.startsWith('http') ? '_blank' : '_self'}"
+                    rel="noopener"
+                    class="btn btn--primary btn--sm"
+                    style="background:${track.color};border-color:${track.color};white-space:nowrap;flex-shrink:0"
+                  >
+                    ${isAr ? 'ابدأ' : 'Start'}
+                  </a>
                 </div>`).join('')}
             </div>
           </section>` : ''}
@@ -166,7 +228,25 @@ export function TrackDetails(query = {}) {
           </div>
         </section>
 
-        <!-- CTA -->
+        <!-- LIVE SESSION (Optional MVP — disabled) -->
+        <section class="td-section">
+          <div class="td-live-session">
+            <div class="td-live-session__info">
+              <div class="td-live-session__icon" style="background:${track.color}14;color:${track.color}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
+              </div>
+              <div>
+                <div class="td-live-session__title">${isAr ? 'جلسة لايف مع مَنْتور' : 'Live Q&A with a Mentor'}</div>
+                <div class="td-live-session__sub">${isAr ? 'اسأل أي حاجة قبل ما تبدأ — متاح بعد اختيار المسار' : 'Ask anything before you commit — available after you pick a track'}</div>
+              </div>
+            </div>
+            <button class="btn btn--outline btn--sm td-live-btn" disabled style="opacity:0.5;cursor:not-allowed">
+              ${isAr ? 'قريباً' : 'Coming Soon'}
+            </button>
+          </div>
+        </section>
+
+        <!-- PRIMARY CTA -->
         <div class="td-cta">
           <button
             class="btn btn--primary btn--lg td-enroll-btn"
@@ -189,12 +269,10 @@ export function TrackDetails(query = {}) {
 export function TrackDetailsEvents(query = {}) {
   const isAr = document.documentElement.getAttribute('lang') === 'ar';
 
-  // Back button
   document.querySelector('.td-back-btn')?.addEventListener('click', () => {
     Router.navigate('/career');
   });
 
-  // Enroll / View Roadmap
   document.querySelector('.td-enroll-btn')?.addEventListener('click', (e) => {
     const id       = e.currentTarget.dataset.id;
     const isActive = e.currentTarget.dataset.active === 'true';
