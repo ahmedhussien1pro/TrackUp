@@ -1,12 +1,11 @@
 // Journey Progress Indicator
-// Shows current position in the TrackUp flow: Test → Results → Track → Roadmap
-// Mounts as a sticky top bar on relevant screens
+// Mounts as a bar above the screen outlet on: /test /results /decision-summary /career /roadmap
 
 const JOURNEY_STEPS = [
-  { key: 'test',    paths: ['/test'],                         en: 'Test',    ar: 'الاختبار' },
-  { key: 'results', paths: ['/results', '/decision-summary'], en: 'Results', ar: 'النتيجة' },
-  { key: 'track',   paths: ['/career'],                       en: 'Track',   ar: 'المسار' },
-  { key: 'roadmap', paths: ['/roadmap'],                      en: 'Roadmap', ar: 'خارطة الطريق' },
+  { key: 'test',     paths: ['/test'],                         en: 'Test',    ar: 'الاختبار' },
+  { key: 'results',  paths: ['/results', '/decision-summary'], en: 'Results', ar: 'النتيجة'  },
+  { key: 'track',    paths: ['/career'],                       en: 'Track',   ar: 'المسار'    },
+  { key: 'roadmap',  paths: ['/roadmap'],                      en: 'Roadmap', ar: 'الخارطة'  },
 ];
 
 const JOURNEY_PATHS = new Set(JOURNEY_STEPS.flatMap(s => s.paths));
@@ -25,8 +24,6 @@ export function mountJourneyProgress(currentPath) {
   const bar = document.createElement('div');
   bar.id        = 'journey-progress';
   bar.className = 'journey-progress';
-  bar.setAttribute('role', 'navigation');
-  bar.setAttribute('aria-label', isAr ? 'تقدم الرحلة' : 'Journey progress');
 
   bar.innerHTML = `
     <div class="journey-progress__inner">
@@ -40,25 +37,29 @@ export function mountJourneyProgress(currentPath) {
             <div class="journey-step__dot">
               ${isDone
                 ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`
-                : `<span>${i + 1}</span>`
-              }
+                : `<span>${i + 1}</span>`}
             </div>
             <span class="journey-step__label">${label}</span>
             ${i < JOURNEY_STEPS.length - 1
               ? `<div class="journey-step__line journey-step__line--${isDone ? 'done' : 'pending'}"></div>`
-              : ''
-            }
+              : ''}
           </div>`;
       }).join('')}
     </div>`;
 
-  // Insert before app-outlet
+  // Mount into slot if exists, otherwise before outlet
+  const slot   = document.getElementById('journey-progress-slot');
   const outlet = document.getElementById('app-outlet');
-  if (outlet?.parentNode) {
+  if (slot) {
+    slot.innerHTML = '';
+    slot.appendChild(bar);
+  } else if (outlet?.parentNode) {
     outlet.parentNode.insertBefore(bar, outlet);
   }
 }
 
 export function unmountJourneyProgress() {
   document.getElementById('journey-progress')?.remove();
+  const slot = document.getElementById('journey-progress-slot');
+  if (slot) slot.innerHTML = '';
 }

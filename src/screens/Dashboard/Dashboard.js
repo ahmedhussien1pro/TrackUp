@@ -25,15 +25,14 @@ function _nba(user, track, prog, enrollments, result, isAr) {
     cta:   isAr ? 'عرض النتائج' : 'View Results',
     color: 'var(--color-primary)',
   };
-  const firstIncomplete = prog?.steps?.find(s => !s.completed);
-  if (firstIncomplete) return {
+  const activeStep = (prog?.steps || []).find(s => s.status === 'active');
+  const nextStep   = activeStep || (prog?.steps || []).find(s => s.status !== 'completed');
+  if (nextStep) return {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
-    label: isAr
-      ? `خطوتك التالية: ${firstIncomplete.titleAr || firstIncomplete.title}`
-      : `Your next step: ${firstIncomplete.title}`,
+    label: isAr ? `خطوتك التالية: ${nextStep.titleAr || nextStep.title}` : `Next step: ${nextStep.title}`,
     sub: isAr
-      ? `الخطوة ${(prog?.steps?.indexOf(firstIncomplete) || 0) + 1} في مسار ${track.nameAr || track.name}`
-      : `Step ${(prog?.steps?.indexOf(firstIncomplete) || 0) + 1} in your ${track.name} roadmap`,
+      ? `مرحلة ${nextStep.phase || ''} — ${track.nameAr || track.name}`
+      : `Phase: ${nextStep.phase || 'Basics'} — ${track.name} roadmap`,
     href:  '#/roadmap',
     cta:   isAr ? 'ابدأ الآن' : 'Start Now',
     color: track?.color || 'var(--color-primary)',
@@ -49,9 +48,7 @@ function _nba(user, track, prog, enrollments, result, isAr) {
   return {
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
     label: isAr ? 'تابع تقدمك في خارطة الطريق' : 'Continue your roadmap progress',
-    sub: isAr
-      ? `أكملت ${prog?.percent || 0}% من مسارك`
-      : `You are ${prog?.percent || 0}% through your track`,
+    sub:   isAr ? `أكملت ${prog?.percent || 0}% من مسارك` : `You are ${prog?.percent || 0}% through your track`,
     href:  '#/roadmap',
     cta:   isAr ? 'فتح الخارطة' : 'Open Roadmap',
     color: track?.color || 'var(--color-primary)',
@@ -66,13 +63,28 @@ function _insight(result, track, isAr) {
   const copies = isAr ? [
     `تُظهر نتائجك توافقاً بنسبة ${pct}% مع مسار ${track.nameAr || track.name}.`,
     `درجة الثقة ${conf === 'high' ? 'عالية' : conf === 'medium' ? 'متوسطة' : 'معقولة'} بفارق ${gap} نقطة عن المسار التالي.`,
-    `إجاباتك تكشف نمطاً واضحاً — ${result.strengthSentence?.ar || ''}`,
   ] : [
-    `Your results show a ${pct}% alignment with ${track.name} — a strong signal you are on the right path.`,
+    `Your results show ${pct}% alignment with ${track.name} — strong signal you are on the right path.`,
     `Confidence is ${conf} with a ${gap}-point gap over the next track.`,
-    `Your answer pattern: ${result.strengthSentence?.en || ''}`,
   ];
   return copies[Math.floor(Date.now() / 3600000) % copies.length];
+}
+
+// SVG progress ring
+function _ring(pct, color, size = 64) {
+  const r   = (size - 8) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="db-ring" data-pct="${pct}" style="--ring-color:${color}">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--color-border)" stroke-width="6"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="6"
+        stroke-dasharray="${circ}" stroke-dashoffset="${circ}"
+        stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"
+        class="db-ring__arc" data-dash="${dash}"/>
+      <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle"
+        font-size="${size * 0.22}" font-weight="800" fill="${color}">${pct}%</text>
+    </svg>`;
 }
 
 export function Dashboard() {
@@ -85,39 +97,44 @@ export function Dashboard() {
   const enrollments = CourseService.getEnrollments();
   const bookings    = MentorService.getBookings();
   const result      = TestService.getResult();
-  const allTracks   = TrackService.getAllTracks();
 
-  // B1 FIX: Demo Mode button only visible when no real testResult exists
   const showDemoBtn = !result;
-
-  const nba     = _nba(user, track, prog, enrollments, result, isAr);
-  const insight = _insight(result, track, isAr);
+  const nba         = _nba(user, track, prog, enrollments, result, isAr);
+  const insight     = _insight(result, track, isAr);
 
   const hour     = new Date().getHours();
   const greeting = isAr
     ? (hour < 12 ? 'صباح الخير' : 'مساء الخير')
     : (hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening');
 
+  const pct   = prog?.percent || 0;
+  const color = track?.color || 'var(--color-primary)';
+
   return `
     <div class="dashboard fade-in">
 
+      <!-- HERO -->
       <div class="db-hero-section">
         <div class="db-hero-section__left">
           <p class="db-hero-section__greeting">${greeting},</p>
           <h1 class="db-hero-section__name">${firstName}</h1>
           ${track ? `<p class="db-hero-section__track-label">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${track.color};margin-inline-end:6px"></span>
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-inline-end:6px"></span>
             ${isAr ? (track.nameAr || track.name) : track.name}
           </p>` : ''}
         </div>
-        ${showDemoBtn ? `
-          <button class="btn btn--outline btn--sm" id="demo-mode-btn" style="flex-shrink:0;gap:6px">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            ${isAr ? 'وضع العرض' : 'Demo Mode'}
-          </button>` : ''}
+        <div style="display:flex;align-items:center;gap:var(--space-4);flex-shrink:0">
+          ${track ? _ring(pct, color) : ''}
+          ${showDemoBtn ? `
+            <button class="btn btn--outline btn--sm" id="demo-mode-btn" style="gap:6px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              ${isAr ? 'وضع العرض' : 'Demo Mode'}
+            </button>` : ''}
+        </div>
       </div>
 
-      <div class="db-nextstep slide-up" style="animation-delay:0.04s;border-left:4px solid ${nba.color};background:${nba.color}06">
+      <!-- NEXT STEP BANNER -->
+      <div class="db-nextstep slide-up" style="animation-delay:0.04s;border-inline-start-color:${nba.color};background:${nba.color}06">
         <div class="db-nextstep__badge" style="background:${nba.color}14;color:${nba.color}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           ${isAr ? 'الخطوة التالية' : 'Next Step'}
@@ -129,6 +146,7 @@ export function Dashboard() {
         <a href="${nba.href}" class="btn btn--lg" style="background:${nba.color};color:#fff;border-color:${nba.color};flex-shrink:0">${nba.cta}</a>
       </div>
 
+      <!-- STATS -->
       <div class="dashboard-stats">
         <div class="stat-card slide-up" style="animation-delay:0.1s">
           <div class="stat-card__icon" style="background:var(--color-primary-subtle,#6366f122);color:var(--color-primary)">
@@ -144,7 +162,7 @@ export function Dashboard() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
           <div class="stat-card__body">
-            <span class="stat-card__value ltr-text">${prog ? prog.percent + '%' : '0%'}</span>
+            <span class="stat-card__value ltr-text">${pct}%</span>
             <span class="stat-card__label">${isAr ? 'التقدم في المسار' : 'Track Progress'}</span>
           </div>
         </div>
@@ -154,7 +172,7 @@ export function Dashboard() {
           </div>
           <div class="stat-card__body">
             <span class="stat-card__value">${enrollments.length}</span>
-            <span class="stat-card__label">${isAr ? 'الدورات المسجلة' : 'Courses Enrolled'}</span>
+            <span class="stat-card__label">${isAr ? 'الدورات المسجلة' : 'Enrolled'}</span>
           </div>
         </div>
         <div class="stat-card slide-up" style="animation-delay:0.19s">
@@ -163,11 +181,12 @@ export function Dashboard() {
           </div>
           <div class="stat-card__body">
             <span class="stat-card__value">${bookings.length}</span>
-            <span class="stat-card__label">${isAr ? 'جلسات الإرشاد' : 'Mentor Sessions'}</span>
+            <span class="stat-card__label">${isAr ? 'جلسات إرشاد' : 'Mentor Sessions'}</span>
           </div>
         </div>
       </div>
 
+      <!-- INSIGHT -->
       ${insight ? `
         <div class="db-insight slide-up" style="animation-delay:0.22s">
           <div class="db-insight__icon">
@@ -180,10 +199,11 @@ export function Dashboard() {
           </a>
         </div>` : ''}
 
+      <!-- TRACK CARD or EMPTY CTA -->
       ${track ? `
         <div class="card dashboard-track-card slide-up" style="animation-delay:0.26s">
           <div class="dashboard-track-card__header">
-            <div class="dashboard-track-card__icon" style="background:${track.color}22;color:${track.color}">${track.icon}</div>
+            <div class="dashboard-track-card__icon" style="background:${color}22;color:${color}">${track.icon}</div>
             <div style="flex:1;min-width:0">
               <h3 class="dashboard-track-card__name">${isAr ? (track.nameAr || track.name) : track.name}</h3>
               <p class="dashboard-track-card__desc">${isAr ? (track.descriptionAr || track.description) : track.description}</p>
@@ -194,13 +214,11 @@ export function Dashboard() {
           </div>
           <div class="dashboard-track-card__progress">
             <div class="progress-bar">
-              <div class="progress-bar__fill"
-                   data-pct="${prog?.percent || 0}"
-                   style="width:0%;background:${track.color}"></div>
+              <div class="progress-bar__fill" data-pct="${pct}" style="width:0%;background:${color}"></div>
             </div>
             <div class="progress-bar__meta">
               <span class="ltr-text">${prog?.completed || 0} ${isAr ? 'مكتمل' : 'completed'}</span>
-              <span class="ltr-text">${prog?.percent || 0}%</span>
+              <span class="ltr-text">${pct}%</span>
             </div>
           </div>
         </div>`
@@ -215,12 +233,13 @@ export function Dashboard() {
         </div>`
       }
 
+      <!-- QUICK NAV -->
       <div class="db-quicknav slide-up" style="animation-delay:0.3s">
         ${[
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>`, label: isAr ? 'خارطة الطريق' : 'Roadmap',    href: '#/roadmap',    color: 'var(--color-primary)' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, label: isAr ? 'نتائج التقييم' : 'My Results',   href: '#/results',   color: 'var(--color-success,#10b981)' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`, label: isAr ? 'ملخص القرار' : 'Decision',     href: '#/decision-summary', color: 'var(--color-primary)' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,  label: isAr ? 'الإعدادات' : 'Settings',     href: '#/settings',   color: 'var(--color-text-muted)' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>`, label: isAr ? 'خارطة الطريق' : 'Roadmap',    href: '#/roadmap',           color: 'var(--color-primary)' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, label: isAr ? 'نتائج التقييم' : 'My Results', href: '#/results',           color: 'var(--color-success,#10b981)' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`, label: isAr ? 'الدورات' : 'Courses',    href: '#/courses',           color: '#f59e0b' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>`, label: isAr ? 'المرشدين' : 'Mentors',    href: '#/mentorship',        color: '#ec4899' },
         ].map(item => `
           <a href="${item.href}" class="db-quicknav__item">
             <span class="db-quicknav__icon" style="color:${item.color};background:${item.color}14">${item.icon}</span>
@@ -232,56 +251,59 @@ export function Dashboard() {
 }
 
 export function DashboardEvents() {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      document.querySelectorAll('.progress-bar__fill[data-pct]').forEach(el => {
-        el.style.transition = 'width 0.7s cubic-bezier(0.4,0,0.2,1)';
-        el.style.width = el.dataset.pct + '%';
-      });
+  // Animate progress bars
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.querySelectorAll('.progress-bar__fill[data-pct]').forEach(el => {
+      el.style.transition = 'width 0.7s cubic-bezier(0.4,0,0.2,1)';
+      el.style.width = el.dataset.pct + '%';
     });
-  });
+  }));
 
+  // Animate SVG ring
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.querySelectorAll('.db-ring__arc[data-dash]').forEach(arc => {
+      const circ = parseFloat(arc.getAttribute('stroke-dasharray'));
+      const dash = parseFloat(arc.dataset.dash);
+      arc.style.transition = 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)';
+      arc.style.strokeDashoffset = circ - dash;
+    });
+  }));
+
+  // Demo Mode
   document.getElementById('demo-mode-btn')?.addEventListener('click', () => {
     const isAr = document.documentElement.getAttribute('lang') === 'ar';
-
     const demoResult = {
       topTrackId: 'frontend',
       top3: [
-        { id: 'frontend', score: 30, pct: 92 },
-        { id: 'ux',       score: 22, pct: 73 },
-        { id: 'backend',  score: 16, pct: 53 },
+        { id: 'power',    score: 30, pct: 92 },
+        { id: 'embedded', score: 22, pct: 73 },
+        { id: 'communications', score: 16, pct: 53 },
       ],
-      scores:      { frontend: 30, ux: 22, backend: 16, data: 10, devops: 8 },
-      percentages: { frontend: 92, ux: 73, backend: 53, data: 33, devops: 27 },
+      scores:      { power: 30, embedded: 22, communications: 16 },
+      percentages: { power: 92, embedded: 73, communications: 53 },
       confidence:  { level: 'high', gap: 19 },
-      dimensions:  { visual: 86, creative: 79, empathetic: 57, analytical: 43, logical: 36, systematic: 21 },
+      dimensions:  { systematic: 86, analytical: 79, fieldOriented: 57, creative: 43, logical: 36, social: 21 },
       strengthSentence: {
-        en: 'You think in visuals, care about output, and love building things people interact with.',
-        ar: 'تفكّر بصرياً، تهتم بالمخرجات، وتحب بناء ما يتفاعل معه الناس.',
+        en: 'You think systematically, love infrastructure, and excel at complex problem solving.',
+        ar: 'تفكّر بمنهجية، تحب البنية التحتية، وتتميز في حل المشكلات المعقدة.',
       },
       completedAt: Date.now(),
     };
     State.setState('testResult', demoResult);
     StorageService.set('testResult', demoResult);
-    StorageService.set('first_run_dismissed', false);
-    TrackService.enrollInTrack('frontend');
+    TrackService.enrollInTrack('power');
     StorageService.set('enrollments', [
-      { courseId: 'c-fe-1', progress: 100, status: 'completed', enrolledAt: Date.now() - 86400000 },
-      { courseId: 'c-fe-2', progress: 42,  status: 'active',    enrolledAt: Date.now() },
+      { courseId: 'c-pw-1', progress: 100, status: 'completed', enrolledAt: Date.now() - 86400000 },
+      { courseId: 'c-pw-2', progress: 42,  status: 'active',    enrolledAt: Date.now() },
     ]);
     StorageService.set('bookings', [
-      { mentorId: 'm1', mentorName: 'Sarah El-Rashidy', bookedAt: Date.now(), status: 'confirmed' },
+      { mentorId: 'm1', mentorName: 'Ahmed El-Sayed', bookedAt: Date.now(), status: 'confirmed' },
     ]);
-
-    if (window.Toastify) {
-      Toastify({
-        text:     isAr ? 'تم تفعيل وضع العرض' : 'Demo mode activated',
-        duration: 2000,
-        gravity:  'bottom',
-        position: 'right',
-        style:    { background: 'var(--color-primary)' },
-      }).showToast();
-    }
+    Toastify({
+      text:     isAr ? 'تم تفعيل وضع العرض' : 'Demo mode activated',
+      duration: 2000, gravity: 'bottom', position: 'right',
+      style: { background: 'var(--color-primary)' },
+    }).showToast();
     setTimeout(() => Router.navigate('/dashboard'), 600);
   });
 }
