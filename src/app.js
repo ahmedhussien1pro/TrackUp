@@ -17,6 +17,7 @@ import { Pricing, PricingEvents }                             from './screens/Pr
 import { Payment, PaymentEvents }                             from './screens/Payment/Payment.js';
 import { Dashboard, DashboardEvents }                         from './screens/Dashboard/Dashboard.js';
 import { Career, CareerEvents }                               from './screens/Career/Career.js';
+import { TrackDetails, TrackDetailsEvents }                   from './screens/TrackDetails/TrackDetails.js';
 import { Roadmap, RoadmapEvents }                             from './screens/Roadmap/Roadmap.js';
 import { Courses, CoursesEvents }                             from './screens/Courses/Courses.js';
 import { Mentorship, MentorshipEvents }                       from './screens/Mentorship/Mentorship.js';
@@ -24,7 +25,7 @@ import { Progress, ProgressEvents }                           from './screens/Pr
 import { Notifications, NotificationsEvents }                 from './screens/Notifications/Notifications.js';
 import { Settings, SettingsEvents }                           from './screens/Settings/Settings.js';
 
-const ALWAYS_PUBLIC = ['/', '/login', '/register', '/pricing', '/onboarding', '/test'];
+const ALWAYS_PUBLIC = ['/', '/login', '/register', '/pricing', '/onboarding', '/test', '/career'];
 const SEMI_PUBLIC   = ['/results', '/decision-summary'];
 
 window.__trackup_layout_sidebar__ = { Sidebar, SidebarEvents };
@@ -110,6 +111,7 @@ function bootstrap() {
   Router.register('/payment',           { render: Payment,        after: PaymentEvents });
   Router.register('/dashboard',         { render: Dashboard,      after: DashboardEvents });
   Router.register('/career',            { render: Career,         after: CareerEvents });
+  Router.register('/career',            { render: TrackDetails,   after: TrackDetailsEvents });
   Router.register('/roadmap',           { render: Roadmap,        after: RoadmapEvents });
   Router.register('/courses',           { render: Courses,        after: CoursesEvents });
   Router.register('/mentorship',        { render: Mentorship,     after: MentorshipEvents });
