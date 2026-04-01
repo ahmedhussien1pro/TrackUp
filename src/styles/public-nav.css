@@ -1,0 +1,39 @@
+/* Minimal public nav — used on Pricing and other public screens without the app layout */
+
+.public-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.public-nav__logo {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.public-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (max-width: 480px) {
+  .public-nav {
+    padding: var(--space-3) var(--space-4);
+  }
+  .public-nav__actions .btn--outline {
+    display: none;
+  }
+}

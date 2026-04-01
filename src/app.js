@@ -34,13 +34,19 @@ function _careerAfter(query) {
   return query?.id ? TrackDetailsEvents(query) : CareerEvents(query);
 }
 
-const ALWAYS_PUBLIC = ['/', '/login', '/register', '/pricing', '/onboarding', '/test', '/career'];
-const SEMI_PUBLIC   = ['/results', '/decision-summary'];
+// Screens that never need the app layout (sidebar + topbar)
+const NO_LAYOUT_SCREENS = ['/', '/login', '/register', '/pricing', '/onboarding', '/test', '/career', '/results', '/decision-summary'];
+
+// Screens accessible to logged-out users only after completing the test
+const SEMI_PUBLIC = ['/results', '/decision-summary'];
 
 window.__trackup_layout_sidebar__ = { Sidebar, SidebarEvents };
 
-function _isAlwaysPublic(path) { return ALWAYS_PUBLIC.includes(path); }
-function _isSemiPublic(path)   { return SEMI_PUBLIC.includes(path); }
+function _needsAppLayout(path, loggedIn) {
+  // Only authenticated users inside the app get sidebar + topbar
+  if (!loggedIn) return false;
+  return !NO_LAYOUT_SCREENS.includes(path);
+}
 
 let _layoutMounted = false;
 
@@ -60,8 +66,6 @@ function _updateActiveLink() {
     '/progress':         'nav.progress',
     '/notifications':    'nav.notifications',
     '/settings':         'nav.settings',
-    '/results':          'nav.results',
-    '/decision-summary': 'nav.decisionSummary',
   };
   const { t } = window.__trackup_i18n__ || {};
   const titleEl = document.getElementById('topbar-page-title');
@@ -90,11 +94,20 @@ function bootstrap() {
     const loggedIn  = !!State.getState('user');
     const hasResult = !!State.getState('testResult');
 
+    // Redirect logged-in users away from auth screens
     if (loggedIn && (path === '/login' || path === '/register')) return '/dashboard';
-    if (!_isAlwaysPublic(path) && !_isSemiPublic(path) && !loggedIn) return '/login';
-    if (_isSemiPublic(path) && !hasResult && !loggedIn) return '/test';
 
-    const needsLayout = loggedIn || (hasResult && _isSemiPublic(path));
+    // Protected app screens require login
+    const isPublic = NO_LAYOUT_SCREENS.includes(path);
+    if (!isPublic && !loggedIn) return '/login';
+
+    // BUG-01 FIX: semi-public screens require BOTH no login AND a fresh test result
+    // A result from localStorage alone is not enough — must have been set this session
+    // We check State (session memory) not just storage
+    if (SEMI_PUBLIC.includes(path) && !hasResult) return '/test';
+
+    // BUG-04 FIX: layout only mounts for logged-in users on app screens
+    const needsLayout = _needsAppLayout(path, loggedIn);
 
     if (needsLayout && !_layoutMounted) {
       _layoutMounted = true;
@@ -106,7 +119,7 @@ function bootstrap() {
       setTimeout(() => _updateActiveLink(), 0);
     }
 
-    // Mount / unmount journey progress bar
+    // Journey progress bar
     if (shouldShowJourney(path)) {
       setTimeout(() => mountJourneyProgress(path), 50);
     } else {

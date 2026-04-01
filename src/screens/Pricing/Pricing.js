@@ -10,12 +10,28 @@ export function Pricing() {
   const plans      = PaymentService.getPlans();
   const activePlan = PaymentService.getActivePlan();
   const isAr       = document.documentElement.getAttribute('lang') === 'ar';
+  const loggedIn   = !!State.getState('user');
 
-  // Collect unique features across all plans for the comparison row
   const allFeatures = [...new Set(plans.flatMap(p => p.features))];
+
+  // BUG-02 FIX: minimal nav for public (guest) users since layout is not mounted
+  const guestNav = !loggedIn ? `
+    <nav class="public-nav">
+      <a href="#/" class="public-nav__logo">TrackUp</a>
+      <div class="public-nav__actions">
+        <a href="#/" class="btn btn--ghost btn--sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          ${isAr ? 'الرئيسية' : 'Home'}
+        </a>
+        <a href="#/login"    class="btn btn--outline btn--sm">${isAr ? 'تسجيل الدخول' : 'Sign In'}</a>
+        <a href="#/register" class="btn btn--primary btn--sm">${isAr ? 'إنشاء حساب' : 'Get Started'}</a>
+      </div>
+    </nav>` : '';
 
   return `
     <div class="pricing-screen fade-in">
+
+      ${guestNav}
 
       <div class="pricing-header">
         <p class="pricing-header__eyebrow">${isAr ? 'الأسعار' : 'Pricing'}</p>
@@ -26,15 +42,14 @@ export function Pricing() {
         }</p>
       </div>
 
-      <!-- Plan cards -->
       <div class="pricing-cards">
         ${plans.map(plan => {
-          const isCurrent = activePlan?.id === plan.id;
+          const isCurrent  = activePlan?.id === plan.id;
           const isFeatured = plan.recommended;
           return `
             <div class="pricing-card${isFeatured ? ' pricing-card--featured' : ''}${isCurrent ? ' pricing-card--current' : ''}">
               ${isFeatured ? `<div class="pricing-card__badge">${isAr ? 'الأكثر شيوعاً' : 'Most popular'}</div>` : ''}
-              ${isCurrent ? `<div class="pricing-card__badge pricing-card__badge--current">${isAr ? 'خطتك الحالية' : 'Current plan'}</div>` : ''}
+              ${isCurrent  ? `<div class="pricing-card__badge pricing-card__badge--current">${isAr ? 'خطتك الحالية' : 'Current plan'}</div>` : ''}
               <div class="pricing-card__name">${isAr ? (plan.nameAr || plan.name) : plan.name}</div>
               <div class="pricing-card__price">
                 <span class="pricing-card__amount">${plan.price === 0 ? (isAr ? 'مجاني' : 'Free') : '$' + plan.price}</span>
@@ -63,18 +78,14 @@ export function Pricing() {
         }).join('')}
       </div>
 
-      <!-- Feature comparison table -->
       <div class="pricing-table slide-up" style="animation-delay:0.2s">
         <div class="pricing-table__title">${isAr ? 'مقارنة الميزات' : 'Feature comparison'}</div>
         <div class="pricing-table__grid" style="grid-template-columns: 1fr ${plans.map(() => '1fr').join(' ')}">
-          <!-- Header row -->
           <div class="pricing-table__cell pricing-table__cell--header"></div>
           ${plans.map(p => `
             <div class="pricing-table__cell pricing-table__cell--header pricing-table__cell--plan${p.recommended ? ' pricing-table__cell--featured' : ''}">
               ${isAr ? (p.nameAr || p.name) : p.name}
             </div>`).join('')}
-
-          <!-- Feature rows -->
           ${allFeatures.map(feat => `
             <div class="pricing-table__cell pricing-table__cell--feat">${feat}</div>
             ${plans.map(p => {
@@ -86,12 +97,8 @@ export function Pricing() {
         </div>
       </div>
 
-      <!-- Trust line -->
       <p class="pricing-trust">
-        ${isAr
-          ? 'لا توجد بيانات بنك مطلوبة. إلغاء في أي وقت.'
-          : 'No credit card required. Cancel anytime.'
-        }
+        ${isAr ? 'لا توجد بيانات بنك مطلوبة. إلغاء في أي وقت.' : 'No credit card required. Cancel anytime.'}
       </p>
 
     </div>`;

@@ -2,19 +2,18 @@ import { t } from '../../i18n.js';
 import { Router } from '../../router.js';
 import { StorageService } from '../../services/storage.service.js';
 
-// Onboarding answers → dimension hints fed into TestService scoring
 const GOAL_DIM_HINTS = {
-  0: { frontend: 2, visual: 2 },      // Get a new job in tech
-  1: { analytical: 1, systematic: 1 }, // Grow in current role
-  2: { creative: 2, logical: 1 },      // Learn new skills
-  3: { creative: 2, empathetic: 1 },   // Start freelancing
+  0: { frontend: 2, visual: 2 },
+  1: { analytical: 1, systematic: 1 },
+  2: { creative: 2, logical: 1 },
+  3: { creative: 2, empathetic: 1 },
 };
 
 const BACKGROUND_PRIOR = {
-  0: {},                                        // Complete beginner — no prior
-  1: { frontend: 1 },                           // Some coding — slight frontend lean
-  2: { backend: 2, devops: 1 },                 // Working in tech — backend/devops boost
-  3: { ux: 2, empathetic: 2 },                  // Switching — empathy / ux lean
+  0: {},
+  1: { frontend: 1 },
+  2: { backend: 2, devops: 1 },
+  3: { ux: 2, empathetic: 2 },
 };
 
 const STEPS = [
@@ -66,9 +65,20 @@ function _renderStep() {
   const total = STEPS.length;
   const pct   = Math.round((_step / total) * 100);
 
+  // BUG-08 FIX: step 0 shows a "Back to Home" button instead of hiding it
+  const backBtn = _step === 0
+    ? `<a href="#/" class="btn btn--ghost btn--sm" style="margin-bottom:var(--space-6)">
+         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+         ${isAr ? 'الرئيسية' : 'Home'}
+       </a>`
+    : `<button class="btn btn--ghost btn--sm" id="onboarding-back" style="margin-bottom:var(--space-6)">
+         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+         ${t('common.back')}
+       </button>`;
+
   return `
     <div style="max-width:600px;margin:0 auto;padding:var(--space-10) var(--space-4)">
-      ${_step > 0 ? `<button class="btn btn--ghost btn--sm" id="onboarding-back" style="margin-bottom:var(--space-6)">&larr; ${t('common.back')}</button>` : ''}
+      ${backBtn}
 
       <div style="margin-bottom:var(--space-6)">
         <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2)">
@@ -93,14 +103,11 @@ function _renderStep() {
   `;
 }
 
-// Build onboarding_context from collected answers and persist to storage
 function _buildAndSaveContext(answers) {
   const goalIdx  = parseInt(answers.goal       ?? -1);
   const bgIdx    = parseInt(answers.background  ?? -1);
-
-  const dimHints    = { ...(GOAL_DIM_HINTS[goalIdx]    || {}) };
+  const dimHints     = { ...(GOAL_DIM_HINTS[goalIdx]  || {}) };
   const priorWeights = { ...(BACKGROUND_PRIOR[bgIdx]   || {}) };
-
   const ctx = { raw: answers, dimHints, priorWeights };
   StorageService.set('onboarding_context', ctx);
   return ctx;
@@ -115,12 +122,10 @@ export function OnboardingEvents() {
   document.querySelectorAll('.test-option').forEach(btn => {
     btn.addEventListener('click', () => {
       _answers[STEPS[_step].id] = btn.dataset.index;
-
       if (_step < STEPS.length - 1) {
         _step++;
         _rerenderOnboarding();
       } else {
-        // All onboarding answers collected — persist context then go to test
         _buildAndSaveContext(_answers);
         Router.navigate('/test');
       }

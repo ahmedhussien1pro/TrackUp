@@ -204,6 +204,16 @@ export function LandingEvents() {
   function _activateDemo() {
     const isAr = document.documentElement.getAttribute('lang') === 'ar';
 
+    // BUG-05 FIX: always wipe old demo/test data before injecting fresh demo
+    StorageService.remove('testResult');
+    StorageService.remove('enrollments');
+    StorageService.remove('bookings');
+    StorageService.remove('committed_track_id');
+    StorageService.remove('path_committed');
+    StorageService.remove('dismissed_save_banner');
+    StorageService.remove('first_run_dismissed');
+    State.setState('testResult', null);
+
     const demoResult = {
       topTrackId: 'embedded',
       top3: [
@@ -224,7 +234,6 @@ export function LandingEvents() {
 
     State.setState('testResult', demoResult);
     StorageService.set('testResult', demoResult);
-    StorageService.set('first_run_dismissed', false);
 
     const existingUser = State.getState('user');
     if (!existingUser) {
@@ -259,7 +268,7 @@ export function LandingEvents() {
       }).showToast();
     }
 
-    setTimeout(() => Router.navigate('/results'), 400);
+    setTimeout(() => Router.navigate('/dashboard'), 400);
   }
 
   document.getElementById('landing-demo-btn')?.addEventListener('click', _activateDemo);

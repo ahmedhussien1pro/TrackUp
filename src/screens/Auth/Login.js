@@ -1,6 +1,7 @@
 import { t } from '../../i18n.js';
 import { Router } from '../../router.js';
 import { AuthService } from '../../services/auth.service.js';
+import { StorageService } from '../../services/storage.service.js';
 import State from '../../state.js';
 
 export function Login() {
@@ -8,7 +9,7 @@ export function Login() {
     <div class="auth-screen">
       <div class="auth-card">
         <div class="auth-card__header">
-          <span class="auth-card__logo">TrackUp</span>
+          <a href="#/" class="auth-card__logo">TrackUp</a>
           <h1>${t('auth.login.title')}</h1>
           <p>${t('auth.login.noAccount')} <a href="#/register">${t('auth.login.register')}</a></p>
         </div>
@@ -39,12 +40,6 @@ export function LoginEvents() {
   const errEl = document.getElementById('login-error');
   const btnEl = document.getElementById('login-submit');
 
-  // auto-fill demo on click of hint
-  document.querySelector('[data-demo]')?.addEventListener('click', () => {
-    document.getElementById('login-email').value    = 'demo@trackup.io';
-    document.getElementById('login-password').value = 'demo1234';
-  });
-
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email    = document.getElementById('login-email')?.value.trim();
@@ -68,18 +63,36 @@ export function LoginEvents() {
       return;
     }
 
-    const user = State.getState('user');
-    Router.navigate(user?.activeTrackId ? '/dashboard' : '/onboarding');
+    // BUG-06 FIX: smart redirect after login
+    // Priority: committed track → has active track → has result → onboarding
+    const user             = State.getState('user');
+    const committedTrackId = StorageService.get('committed_track_id');
+    const hasResult        = !!State.getState('testResult');
+
+    if (committedTrackId && !user?.activeTrackId) {
+      // Attach committed track from pre-login flow
+      user.activeTrackId = committedTrackId;
+      State.setState('user', user);
+      StorageService.set('session', user);
+    }
+
+    if (user?.activeTrackId) {
+      Router.navigate('/dashboard');
+    } else if (hasResult) {
+      Router.navigate('/results');
+    } else {
+      Router.navigate('/onboarding');
+    }
   });
 }
 
 function _showError(el, msg) {
   if (!el) return;
-  el.textContent = msg;
+  el.textContent  = msg;
   el.style.cssText = 'display:block;color:var(--color-danger);font-size:0.85rem;margin:0.5rem 0 0.75rem;padding:0.5rem 0.75rem;background:#fee2e2;border-radius:6px;';
 }
 function _clearError(el) {
   if (!el) return;
-  el.textContent = '';
+  el.textContent   = '';
   el.style.display = 'none';
 }
