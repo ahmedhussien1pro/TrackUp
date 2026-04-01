@@ -25,6 +25,15 @@ import { Progress, ProgressEvents }                           from './screens/Pr
 import { Notifications, NotificationsEvents }                 from './screens/Notifications/Notifications.js';
 import { Settings, SettingsEvents }                           from './screens/Settings/Settings.js';
 
+// /career?id=power  => TrackDetails
+// /career           => Career list
+function _careerRender(query) {
+  return query?.id ? TrackDetails(query) : Career(query);
+}
+function _careerAfter(query) {
+  return query?.id ? TrackDetailsEvents(query) : CareerEvents(query);
+}
+
 const ALWAYS_PUBLIC = ['/', '/login', '/register', '/pricing', '/onboarding', '/test', '/career'];
 const SEMI_PUBLIC   = ['/results', '/decision-summary'];
 
@@ -110,8 +119,7 @@ function bootstrap() {
   Router.register('/pricing',           { render: Pricing,        after: PricingEvents });
   Router.register('/payment',           { render: Payment,        after: PaymentEvents });
   Router.register('/dashboard',         { render: Dashboard,      after: DashboardEvents });
-  Router.register('/career',            { render: Career,         after: CareerEvents });
-  Router.register('/career',            { render: TrackDetails,   after: TrackDetailsEvents });
+  Router.register('/career',            { render: _careerRender,  after: _careerAfter });
   Router.register('/roadmap',           { render: Roadmap,        after: RoadmapEvents });
   Router.register('/courses',           { render: Courses,        after: CoursesEvents });
   Router.register('/mentorship',        { render: Mentorship,     after: MentorshipEvents });
