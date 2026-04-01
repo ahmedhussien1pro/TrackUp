@@ -70,9 +70,8 @@ function _insight(result, track, isAr) {
   return copies[Math.floor(Date.now() / 3600000) % copies.length];
 }
 
-// SVG progress ring
 function _ring(pct, color, size = 64) {
-  const r   = (size - 8) / 2;
+  const r    = (size - 8) / 2;
   const circ = 2 * Math.PI * r;
   const dash = (pct / 100) * circ;
   return `
@@ -113,7 +112,6 @@ export function Dashboard() {
   return `
     <div class="dashboard fade-in">
 
-      <!-- HERO -->
       <div class="db-hero-section">
         <div class="db-hero-section__left">
           <p class="db-hero-section__greeting">${greeting},</p>
@@ -133,7 +131,6 @@ export function Dashboard() {
         </div>
       </div>
 
-      <!-- NEXT STEP BANNER -->
       <div class="db-nextstep slide-up" style="animation-delay:0.04s;border-inline-start-color:${nba.color};background:${nba.color}06">
         <div class="db-nextstep__badge" style="background:${nba.color}14;color:${nba.color}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -146,7 +143,6 @@ export function Dashboard() {
         <a href="${nba.href}" class="btn btn--lg" style="background:${nba.color};color:#fff;border-color:${nba.color};flex-shrink:0">${nba.cta}</a>
       </div>
 
-      <!-- STATS -->
       <div class="dashboard-stats">
         <div class="stat-card slide-up" style="animation-delay:0.1s">
           <div class="stat-card__icon" style="background:var(--color-primary-subtle,#6366f122);color:var(--color-primary)">
@@ -186,7 +182,6 @@ export function Dashboard() {
         </div>
       </div>
 
-      <!-- INSIGHT -->
       ${insight ? `
         <div class="db-insight slide-up" style="animation-delay:0.22s">
           <div class="db-insight__icon">
@@ -199,7 +194,6 @@ export function Dashboard() {
           </a>
         </div>` : ''}
 
-      <!-- TRACK CARD or EMPTY CTA -->
       ${track ? `
         <div class="card dashboard-track-card slide-up" style="animation-delay:0.26s">
           <div class="dashboard-track-card__header">
@@ -233,13 +227,12 @@ export function Dashboard() {
         </div>`
       }
 
-      <!-- QUICK NAV -->
       <div class="db-quicknav slide-up" style="animation-delay:0.3s">
         ${[
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>`, label: isAr ? 'خارطة الطريق' : 'Roadmap',    href: '#/roadmap',           color: 'var(--color-primary)' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, label: isAr ? 'نتائج التقييم' : 'My Results', href: '#/results',           color: 'var(--color-success,#10b981)' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`, label: isAr ? 'الدورات' : 'Courses',    href: '#/courses',           color: '#f59e0b' },
-          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>`, label: isAr ? 'المرشدين' : 'Mentors',    href: '#/mentorship',        color: '#ec4899' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>`, label: isAr ? 'خارطة الطريق' : 'Roadmap',    href: '#/roadmap',    color: 'var(--color-primary)' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, label: isAr ? 'نتائج التقييم' : 'My Results', href: '#/results',    color: 'var(--color-success,#10b981)' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`, label: isAr ? 'الدورات' : 'Courses',    href: '#/courses',    color: '#f59e0b' },
+          { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>`, label: isAr ? 'المرشدين' : 'Mentors',    href: '#/mentorship', color: '#ec4899' },
         ].map(item => `
           <a href="${item.href}" class="db-quicknav__item">
             <span class="db-quicknav__icon" style="color:${item.color};background:${item.color}14">${item.icon}</span>
@@ -251,7 +244,6 @@ export function Dashboard() {
 }
 
 export function DashboardEvents() {
-  // Animate progress bars
   requestAnimationFrame(() => requestAnimationFrame(() => {
     document.querySelectorAll('.progress-bar__fill[data-pct]').forEach(el => {
       el.style.transition = 'width 0.7s cubic-bezier(0.4,0,0.2,1)';
@@ -259,7 +251,6 @@ export function DashboardEvents() {
     });
   }));
 
-  // Animate SVG ring
   requestAnimationFrame(() => requestAnimationFrame(() => {
     document.querySelectorAll('.db-ring__arc[data-dash]').forEach(arc => {
       const circ = parseFloat(arc.getAttribute('stroke-dasharray'));
@@ -269,18 +260,17 @@ export function DashboardEvents() {
     });
   }));
 
-  // Demo Mode
   document.getElementById('demo-mode-btn')?.addEventListener('click', () => {
     const isAr = document.documentElement.getAttribute('lang') === 'ar';
     const demoResult = {
-      topTrackId: 'frontend',
+      topTrackId: 'power',
       top3: [
-        { id: 'power',    score: 30, pct: 92 },
-        { id: 'embedded', score: 22, pct: 73 },
+        { id: 'power',          score: 30, pct: 92 },
+        { id: 'embedded',       score: 22, pct: 73 },
         { id: 'communications', score: 16, pct: 53 },
       ],
-      scores:      { power: 30, embedded: 22, communications: 16 },
-      percentages: { power: 92, embedded: 73, communications: 53 },
+      scores:      { power: 30, embedded: 22, communications: 16, 'career-shift': 8 },
+      percentages: { power: 92, embedded: 73, communications: 53, 'career-shift': 25 },
       confidence:  { level: 'high', gap: 19 },
       dimensions:  { systematic: 86, analytical: 79, fieldOriented: 57, creative: 43, logical: 36, social: 21 },
       strengthSentence: {
@@ -297,12 +287,12 @@ export function DashboardEvents() {
       { courseId: 'c-pw-2', progress: 42,  status: 'active',    enrolledAt: Date.now() },
     ]);
     StorageService.set('bookings', [
-      { mentorId: 'm1', mentorName: 'Ahmed El-Sayed', bookedAt: Date.now(), status: 'confirmed' },
+      { mentorId: 'm1', mentorName: isAr ? 'م. أحمد السيد' : 'Eng. Ahmed El-Sayed', bookedAt: Date.now(), status: 'confirmed' },
     ]);
     Toastify({
       text:     isAr ? 'تم تفعيل وضع العرض' : 'Demo mode activated',
       duration: 2000, gravity: 'bottom', position: 'right',
-      style: { background: 'var(--color-primary)' },
+      style:    { background: 'var(--color-primary)' },
     }).showToast();
     setTimeout(() => Router.navigate('/dashboard'), 600);
   });

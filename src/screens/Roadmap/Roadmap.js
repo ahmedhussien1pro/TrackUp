@@ -2,6 +2,7 @@ import { t } from '../../i18n.js';
 import State from '../../state.js';
 import { RoadmapService } from '../../services/roadmap.service.js';
 import { TrackService } from '../../services/track.service.js';
+import { Router } from '../../router.js';
 
 const PHASE_ORDER = ['Basics', 'Courses', 'Projects', 'Job Ready'];
 const PHASE_ICONS = {
@@ -10,12 +11,18 @@ const PHASE_ICONS = {
   'Projects':  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
   'Job Ready': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>`,
 };
-
 const PHASE_AR = {
   'Basics':    'الأساسيات',
   'Courses':   'الكورسات',
   'Projects':  'المشاريع',
   'Job Ready': 'جاهز للعمل',
+};
+// Phase-level CTA config: what action to show when phase is active
+const PHASE_CTA = {
+  'Basics':    { href: '#/courses',    en: 'Browse Courses',    ar: 'استعرض الكورسات' },
+  'Courses':   { href: '#/courses',    en: 'Go to Courses',     ar: 'افتح الكورسات' },
+  'Projects':  { href: '#/courses',    en: 'Find Project Courses', ar: 'كورسات المشاريع' },
+  'Job Ready': { href: '#/mentorship', en: 'Book a Mentor',     ar: 'احجز مرشد' },
 };
 
 export function Roadmap() {
@@ -39,7 +46,6 @@ export function Roadmap() {
   const prog  = RoadmapService.getProgressForTrack(user.activeTrackId);
   const color = track?.color || 'var(--color-primary)';
 
-  // Group steps by phase
   const grouped = {};
   PHASE_ORDER.forEach(p => { grouped[p] = []; });
   steps.forEach(s => {
@@ -48,7 +54,6 @@ export function Roadmap() {
     grouped[ph].push(s);
   });
 
-  // Determine phase status
   function _phaseStatus(phaseSteps) {
     if (!phaseSteps.length) return 'locked';
     if (phaseSteps.every(s => s.status === 'completed')) return 'completed';
@@ -61,7 +66,6 @@ export function Roadmap() {
   return `
     <div class="roadmap-screen fade-in">
 
-      <!-- Header -->
       <div class="screen-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4)">
         <div>
           <h1 style="color:${color}">${trackName}</h1>
@@ -73,18 +77,18 @@ export function Roadmap() {
         </div>
       </div>
 
-      <!-- Overall progress bar -->
       <div class="progress-bar" style="margin-bottom:var(--space-8)">
         <div class="progress-bar__fill" data-pct="${prog.percent}" style="width:0%;background:${color}"></div>
       </div>
 
-      <!-- Phase Journey -->
       <div class="roadmap-phases">
-        ${PHASE_ORDER.filter(p => grouped[p].length > 0).map((phase, pi) => {
-          const phaseSteps  = grouped[phase];
-          const phaseSt     = _phaseStatus(phaseSteps);
-          const phaseLabel  = isAr ? (PHASE_AR[phase] || phase) : phase;
-          const phaseIcon   = PHASE_ICONS[phase] || '';
+        ${PHASE_ORDER.filter(p => grouped[p].length > 0).map((phase) => {
+          const phaseSteps = grouped[phase];
+          const phaseSt    = _phaseStatus(phaseSteps);
+          const phaseLabel = isAr ? (PHASE_AR[phase] || phase) : phase;
+          const phaseIcon  = PHASE_ICONS[phase] || '';
+          const phaseCta   = PHASE_CTA[phase];
+
           return `
             <div class="roadmap-phase roadmap-phase--${phaseSt}">
               <div class="roadmap-phase__header">
@@ -94,7 +98,13 @@ export function Roadmap() {
                   ${phaseSt === 'completed' ? `<span class="badge" style="background:${color}15;color:${color};font-size:0.6875rem">${isAr ? 'مكتمل' : 'Done'}</span>` : ''}
                   ${phaseSt === 'active' ? `<span class="badge badge--active" style="font-size:0.6875rem">${isAr ? 'جاري' : 'In Progress'}</span>` : ''}
                 </div>
-                <span class="roadmap-phase__count">${phaseSteps.filter(s => s.status === 'completed').length}/${phaseSteps.length}</span>
+                <div style="display:flex;align-items:center;gap:var(--space-3)">
+                  <span class="roadmap-phase__count">${phaseSteps.filter(s => s.status === 'completed').length}/${phaseSteps.length}</span>
+                  ${phaseSt === 'active' && phaseCta ? `
+                    <a href="${phaseCta.href}" class="btn btn--primary btn--sm" style="background:${color};border-color:${color};font-size:var(--text-xs)">
+                      ${isAr ? phaseCta.ar : phaseCta.en}
+                    </a>` : ''}
+                </div>
               </div>
               <div class="roadmap-phase__steps">
                 ${phaseSteps.map((step, i) => `
@@ -133,12 +143,12 @@ export function Roadmap() {
         }).join('')}
       </div>
 
-      <!-- Bottom action -->
+      <!-- Bottom navigation -->
       <div style="margin-top:var(--space-8);display:flex;gap:var(--space-3);flex-wrap:wrap">
-        <a href="#/courses" class="btn btn--outline">
-          ${isAr ? 'عرض الكورسات' : 'Browse Courses'}
+        <a href="#/courses" class="btn btn--primary" style="background:${color};border-color:${color}">
+          ${isAr ? 'الكورسات' : 'View Courses'}
         </a>
-        <a href="#/mentorship" class="btn btn--ghost">
+        <a href="#/mentorship" class="btn btn--outline">
           ${isAr ? 'ابحث عن مرشد' : 'Find a Mentor'}
         </a>
       </div>
@@ -157,13 +167,12 @@ export function RoadmapEvents() {
   document.querySelectorAll('.roadmap-complete-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const stepId = btn.dataset.stepId;
+      const isAr   = document.documentElement.getAttribute('lang') === 'ar';
       RoadmapService.completeStep(stepId);
       Toastify({
-        text: document.documentElement.getAttribute('lang') === 'ar'
-          ? 'أحسنت! تم إكمال الخطوة'
-          : 'Step completed. Keep going!',
+        text:     isAr ? 'أحسنت! تم إكمال الخطوة' : 'Step completed. Keep going!',
         duration: 2500, gravity: 'bottom', position: 'right',
-        style: { background: 'var(--color-success)' },
+        style:    { background: 'var(--color-success)' },
       }).showToast();
       const outlet = document.getElementById('app-outlet');
       if (outlet) { outlet.innerHTML = Roadmap(); RoadmapEvents(); }
