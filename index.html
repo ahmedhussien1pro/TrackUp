@@ -36,8 +36,12 @@
   <link rel="stylesheet" href="./styles/screens/mentorship-payment-extra.css" />
   <link rel="stylesheet" href="./styles/screens/notifications-settings.css" />
 
-  <!-- Polish: decision moment + dashboard next step -->
+  <!-- Component styles -->
   <link rel="stylesheet" href="./src/styles/decision-moment.css" />
+  <link rel="stylesheet" href="./src/components/layout/JourneyProgress.css" />
+
+  <!-- Screen-level component styles -->
+  <link rel="stylesheet" href="./src/screens/TrackDetails/TrackDetails.css" />
 
   <!-- Vendors -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
@@ -66,7 +70,11 @@
     <div id="sidebar-overlay" aria-hidden="true"></div>
     <div id="app-body" class="no-sidebar">
       <header id="app-topbar" class="app-topbar" aria-hidden="true"></header>
-      <main id="app-outlet" role="main" aria-live="polite"></main>
+      <main id="app-main" role="main">
+        <!-- Journey progress bar mounts here when relevant -->
+        <div id="journey-progress-slot"></div>
+        <div id="app-outlet" aria-live="polite"></div>
+      </main>
     </div>
   </div>
 

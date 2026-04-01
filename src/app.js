@@ -5,6 +5,7 @@ import { StorageService } from './services/storage.service.js';
 import { AuthService } from './services/auth.service.js';
 import { Sidebar, SidebarEvents } from './components/layout/Sidebar.js';
 import { mountLayout, unmountLayout } from './components/layout/Topbar.js';
+import { mountJourneyProgress, unmountJourneyProgress, shouldShowJourney } from './components/layout/JourneyProgress.js';
 
 import { Landing, LandingEvents }                             from './screens/Landing/Landing.js';
 import { Login, LoginEvents }                                 from './screens/Auth/Login.js';
@@ -25,8 +26,7 @@ import { Progress, ProgressEvents }                           from './screens/Pr
 import { Notifications, NotificationsEvents }                 from './screens/Notifications/Notifications.js';
 import { Settings, SettingsEvents }                           from './screens/Settings/Settings.js';
 
-// /career?id=power  => TrackDetails
-// /career           => Career list
+// /career?id=X => TrackDetails | /career => Career list
 function _careerRender(query) {
   return query?.id ? TrackDetails(query) : Career(query);
 }
@@ -52,16 +52,16 @@ function _updateActiveLink() {
     link.setAttribute('aria-current', active ? 'page' : 'false');
   });
   const PAGE_KEYS = {
-    '/dashboard':       'nav.dashboard',
-    '/career':          'nav.career',
-    '/roadmap':         'nav.roadmap',
-    '/courses':         'nav.courses',
-    '/mentorship':      'nav.mentorship',
-    '/progress':        'nav.progress',
-    '/notifications':   'nav.notifications',
-    '/settings':        'nav.settings',
-    '/results':         'nav.results',
-    '/decision-summary':'nav.decisionSummary',
+    '/dashboard':        'nav.dashboard',
+    '/career':           'nav.career',
+    '/roadmap':          'nav.roadmap',
+    '/courses':          'nav.courses',
+    '/mentorship':       'nav.mentorship',
+    '/progress':         'nav.progress',
+    '/notifications':    'nav.notifications',
+    '/settings':         'nav.settings',
+    '/results':          'nav.results',
+    '/decision-summary': 'nav.decisionSummary',
   };
   const { t } = window.__trackup_i18n__ || {};
   const titleEl = document.getElementById('topbar-page-title');
@@ -104,6 +104,13 @@ function bootstrap() {
       unmountLayout();
     } else if (needsLayout && _layoutMounted) {
       setTimeout(() => _updateActiveLink(), 0);
+    }
+
+    // Mount / unmount journey progress bar
+    if (shouldShowJourney(path)) {
+      setTimeout(() => mountJourneyProgress(path), 50);
+    } else {
+      unmountJourneyProgress();
     }
 
     return null;
