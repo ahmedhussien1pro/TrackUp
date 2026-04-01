@@ -3,24 +3,27 @@ import { StorageService } from './storage.service.js';
 import { questions } from '../data/mock/questions.js';
 import { tracks } from '../data/mock/tracks.js';
 
-// 7 cognitive dimensions mapped from question answers
+// Cognitive dimensions mapped from question answers
+// Aligned with EE tracks: field-oriented, analytical, hardware, software-adjacent
 const DIMENSION_MAP = {
-  q1: { visual: [0,3], logical: [1], analytical: [2], empathetic: [3] },
-  q2: { creative: [0,3], systematic: [1], analytical: [2] },
-  q3: { visual: [0], logical: [1], analytical: [2], empathetic: [3] },
-  q4: { creative: [0,3], analytical: [1], systematic: [2] },
-  q5: { creative: [0,2], analytical: [3], logical: [1] },
-  q6: { visual: [0], logical: [1,2], empathetic: [3] },
-  q7: { creative: [0], logical: [1], analytical: [2], empathetic: [3] },
+  q1: { fieldwork: [0],    software: [1],    analytical: [2],   adaptive: [3] },
+  q2: { software: [0],    systematic: [1],  fieldwork: [2],    adaptive: [3] },
+  q3: { fieldwork: [0],   hardware: [1],    analytical: [2],   adaptive: [3] },
+  q4: { ambitious: [0],   systematic: [1],  ambitious: [2],    adaptive: [3] },
+  q5: { resilient: [0],   systematic: [1],  systematic: [2],   adaptive: [3] },
+  q6: { analytical: [0],  systematic: [1],  fieldwork: [2],    adaptive: [3] },
+  q7: { fieldwork: [0],   hardware: [1],    analytical: [2],   adaptive: [3] },
 };
 
 const DIMENSION_LABELS = {
-  visual:     { en: 'Visual Thinking',   ar: 'التفكير البصري' },
-  logical:    { en: 'Logical Systems',   ar: 'الأنظمة المنطقية' },
-  analytical: { en: 'Analytical Mind',   ar: 'العقل التحليلي' },
-  empathetic: { en: 'User Empathy',      ar: 'التعاطف مع المستخدم' },
-  creative:   { en: 'Creative Output',   ar: 'الإبداع والإخراج' },
-  systematic: { en: 'Systems Thinking',  ar: 'التفكير المنظومي' },
+  fieldwork:  { en: 'Field Orientation',    ar: 'التوجه الميداني' },
+  software:   { en: 'Software Affinity',    ar: 'الميل للبرمجة' },
+  hardware:   { en: 'Hardware Thinking',    ar: 'التفكير بالهاردوير' },
+  analytical: { en: 'Analytical Mind',      ar: 'العقل التحليلي' },
+  systematic: { en: 'Systems Thinking',     ar: 'التفكير المنظومي' },
+  resilient:  { en: 'Stress Resilience',    ar: 'تحمّل الضغط' },
+  ambitious:  { en: 'Career Ambition',      ar: 'الطموح المهني' },
+  adaptive:   { en: 'Adaptability',         ar: 'القدرة على التأقلم' },
 };
 
 const CONFIDENCE_COPY = {
@@ -38,8 +41,31 @@ const CONFIDENCE_COPY = {
   },
 };
 
-function _computeDimensions(answers, dimHints = {}) {
-  const scores = { visual: 0, logical: 0, analytical: 0, empathetic: 0, creative: 0, systematic: 0 };
+const STRENGTH_SENTENCE = {
+  power: {
+    en: 'You are drawn to real-world impact, enjoy field work, and want to keep infrastructure running.',
+    ar: 'تنجذب للأثر الحقيقي، وتستمتع بالعمل الميداني، وتريد إبقاء البنية التحتية تعمل.',
+  },
+  embedded: {
+    en: 'You love the intersection of hardware and code — building smart devices that solve real problems.',
+    ar: 'تحب تلاقي الهاردوير والكود — بناء أجهزة ذكية تحل مشكلات حقيقية.',
+  },
+  communications: {
+    en: 'You think analytically, love networks, and are excited by the technology connecting the world.',
+    ar: 'تفكر تحليلياً، وتحب الشبكات، وتتحمس للتكنولوجيا التي تربط العالم.',
+  },
+  'career-shift': {
+    en: 'You are motivated, adaptable, and ready to start fresh — engineering is within your reach.',
+    ar: 'أنت متحفز وقابل للتكيف وجاهز للبداية من جديد — الهندسة في متناول يدك.',
+  },
+};
+
+function _computeDimensions(answers) {
+  const scores = {
+    fieldwork: 0, software: 0, hardware: 0,
+    analytical: 0, systematic: 0, resilient: 0,
+    ambitious: 0, adaptive: 0,
+  };
 
   Object.entries(answers).forEach(([qid, optIdx]) => {
     const map = DIMENSION_MAP[qid];
@@ -49,12 +75,7 @@ function _computeDimensions(answers, dimHints = {}) {
     });
   });
 
-  // Apply onboarding dimension hints as a soft prior
-  Object.entries(dimHints).forEach(([dim, boost]) => {
-    if (scores[dim] !== undefined) scores[dim] += boost;
-  });
-
-  const maxPossible = 14 + Object.values(dimHints).reduce((s, v) => s + v, 0);
+  const maxPossible = 14;
   return Object.fromEntries(
     Object.entries(scores).map(([k, v]) => [k, Math.min(100, Math.round((v / maxPossible) * 100))])
   );
@@ -62,33 +83,10 @@ function _computeDimensions(answers, dimHints = {}) {
 
 function _computeConfidence(top3) {
   if (!top3 || top3.length < 2) return { level: 'high', gap: 100 };
-  const gap = top3[0].pct - (top3[1]?.pct || 0);
+  const gap   = top3[0].pct - (top3[1]?.pct || 0);
   const level = gap >= 25 ? 'high' : gap >= 12 ? 'medium' : 'low';
   return { level, gap };
 }
-
-const STRENGTH_SENTENCE = {
-  frontend: {
-    en: 'You think in visuals, care about output, and love building things people interact with.',
-    ar: 'تفكّر بصرياً، تهتم بالمخرجات، وتحب بناء ما يتفاعل معه الناس.',
-  },
-  backend: {
-    en: 'You reason in systems, value reliability, and find deep satisfaction in invisible infrastructure.',
-    ar: 'تفكر بالأنظمة، تقدّر الاطمئنان، وتجد رضا عميقاً في البنية التحتية غير المرئية.',
-  },
-  data: {
-    en: 'You ask why before you act, trust evidence over intuition, and think in patterns.',
-    ar: 'تسأل لماذا قبل أن تتصرف، وتثق بالأدلة، وتفكر في الأنماط.',
-  },
-  ux: {
-    en: 'You lead with empathy, think about users first, and care deeply about how things feel.',
-    ar: 'تنطلق من التعاطف، وتفكر في المستخدمين أولاً، ويهمك عمقاً الشعور بالتجربة.',
-  },
-  devops: {
-    en: 'You love making complex systems predictable, automating everything, and owning reliability.',
-    ar: 'تحب جعل الأنظمة المعقدة يمكن التنبؤ بها، وأتمتة كل شيء، وامتلاك الاطمئنان.',
-  },
-};
 
 export const TestService = {
   startTest() {
@@ -100,27 +98,16 @@ export const TestService = {
   },
 
   submitTest(session) {
-    // Load onboarding context (prior weights from goal/background answers)
-    const ctx          = StorageService.get('onboarding_context') || {};
-    const priorWeights = ctx.priorWeights || {};
-    const dimHints     = ctx.dimHints     || {};
-
     const scores = {};
     tracks.forEach(t => { scores[t.id] = 0; });
 
-    // Apply onboarding prior weights as a soft boost
-    Object.entries(priorWeights).forEach(([trackId, boost]) => {
-      if (scores[trackId] !== undefined) scores[trackId] += boost;
-    });
-
-    // Score from test answers
     session.questions.forEach(q => {
       const idx = session.answers[q.id];
       if (idx === undefined) return;
       const opt = q.options[idx];
       if (!opt?.weights) return;
       Object.entries(opt.weights).forEach(([trackId, w]) => {
-        scores[trackId] = (scores[trackId] || 0) + w;
+        if (scores[trackId] !== undefined) scores[trackId] += w;
       });
     });
 
@@ -138,7 +125,7 @@ export const TestService = {
 
     const top3       = sorted.slice(0, 3).map(s => ({ ...s, pct: percentages[s.id] }));
     const confidence = _computeConfidence(top3);
-    const dimensions = _computeDimensions(session.answers, dimHints);
+    const dimensions = _computeDimensions(session.answers);
 
     const result = {
       scores,
@@ -148,8 +135,7 @@ export const TestService = {
       recommendedTrack: tracks.find(t => t.id === topTrackId),
       confidence,
       dimensions,
-      strengthSentence: STRENGTH_SENTENCE[topTrackId] || STRENGTH_SENTENCE.frontend,
-      onboardingContext: ctx,
+      strengthSentence: STRENGTH_SENTENCE[topTrackId] || STRENGTH_SENTENCE.power,
       completedAt: Date.now(),
     };
 
