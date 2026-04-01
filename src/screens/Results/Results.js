@@ -12,9 +12,7 @@ export function Results() {
     return `
       <div class="empty-state">
         <div class="empty-state__icon">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-          </svg>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
         </div>
         <h3>${t('results.noResult')}</h3>
         <p>${t('results.noResultSub')}</p>
@@ -32,6 +30,7 @@ export function Results() {
     allTracks.find(tr => tr.id === top3[0]?.id) ||
     allTracks[0];
 
+  const user       = State.getState('user');
   const confidence = result.confidence || { level: 'high', gap: 30 };
   const dimensions = result.dimensions || {};
   const trackName  = isAr ? (topTrack.nameAr || topTrack.name) : topTrack.name;
@@ -42,8 +41,7 @@ export function Results() {
     medium: 'var(--color-warning)',
     low:    'var(--color-primary)',
   };
-  const confColor = confColorMap[confidence.level] || confColorMap.high;
-
+  const confColor  = confColorMap[confidence.level] || confColorMap.high;
   const dimEntries = Object.entries(dimensions).sort((a, b) => b[1] - a[1]).slice(0, 3);
 
   const dimRows = dimEntries.map(([key, pct]) => `
@@ -63,24 +61,31 @@ export function Results() {
   const topDimLabel = topDim ? TestService.getDimensionLabel(topDim[0], lang) : '';
   const topDimDelta = topDim && secondDim ? topDim[1] - secondDim[1] : 0;
 
-  const narrativeBridge = isAr
-    ? `بناءً على إجاباتك، حللنا أسلوب تفكيرك عبر 6 أبعاد معرفية. إليك ما وجدناه:`
-    : `Based on your answers, we analysed your thinking style across 6 cognitive dimensions. Here is what we found:`;
-
   const whySentence = topDim
     ? (isAr
-        ? `توافقك مع مسار ${trackName} مدفوع بدرجة "ك${topDimLabel}ك" لديك (${topDim[1]}%)، وهي أعلى بـ ${topDimDelta} نقطة من أقوى أبعادك الأخرى — إشارة واضحة على توافق طبيعي مع هذا المسار.`
-        : `Your fit with ${trackName} is driven by your "${topDimLabel}" score (${topDim[1]}%), which is ${topDimDelta} points above your next strongest dimension — a clear signal of natural alignment.`)
+        ? `توافقك مع ${trackName} مدفوع بدرجة "ال${topDimLabel}" (${topDim[1]}%)\u060c أعلى بـ ${topDimDelta} نقطة عن أقوى أبعادك الأخرى.`
+        : `Your fit with ${trackName} is driven by your "${topDimLabel}" score (${topDim[1]}%), ${topDimDelta} points above your next strongest dimension.`)
     : '';
+
+  // Save banner: user has result but no account
+  const showSaveBanner = !user && !StorageService.get('dismissed_save_banner');
 
   return `
     <div class="results-screen">
 
+      ${showSaveBanner ? `
+        <div class="save-banner" id="save-banner">
+          <span>${isAr ? 'احفظ نتيجتك — سجّل مجاناً' : 'Save your result — create a free account'}</span>
+          <div style="display:flex;gap:var(--space-2);align-items:center">
+            <a href="#/register" class="btn btn--primary btn--sm">${isAr ? 'إنشاء حساب' : 'Create Account'}</a>
+            <button class="btn btn--ghost btn--sm" id="dismiss-save-banner">×</button>
+          </div>
+        </div>` : ''}
+
+      <!-- DECISION MOMENT -->
       <div class="rc-decision-moment" id="rc-decision-moment">
         <div class="rc-dm__inner">
-          <div class="rc-dm__icon" style="background:${topTrack.color}18;color:${topTrack.color}">
-            ${topTrack.icon}
-          </div>
+          <div class="rc-dm__icon" style="background:${topTrack.color}18;color:${topTrack.color}">${topTrack.icon}</div>
           <p class="rc-dm__eyebrow">${isAr ? 'تم اتخاذ القرار' : 'Decision made'}</p>
           <h2 class="rc-dm__headline">
             ${isAr ? 'نوصي بـ' : 'We recommend:'}
@@ -97,6 +102,7 @@ export function Results() {
         </div>
       </div>
 
+      <!-- LOADING OVERLAY -->
       <div class="rc-overlay" id="rc-overlay">
         <div class="rc-overlay__inner">
           <div class="rc-overlay__dots"><span></span><span></span><span></span></div>
@@ -104,6 +110,7 @@ export function Results() {
         </div>
       </div>
 
+      <!-- FULL RESULTS -->
       <div class="rc-results" id="rc-results" style="opacity:0;pointer-events:none">
 
         <div class="rc-hero">
@@ -112,7 +119,6 @@ export function Results() {
             ${t('results.headline')}
             <span style="color:${topTrack.color}">&nbsp;${trackName}</span>
           </h1>
-          <p class="rc-hero__sub">${narrativeBridge}</p>
 
           <div class="rc-confidence" style="border-color:${confColor}20;background:${confColor}0d">
             <span class="rc-confidence__dot" style="background:${confColor}"></span>
@@ -122,14 +128,13 @@ export function Results() {
           </div>
         </div>
 
+        <!-- TOP TRACK CARD -->
         <div class="rc-decision-card" style="border-color:${topTrack.color}30;background:${topTrack.color}05">
           <div class="rc-decision-card__header">
-            <div class="rc-decision-card__icon" style="background:${topTrack.color}18;color:${topTrack.color}">
-              ${topTrack.icon}
-            </div>
+            <div class="rc-decision-card__icon" style="background:${topTrack.color}18;color:${topTrack.color}">${topTrack.icon}</div>
             <div class="rc-decision-card__meta">
               <div class="rc-decision-card__name">${trackName}</div>
-              <div class="rc-decision-card__sub">${topTrack.level} &middot; ${topTrack.duration}</div>
+              <div class="rc-decision-card__sub">${topTrack.level} &middot; ${isAr ? (topTrack.durationAr || topTrack.duration) : topTrack.duration}</div>
             </div>
             <span class="rc-badge" style="background:${topTrack.color}18;color:${topTrack.color};border-color:${topTrack.color}30">
               ${fitPct}%
@@ -139,11 +144,11 @@ export function Results() {
           <div class="rc-why-section">
             <p class="rc-why-section__title">${t('results.whyThis')}</p>
             <div class="rc-reasons">${dimRows}</div>
-            <p class="rc-why-bridge">${whySentence}</p>
+            ${whySentence ? `<p class="rc-why-bridge">${whySentence}</p>` : ''}
           </div>
         </div>
 
-        <!-- Runner-up tracks — NO alt track section above these -->
+        <!-- RUNNER-UP TRACKS -->
         <div class="rc-tracks" id="rc-tracks">
           ${top3.slice(1).map((item, i) => {
             const tr = allTracks.find(t => t.id === item.id);
@@ -155,7 +160,7 @@ export function Results() {
                   <div class="rc-card__icon" style="background:${tr.color}18;color:${tr.color};border-color:${tr.color}30">${tr.icon}</div>
                   <div class="rc-card__meta">
                     <div class="rc-card__name">${isAr ? (tr.nameAr || tr.name) : tr.name}</div>
-                    <div class="rc-card__sub">${tr.level} &middot; ${tr.duration}</div>
+                    <div class="rc-card__sub">${tr.level}</div>
                   </div>
                 </div>
                 <div class="rc-bar-row">
@@ -168,18 +173,18 @@ export function Results() {
           }).join('')}
         </div>
 
+        <!-- GATEWAY ACTIONS -->
         <div class="rc-gateway">
           <div class="rc-gateway__primary">
-            <button class="btn btn--primary btn--lg" id="rc-summary-btn" data-track-id="${topTrack.id}">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-              ${t('results.viewFull')}
-            </button>
-            <p class="rc-gateway__hint">${isAr ? 'افهم بالضبط لماذا هذا القرار مناسب لك' : 'Understand exactly why this is the right decision for you'}</p>
+            <a href="#/career?id=${topTrack.id}" class="btn btn--primary btn--lg" id="rc-explore-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              ${isAr ? `ادخل على مسار ${trackName}` : `Explore ${trackName} Track`}
+            </a>
+            <p class="rc-gateway__hint">${isAr ? 'شوف كل التفاصيل قبل ما تبدأ' : 'Review full details before committing'}</p>
           </div>
           <div class="rc-gateway__secondary">
-            <button class="btn btn--outline" id="rc-start-btn" data-track-id="${topTrack.id}">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              ${t('results.startTrack')}
+            <button class="btn btn--outline" id="rc-summary-btn">
+              ${t('results.viewFull')}
             </button>
             <button class="btn btn--ghost btn--sm" id="rc-retake-btn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
@@ -200,12 +205,7 @@ export function ResultsEvents() {
   const dmScore    = document.getElementById('rc-dm-score');
   const dmCta      = document.getElementById('rc-dm-cta');
 
-  const phases = [
-    t('test.analysing'),
-    t('results.measuringFit'),
-    t('results.rankingResults'),
-  ];
-
+  const phases = [t('test.analysing'), t('results.measuringFit'), t('results.rankingResults')];
   let phaseIdx = 0;
   const phaseInterval = setInterval(() => {
     phaseIdx = (phaseIdx + 1) % phases.length;
@@ -221,10 +221,10 @@ export function ResultsEvents() {
     }
     if (dm) {
       dm.style.display = 'flex';
-      requestAnimationFrame(() => { dm.classList.add('rc-dm--visible'); });
+      requestAnimationFrame(() => dm.classList.add('rc-dm--visible'));
       if (dmScore) {
-        const result = StorageService.get('testResult');
-        const target = typeof result?.top3?.[0]?.pct === 'number' ? result.top3[0].pct : 100;
+        const res    = StorageService.get('testResult');
+        const target = typeof res?.top3?.[0]?.pct === 'number' ? res.top3[0].pct : 100;
         _countUp(dmScore, 0, target, 900, '%');
       }
     }
@@ -243,48 +243,63 @@ export function ResultsEvents() {
       results.style.pointerEvents = 'auto';
     }
     setTimeout(() => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          document.querySelectorAll('.rc-reason__fill').forEach(el => {
-            el.style.transition = 'width 0.7s cubic-bezier(0.4,0,0.2,1)';
-            el.style.width = el.dataset.pct + '%';
-          });
-          document.querySelectorAll('.rc-card').forEach((card, i) => {
-            setTimeout(() => {
-              card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-              card.style.opacity    = '1';
-              card.style.transform  = 'translateY(0)';
-              const fill   = card.querySelector('.rc-bar-fill');
-              const pctEl  = card.querySelector('.rc-pct');
-              const target = parseInt(fill?.dataset.pct || '0');
-              setTimeout(() => {
-                if (fill)  fill.style.width = target + '%';
-                if (pctEl) _countUp(pctEl, 0, target, 700, '%');
-              }, 100);
-            }, i * 200);
-          });
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.querySelectorAll('.rc-reason__fill').forEach(el => {
+          el.style.transition = 'width 0.7s cubic-bezier(0.4,0,0.2,1)';
+          el.style.width = el.dataset.pct + '%';
         });
-      });
+        document.querySelectorAll('.rc-card').forEach((card, i) => {
+          setTimeout(() => {
+            card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            card.style.opacity    = '1';
+            card.style.transform  = 'translateY(0)';
+            const fill   = card.querySelector('.rc-bar-fill');
+            const pctEl  = card.querySelector('.rc-pct');
+            const target = parseInt(fill?.dataset.pct || '0');
+            setTimeout(() => {
+              if (fill) { fill.style.transition = 'width 0.6s ease'; fill.style.width = target + '%'; }
+              if (pctEl) _countUp(pctEl, 0, target, 700, '%');
+            }, 100);
+          }, i * 200);
+        });
+      }));
     }, 100);
   });
 
-  document.getElementById('rc-summary-btn')?.addEventListener('click', (e) => {
-    const trackId = e.currentTarget.dataset.trackId;
-    if (trackId) TrackService.enrollInTrack(trackId);
+  document.getElementById('rc-summary-btn')?.addEventListener('click', () => {
+    const result = TestService.getResult();
+    if (result?.topTrackId) TrackService.enrollInTrack(result.topTrackId);
     Router.navigate('/decision-summary');
   });
 
-  document.getElementById('rc-start-btn')?.addEventListener('click', (e) => {
-    const trackId = e.currentTarget.dataset.trackId;
-    if (trackId) TrackService.enrollInTrack(trackId);
-    const user = State.getState('user');
-    Router.navigate(user ? '/dashboard' : '/register');
+  document.getElementById('rc-retake-btn')?.addEventListener('click', () => {
+    if (window.Swal) {
+      Swal.fire({
+        title: document.documentElement.getAttribute('lang') === 'ar' ? 'إعادة الاختبار؟' : 'Retake the test?',
+        text:  document.documentElement.getAttribute('lang') === 'ar' ? 'سيتم حذف نتيجتك الحالية.' : 'Your current result will be cleared.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: document.documentElement.getAttribute('lang') === 'ar' ? 'نعم، أعد' : 'Yes, retake',
+        cancelButtonText:  document.documentElement.getAttribute('lang') === 'ar' ? 'إلغاء' : 'Cancel',
+      }).then(res => {
+        if (res.isConfirmed) {
+          State.setState('testResult', null);
+          StorageService.set('testResult', null);
+          Router.navigate('/test');
+        }
+      });
+    } else {
+      State.setState('testResult', null);
+      StorageService.set('testResult', null);
+      Router.navigate('/test');
+    }
   });
 
-  document.getElementById('rc-retake-btn')?.addEventListener('click', () => {
-    State.setState('testResult', null);
-    StorageService.set('testResult', null);
-    Router.navigate('/test');
+  // Save banner dismiss
+  document.getElementById('dismiss-save-banner')?.addEventListener('click', () => {
+    StorageService.set('dismissed_save_banner', true);
+    const banner = document.getElementById('save-banner');
+    if (banner) { banner.style.opacity = '0'; setTimeout(() => banner.remove(), 200); }
   });
 }
 
