@@ -9,18 +9,18 @@ window.selectSessionType = function(typeId) {
   window._sessionUI.selectedType = typeId;
   window._sessionUI.selectedMentor = null;
   window._sessionUI.selectedSlot = null;
-  renderApp();
+  renderMainOnly();
 };
 window.selectMentor = function(mentorId) {
   window._sessionUI.selectedMentor = mentorId;
   window._sessionUI.selectedSlot = null;
-  renderApp();
+  renderMainOnly();
 };
 window.selectSlot = function(slotId) {
   const slot = (window.SESSION_SLOTS || []).find(s => s.id === slotId);
   if (slot && !slot.available) return;
   window._sessionUI.selectedSlot = slotId;
-  renderApp();
+  renderMainOnly();
 };
 
 // Helper: map track id -> fieldKey used in MENTORS
@@ -65,7 +65,6 @@ function renderSessionTypeCards(isAr) {
 }
 
 function renderMentorCards(isAr, trackId) {
-  // Use unified MENTORS from mentors.js, filter by fieldKey
   const field = trackToField(trackId);
   const mentors = (window.MENTORS || []).filter(m => m.fieldKey === field || m.fieldKey === 'general');
   if (!mentors.length) return `<p class="text-muted">${isAr ? 'لا يوجد مرشدون متاحون لهذا المسار حاليًا.' : 'No mentors available for this track yet.'}</p>`;
@@ -156,7 +155,6 @@ window.renderSessionBookingView = function renderSessionBookingView() {
   return `
     <div style="display:grid;gap:1.4rem;">
 
-      <!-- Header -->
       <div class="surface-panel section-pad" data-aos="fade-up">
         <div class="page-header">
           <div>
@@ -186,7 +184,6 @@ window.renderSessionBookingView = function renderSessionBookingView() {
 
       ${state.premiumUnlocked ? `
 
-        <!-- Step 1: Session type -->
         <div class="surface-panel section-pad" data-aos="fade-up">
           <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
             <div style="width:1.6rem;height:1.6rem;border-radius:50%;background:${step1Done ? 'var(--accent)' : 'var(--surface-3)'};border:2px solid ${step1Done ? 'var(--accent)' : 'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:${step1Done ? '#fff' : 'var(--text-muted)'};">1</div>
@@ -198,7 +195,6 @@ window.renderSessionBookingView = function renderSessionBookingView() {
         </div>
 
         ${ui.selectedType ? `
-          <!-- Step 2: Mentor -->
           <div class="surface-panel section-pad" data-aos="fade-up">
             <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
               <div style="width:1.6rem;height:1.6rem;border-radius:50%;background:${step2Done ? 'var(--accent)' : 'var(--surface-3)'};border:2px solid ${step2Done ? 'var(--accent)' : 'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:${step2Done ? '#fff' : 'var(--text-muted)'};">2</div>
@@ -211,7 +207,6 @@ window.renderSessionBookingView = function renderSessionBookingView() {
         ` : ''}
 
         ${ui.selectedMentor ? `
-          <!-- Step 3: Time slot -->
           <div class="surface-panel section-pad" data-aos="fade-up">
             <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
               <div style="width:1.6rem;height:1.6rem;border-radius:50%;background:${step3Done ? 'var(--accent)' : 'var(--surface-3)'};border:2px solid ${step3Done ? 'var(--accent)' : 'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:${step3Done ? '#fff' : 'var(--text-muted)'};">3</div>
@@ -225,14 +220,12 @@ window.renderSessionBookingView = function renderSessionBookingView() {
         ` : ''}
 
         ${ui.selectedSlot ? `
-          <!-- Step 4: Booking form -->
           <div class="surface-panel section-pad" data-aos="fade-up">
             <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
               <div style="width:1.6rem;height:1.6rem;border-radius:50%;background:var(--surface-3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--text-muted);">4</div>
               <span style="font-weight:700;">${isAr ? 'تفاصيل الحجز' : 'Your booking details'}</span>
             </div>
 
-            <!-- Summary strip -->
             <div class="surface-soft section-pad" style="margin-bottom:1.2rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;">
               ${[[
                 isAr ? 'نوع الجلسة' : 'Session type',
@@ -286,8 +279,8 @@ window.renderSessionBookingView = function renderSessionBookingView() {
               </div>
               <input type="hidden" name="sessionType" value="${ui.selectedType || ''}">
               <input type="hidden" name="mentorId"    value="${ui.selectedMentor || ''}">
-              <input type="hidden" name="slotId"     value="${ui.selectedSlot || ''}">
-              <input type="hidden" name="trackId"    value="${state.selectedTrack}">
+              <input type="hidden" name="slotId"      value="${ui.selectedSlot || ''}">
+              <input type="hidden" name="trackId"     value="${state.selectedTrack}">
               <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
                 <button class="btn btn-primary" type="submit">${t('submitBooking')}</button>
                 <button class="btn btn-secondary" type="button" onclick="navigateTo('mentors')">${isAr ? 'رجوع للمرشدين' : 'Back to Mentors'}</button>
