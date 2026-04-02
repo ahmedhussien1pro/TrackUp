@@ -9,6 +9,7 @@ window.closeMobileMenu = function closeMobileMenu(event) {
 };
 window.toggleJourneyMenu = function toggleJourneyMenu() {
   state.journeyOpen = !state.journeyOpen;
+  state.accountOpen = false;
   renderApp();
   if (state.journeyOpen) {
     setTimeout(() => {
@@ -193,6 +194,8 @@ window.renderApp = function renderApp() {
   }
 };
 state.direction = state.language === 'ar' ? 'rtl' : 'ltr';
-// Init auth state (session only — not persisted)
 if (!state.auth) state.auth = null;
+if (!state.accountOpen) state.accountOpen = false;
+// Init URL router before first render
+initRouter();
 renderApp();

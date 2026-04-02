@@ -27,36 +27,38 @@ window.getOrderedNav = function getOrderedNav() {
   const sessionDone = state.completedMilestones?.sessionBooked;
 
   return [
-    // ── Primary (always visible in top nav) ──
-    { id: 'home',            label: t('home'),       icon: 'house',          group: 'primary' },
-    { id: 'profile',         label: t('profile'),    icon: 'user-round',     group: 'primary' },
-    { id: 'test',            label: t('test'),       icon: 'clipboard-list', group: 'primary' },
-    { id: 'results',         label: t('results'),    icon: 'bar-chart-3',    group: 'primary' },
-    { id: 'pricing',         label: t('pricing'),    icon: 'credit-card',    group: 'primary' },
+    // Primary — always visible in top navbar
+    { id: 'home',             label: t('home'),       icon: 'house',          group: 'primary' },
+    { id: 'pricing',          label: t('pricing'),    icon: 'credit-card',    group: 'primary' },
+    { id: 'about',            label: t('about'),      icon: 'info',           group: 'primary' },
+    { id: 'contact',          label: t('contact'),    icon: 'mail',           group: 'primary' },
 
-    // ── Journey dropdown ──
-    { id: 'track-details',   label: t('tracks'),     icon: 'layers-3',       group: 'journey' },
-    { id: 'roadmap',         label: t('roadmap'),    icon: 'route',          group: 'journey' },
-    { id: 'platforms',       label: t('platforms'),  icon: 'layout-grid',    group: 'journey' },
-    { id: 'progress',        label: t('progress'),   icon: 'target',         group: 'journey' },
-    { id: 'mentors',         label: t('mentors'),    icon: 'users-round',    group: 'journey' },
-    { id: 'session-booking', label: t('sessions'),   icon: 'calendar-days',  group: 'journey' },
-    { id: 'subtrack-test',   label: state.language === 'ar' ? 'اختبار التخصص' : 'Sub-track Test',
-                                                      icon: 'flask-conical',  group: 'journey',
-                             lock: !sessionDone },
-    { id: 'recorded-library',label: state.language === 'ar' ? 'مكتبة الجلسات' : 'Recorded Library',
-                                                      icon: 'library',        group: 'journey',
-                             lock: !isPremium },
-    { id: 'chat',            label: state.language === 'ar' ? 'تواصل مع مرشدك' : 'Mentor Chat',
-                                                      icon: 'message-square', group: 'journey',
-                             lock: !isPremium },
-    { id: 'sub-track-result',label: state.language === 'ar' ? 'تخصصك الدقيق' : 'Sub-track Result',
-                                                      icon: 'target',         group: 'journey',
-                             lock: !sessionDone },
+    // Journey dropdown
+    { id: 'profile',          label: t('profile'),        icon: 'user-round',     group: 'journey' },
+    { id: 'test',             label: t('test'),           icon: 'clipboard-list', group: 'journey' },
+    { id: 'results',          label: t('results'),        icon: 'bar-chart-3',    group: 'journey' },
+    { id: 'track-details',    label: t('tracks'),         icon: 'layers-3',       group: 'journey' },
+    { id: 'roadmap',          label: t('roadmap'),        icon: 'route',          group: 'journey' },
+    { id: 'platforms',        label: t('platforms'),      icon: 'layout-grid',    group: 'journey' },
+    { id: 'progress',         label: t('progress'),       icon: 'target',         group: 'journey' },
+    { id: 'mentors',          label: t('mentors'),        icon: 'users-round',    group: 'journey' },
+    { id: 'session-booking',  label: t('sessions'),       icon: 'calendar-days',  group: 'journey' },
+    { id: 'subtrack-test',    label: state.language === 'ar' ? 'اختبار التخصص الدقيق' : 'Sub-track Test',
+                                                           icon: 'flask-conical',  group: 'journey', lock: !sessionDone },
+    { id: 'recorded-library', label: state.language === 'ar' ? 'مكتبة الجلسات' : 'Recorded Library',
+                                                           icon: 'library',        group: 'journey', lock: !isPremium },
+    { id: 'chat',             label: state.language === 'ar' ? 'تواصل مع مرشدك' : 'Mentor Chat',
+                                                           icon: 'message-square', group: 'journey', lock: !isPremium },
+    { id: 'sub-track-result', label: state.language === 'ar' ? 'تخصصك الدقيق' : 'Sub-track Result',
+                                                           icon: 'target',         group: 'journey', lock: !sessionDone },
 
-    // ── Footer only ──
-    { id: 'about',           label: t('about'),      icon: 'info',           group: 'footer' },
-    { id: 'contact',         label: t('contact'),    icon: 'mail',           group: 'footer' },
+    // Account dropdown
+    { id: 'profile',          label: t('profile'),    icon: 'user-round',     group: 'account' },
+    { id: 'auth',             label: state.language === 'ar' ? 'الحساب' : 'Account', icon: 'log-in', group: 'account' },
+
+    // Footer only
+    { id: 'about',            label: t('about'),      icon: 'info',           group: 'footer' },
+    { id: 'contact',          label: t('contact'),    icon: 'mail',           group: 'footer' },
   ];
 };
 
@@ -90,14 +92,14 @@ window.updateProgress = function updateProgress(key, value = true) {
 
 window.nextRecommendedStep = function nextRecommendedStep() {
   const m = state.completedMilestones;
-  if (!m.profileCompleted)  return { view: 'profile',         label: t('profileTitle') };
-  if (!m.testCompleted)     return { view: 'test',            label: t('startAssessment') };
-  if (!m.resultsViewed)     return { view: 'results',         label: t('openResults') };
-  if (!m.detailsOpened)     return { view: 'track-details',   label: t('exploreTrack') };
-  if (!m.roadmapStarted)    return { view: 'roadmap',         label: t('openRoadmap') };
-  if (!m.courseStarted)     return { view: 'platforms',       label: t('platforms') };
-  if (!m.premiumUnlocked)   return { view: 'pricing',         label: t('upgradeNow') };
-  if (!m.sessionBooked)     return { view: 'mentors',         label: t('meetMentors') };
+  if (!m.profileCompleted)  return { view: 'profile',       label: t('profileTitle') };
+  if (!m.testCompleted)     return { view: 'test',          label: t('startAssessment') };
+  if (!m.resultsViewed)     return { view: 'results',       label: t('openResults') };
+  if (!m.detailsOpened)     return { view: 'track-details', label: t('exploreTrack') };
+  if (!m.roadmapStarted)    return { view: 'roadmap',       label: t('openRoadmap') };
+  if (!m.courseStarted)     return { view: 'platforms',     label: t('platforms') };
+  if (!m.premiumUnlocked)   return { view: 'pricing',       label: t('upgradeNow') };
+  if (!m.sessionBooked)     return { view: 'mentors',       label: t('meetMentors') };
   return { view: 'subtrack-test', label: t('startNow') };
 };
 
@@ -141,18 +143,62 @@ window.guardView = function guardView(view) {
   return true;
 };
 
+// ── URL Router ──────────────────────────────────────────────
+// Views that should NOT be persisted in URL (sensitive/transient)
+const PRIVATE_VIEWS = ['auth'];
+
 window.navigateTo = function navigateTo(view, extras = {}) {
   if (extras.selectedTrack) state.selectedTrack = extras.selectedTrack;
   state.currentView = view;
   state.mobileMenuOpen = false;
   state.journeyOpen = false;
+  state.accountOpen = false;
   if (view === 'results' && state.rankedTracks.length) updateProgress('resultsViewed', true);
   if (view === 'track-details') updateProgress('detailsOpened', true);
   if (view === 'roadmap') updateProgress('roadmapStarted', true);
   persistState();
+
+  // Push to browser history
+  if (!PRIVATE_VIEWS.includes(view)) {
+    const params = new URLSearchParams({ tab: view });
+    if (extras.selectedTrack) params.set('track', extras.selectedTrack);
+    history.pushState({ view, ...extras }, '', '?' + params.toString());
+  }
+
   renderApp();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+
+// Handle browser back/forward
+window.addEventListener('popstate', function(e) {
+  const params = new URLSearchParams(window.location.search);
+  const view = params.get('tab') || 'home';
+  const track = params.get('track');
+  state.currentView = view;
+  if (track) state.selectedTrack = track;
+  state.mobileMenuOpen = false;
+  state.journeyOpen = false;
+  state.accountOpen = false;
+  renderApp();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// Read URL on first load / refresh — restore last view
+window.initRouter = function initRouter() {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  const track = params.get('track');
+  if (tab && !PRIVATE_VIEWS.includes(tab)) {
+    state.currentView = tab;
+    if (track) state.selectedTrack = track;
+    // Replace history entry so back button works correctly
+    history.replaceState({ view: tab, selectedTrack: track }, '', window.location.search);
+  } else {
+    // Set initial URL without pushing new entry
+    history.replaceState({ view: state.currentView }, '', '?tab=' + state.currentView);
+  }
+};
+// ────────────────────────────────────────────────────────────
 
 window.switchLanguage = function switchLanguage() {
   state.language = state.language === 'en' ? 'ar' : 'en';
@@ -183,6 +229,7 @@ window.resetDemo = function resetDemo() {
       state.currentView = 'home';
       state.mobileMenuOpen = false;
       state.journeyOpen = false;
+      state.accountOpen = false;
       state.mentorFilter = 'all';
       state.selectedMentor = null;
       state.subtestField = null;
@@ -210,7 +257,28 @@ window.resetDemo = function resetDemo() {
       state.subTrackResult = null;
       state.auth = null;
       persistState();
+      history.replaceState({ view: 'home' }, '', '?tab=home');
       renderApp();
     }
   });
+};
+
+window.toggleAccountMenu = function toggleAccountMenu() {
+  state.accountOpen = !state.accountOpen;
+  state.journeyOpen = false;
+  renderApp();
+  if (state.accountOpen) {
+    setTimeout(() => {
+      function outsideHandler(e) {
+        const dropdown = document.querySelector('.account-dropdown');
+        const trigger  = document.querySelector('[data-account]');
+        if (dropdown && !dropdown.contains(e.target) && trigger && !trigger.contains(e.target)) {
+          state.accountOpen = false;
+          renderApp();
+          document.removeEventListener('click', outsideHandler, true);
+        }
+      }
+      document.addEventListener('click', outsideHandler, true);
+    }, 0);
+  }
 };
