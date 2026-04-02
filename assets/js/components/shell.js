@@ -3,17 +3,17 @@ function getProfileInitials() {
   const name = (state.profile && state.profile.fullName && state.profile.fullName.trim()) || '';
   if (!name) return '?';
   const words = name.split(/\s+/).filter(Boolean);
-  if (words.length === 1) {
-    return words[0].slice(0, 2).toUpperCase();
-  }
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
 window.renderHeader = function renderHeader() {
   const nav = getOrderedNav();
-  const primaryNav = nav.filter(item => ['home', 'profile', 'test', 'results', 'pricing'].includes(item.id));
-  const journeyNav = nav.filter(item => !['home', 'profile', 'test', 'results', 'pricing'].includes(item.id));
-  const isJourneyActive = ['track-details','roadmap','progress','session-booking'].includes(state.currentView);
+  const primaryNav = nav.filter(item => item.group === 'primary');
+  const journeyNav = nav.filter(item => item.group === 'journey');
+
+  const journeyViews = journeyNav.map(i => i.id);
+  const isJourneyActive = journeyViews.includes(state.currentView);
   const hasProfile = state.profile && state.profile.fullName && state.profile.fullName.trim();
   const initials = getProfileInitials();
   const isPro = state.premiumUnlocked;
@@ -36,6 +36,8 @@ window.renderHeader = function renderHeader() {
             ${primaryNav.map(item => `
               <button class="nav-link ${state.currentView === item.id ? 'is-active' : ''}" onclick="guardedNavigate('${item.id}')">${item.label}</button>
             `).join('')}
+
+            <!-- Journey dropdown -->
             <div style="position:relative;">
               <button class="nav-link ${isJourneyActive ? 'is-active' : ''}" data-journey="true" onclick="toggleJourneyMenu()">
                 <span>${t('journey')}</span>
@@ -43,18 +45,26 @@ window.renderHeader = function renderHeader() {
                   <path d="m6 9 6 6 6-6"/>
                 </svg>
               </button>
+
               ${state.journeyOpen ? `
-                <div class="journey-dropdown surface-panel fade-up-soft" style="position:absolute;top:calc(100% + 8px);${state.direction === 'rtl' ? 'left:0;' : 'right:0;'}">
+                <div class="journey-dropdown surface-panel fade-up-soft" style="position:absolute;top:calc(100% + 8px);${state.direction === 'rtl' ? 'left:0;' : 'right:0;'}min-width:220px;">
                   <div class="journey-dropdown-header">
                     <span class="eyebrow">${t('openJourney')}</span>
                   </div>
                   <div class="journey-dropdown-items">
-                    ${journeyNav.map(item => `
-                      <button class="journey-item ${state.currentView === item.id ? 'is-active' : ''}" onclick="guardedNavigate('${item.id}')">
-                        <i data-lucide="${item.icon}" style="width:15px;height:15px;flex-shrink:0;"></i>
-                        <span>${item.label}</span>
-                      </button>
-                    `).join('')}
+                    ${journeyNav.map(item => {
+                      const isActive = state.currentView === item.id;
+                      const isLocked = item.lock;
+                      return `
+                        <button
+                          class="journey-item ${isActive ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}"
+                          onclick="guardedNavigate('${item.id}')"
+                          style="${isLocked ? 'opacity:.5;' : ''}">
+                          <i data-lucide="${isLocked ? 'lock' : item.icon}" style="width:15px;height:15px;flex-shrink:0;color:${isLocked ? 'var(--text-muted)' : 'inherit'};"></i>
+                          <span style="flex:1;text-align:start;">${item.label}</span>
+                          ${isLocked ? `<span style="font-size:.65rem;font-weight:700;color:var(--text-muted);background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:.1rem .4rem;flex-shrink:0;">${state.language === 'ar' ? 'مقفول' : 'LOCKED'}</span>` : ''}
+                        </button>`;
+                    }).join('')}
                   </div>
                 </div>
               ` : ''}
@@ -62,7 +72,6 @@ window.renderHeader = function renderHeader() {
           </nav>
 
           <div class="header-actions">
-            <!-- Profile Avatar -->
             ${hasProfile ? `
               <button class="nav-avatar ${isPro ? 'nav-avatar--pro' : ''}" onclick="navigateTo('profile')" title="${state.profile.fullName}">
                 <span class="nav-avatar-initials">${initials}</span>
@@ -95,9 +104,12 @@ window.renderHeader = function renderHeader() {
 
 window.renderMobilePanel = function renderMobilePanel() {
   const nav = getOrderedNav();
+  // Mobile panel shows primary + journey only (not footer)
+  const mobileNav = nav.filter(item => item.group === 'primary' || item.group === 'journey');
   const initials = getProfileInitials();
   const hasProfile = state.profile && state.profile.fullName && state.profile.fullName.trim();
   const isPro = state.premiumUnlocked;
+
   return `
     <div class="mobile-panel ${state.mobileMenuOpen ? 'is-open' : ''}" onclick="closeMobileMenu(event)">
       <div class="mobile-sheet" onclick="event.stopPropagation()">
@@ -122,16 +134,26 @@ window.renderMobilePanel = function renderMobilePanel() {
             </div>
             <div>
               <div style="font-weight:700;font-size:.9rem;">${state.profile.fullName}</div>
-              ${isPro ? `<div class="eyebrow" style="color:var(--accent);font-size:.7rem;">${t('premiumActive')}</div>` : `<div class="text-muted" style="font-size:.78rem;">${t('free')}</div>`}
+              ${isPro
+                ? `<div class="eyebrow" style="color:var(--accent);font-size:.7rem;">${t('premiumActive')}</div>`
+                : `<div class="text-muted" style="font-size:.78rem;">${t('free')}</div>`}
             </div>
           </div>
         ` : ''}
-        <div style="display:grid;gap:.6rem;">
-          ${nav.map(item => `
-            <button class="btn ${state.currentView === item.id ? 'btn-secondary' : 'btn-ghost'}" style="justify-content:flex-start;" onclick="guardedNavigate('${item.id}')">
-              <i data-lucide="${item.icon}" style="width:16px;height:16px;"></i>${item.label}
-            </button>
-          `).join('')}
+        <div style="display:grid;gap:.5rem;">
+          ${mobileNav.map(item => {
+            const isActive = state.currentView === item.id;
+            const isLocked = item.lock;
+            return `
+              <button
+                class="btn ${isActive ? 'btn-secondary' : 'btn-ghost'}"
+                style="justify-content:flex-start;gap:.6rem;${isLocked ? 'opacity:.5;' : ''}"
+                onclick="guardedNavigate('${item.id}')">
+                <i data-lucide="${isLocked ? 'lock' : item.icon}" style="width:16px;height:16px;flex-shrink:0;"></i>
+                <span style="flex:1;text-align:start;">${item.label}</span>
+                ${isLocked ? `<span style="font-size:.65rem;font-weight:700;color:var(--text-muted);">${state.language === 'ar' ? 'مقفول' : 'LOCKED'}</span>` : ''}
+              </button>`;
+          }).join('')}
         </div>
       </div>
     </div>
@@ -140,11 +162,11 @@ window.renderMobilePanel = function renderMobilePanel() {
 
 window.renderBottomNav = function renderBottomNav() {
   const items = [
-    { id: 'home', icon: 'house', label: t('home') },
-    { id: 'test', icon: 'clipboard-list', label: t('test') },
-    { id: 'results', icon: 'bar-chart-3', label: t('results') },
-    { id: 'progress', icon: 'target', label: t('progress') },
-    { id: 'profile', icon: 'user-round', label: t('profile') }
+    { id: 'home',    icon: 'house',          label: t('home') },
+    { id: 'test',    icon: 'clipboard-list', label: t('test') },
+    { id: 'results', icon: 'bar-chart-3',    label: t('results') },
+    { id: 'progress',icon: 'target',         label: t('progress') },
+    { id: 'profile', icon: 'user-round',     label: t('profile') }
   ];
   return `
     <div class="mobile-bottom-nav">

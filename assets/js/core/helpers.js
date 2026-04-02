@@ -23,20 +23,40 @@ window.showToast = function showToast(text, color = '#2563eb') {
 };
 
 window.getOrderedNav = function getOrderedNav() {
+  const isPremium = state.premiumUnlocked;
+  const sessionDone = state.completedMilestones?.sessionBooked;
+
   return [
-    { id: 'home',             label: t('home'),       icon: 'house' },
-    { id: 'profile',          label: t('profile'),    icon: 'user-round' },
-    { id: 'test',             label: t('test'),       icon: 'clipboard-list' },
-    { id: 'results',          label: t('results'),    icon: 'bar-chart-3' },
-    { id: 'track-details',    label: t('tracks'),     icon: 'layers-3' },
-    { id: 'roadmap',          label: t('roadmap'),    icon: 'route' },
-    { id: 'platforms',        label: t('platforms'),  icon: 'layout-grid' },
-    { id: 'pricing',          label: t('pricing'),    icon: 'credit-card' },
-    { id: 'progress',         label: t('progress'),   icon: 'target' },
-    { id: 'mentors',          label: t('mentors'),    icon: 'users-round' },
-    { id: 'session-booking',  label: t('sessions'),   icon: 'calendar-days' },
-    { id: 'about',            label: t('about'),      icon: 'info' },
-    { id: 'contact',          label: t('contact'),    icon: 'mail' },
+    // ── Primary (always visible in top nav) ──
+    { id: 'home',            label: t('home'),       icon: 'house',          group: 'primary' },
+    { id: 'profile',         label: t('profile'),    icon: 'user-round',     group: 'primary' },
+    { id: 'test',            label: t('test'),       icon: 'clipboard-list', group: 'primary' },
+    { id: 'results',         label: t('results'),    icon: 'bar-chart-3',    group: 'primary' },
+    { id: 'pricing',         label: t('pricing'),    icon: 'credit-card',    group: 'primary' },
+
+    // ── Journey dropdown ──
+    { id: 'track-details',   label: t('tracks'),     icon: 'layers-3',       group: 'journey' },
+    { id: 'roadmap',         label: t('roadmap'),    icon: 'route',          group: 'journey' },
+    { id: 'platforms',       label: t('platforms'),  icon: 'layout-grid',    group: 'journey' },
+    { id: 'progress',        label: t('progress'),   icon: 'target',         group: 'journey' },
+    { id: 'mentors',         label: t('mentors'),    icon: 'users-round',    group: 'journey' },
+    { id: 'session-booking', label: t('sessions'),   icon: 'calendar-days',  group: 'journey' },
+    { id: 'subtrack-test',   label: state.language === 'ar' ? 'اختبار التخصص' : 'Sub-track Test',
+                                                      icon: 'flask-conical',  group: 'journey',
+                             lock: !sessionDone },
+    { id: 'recorded-library',label: state.language === 'ar' ? 'مكتبة الجلسات' : 'Recorded Library',
+                                                      icon: 'library',        group: 'journey',
+                             lock: !isPremium },
+    { id: 'chat',            label: state.language === 'ar' ? 'تواصل مع مرشدك' : 'Mentor Chat',
+                                                      icon: 'message-square', group: 'journey',
+                             lock: !isPremium },
+    { id: 'sub-track-result',label: state.language === 'ar' ? 'تخصصك الدقيق' : 'Sub-track Result',
+                                                      icon: 'target',         group: 'journey',
+                             lock: !sessionDone },
+
+    // ── Footer only ──
+    { id: 'about',           label: t('about'),      icon: 'info',           group: 'footer' },
+    { id: 'contact',         label: t('contact'),    icon: 'mail',           group: 'footer' },
   ];
 };
 
@@ -184,6 +204,10 @@ window.resetDemo = function resetDemo() {
       state.currentQuestionIndex = 0;
       state.startedCourseIds = [];
       state.roadmapProgress = {};
+      state.chatMessages = [];
+      state.watchedSessions = [];
+      state.libraryFilter = 'all';
+      state.subTrackResult = null;
       state.auth = null;
       persistState();
       renderApp();
