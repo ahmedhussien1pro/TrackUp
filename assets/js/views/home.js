@@ -1,10 +1,27 @@
 window.renderHomeView = function renderHomeView() {
   const next = nextRecommendedStep();
+  const lang = state.language;
+  const isAr = lang === 'ar';
+
   const testimonials = [
     { name: t('testimonial1Name'), role: t('testimonial1Role'), text: t('testimonial1Text'), stars: 5 },
     { name: t('testimonial2Name'), role: t('testimonial2Role'), text: t('testimonial2Text'), stars: 5 },
     { name: t('testimonial3Name'), role: t('testimonial3Role'), text: t('testimonial3Text'), stars: 5 }
   ];
+
+  /* ── Star SVG helper — no emoji ── */
+  function starSVG(filled) {
+    return `<svg width="13" height="13" viewBox="0 0 24 24"
+      fill="${filled ? '#f59e0b' : 'none'}"
+      stroke="#f59e0b" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round"
+      style="display:inline;flex-shrink:0;">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>`;
+  }
+  function renderStars(n) {
+    return Array.from({ length: 5 }, (_, i) => starSVG(i < n)).join('');
+  }
 
   const noiseOffsets = [80, 100, 115, 130, 165, 178, 192, 210];
   const noiseWaves = noiseOffsets.map((y, i) => {
@@ -18,9 +35,6 @@ window.renderHomeView = function renderHomeView() {
     t('roadmap'), t('coursesTitle'), t('progress'),
     t('premium'), t('sessions')
   ].join(arrow);
-
-  const lang = state.language;
-  const isAr = lang === 'ar';
 
   const features = [
     [ 'Quick assessment (5 questions)', 'تقييم سريع (٥ أسئلة)',        true,  true  ],
@@ -70,7 +84,6 @@ window.renderHomeView = function renderHomeView() {
     </div>
   `;
 
-  /* Quick links for Home — all key pages */
   const homeQuickLinks = [
     { id:'profile',  icon:'user-round',     labelEn:'Profile',     labelAr:'ملفي' },
     { id:'test',     icon:'clipboard-list', labelEn:'Assessment',  labelAr:'الاختبار' },
@@ -82,7 +95,6 @@ window.renderHomeView = function renderHomeView() {
   ];
 
   return `
-    <!-- HERO -->
     <section class="home-hero" data-aos="fade-up">
       <div class="home-hero-content">
         <span class="badge badge-accent" style="margin-bottom:1rem;">${t('homeBadge')}</span>
@@ -94,7 +106,6 @@ window.renderHomeView = function renderHomeView() {
           <button class="btn btn-accent-outline" onclick="navigateTo('pricing')">${t('viewPricing')}</button>
         </div>
       </div>
-
       <div class="home-hero-visual" aria-hidden="true">
         <div class="signal-scene">
           <div class="signal-grid"></div>
@@ -111,7 +122,6 @@ window.renderHomeView = function renderHomeView() {
       </div>
     </section>
 
-    <!-- PARTNERS AUTO-SLIDE -->
     <section class="partners-section" data-aos="fade-up">
       <div class="eyebrow" style="text-align:center;margin-bottom:1.1rem;">${t('partnersTitle')}</div>
       <div class="partners-track-wrap">
@@ -121,7 +131,6 @@ window.renderHomeView = function renderHomeView() {
       </div>
     </section>
 
-    <!-- HOW IT WORKS -->
     <section data-aos="fade-up">
       <div class="eyebrow" style="margin-bottom:1rem;">${t('quickSteps')}</div>
       <div class="kpi-row">
@@ -131,7 +140,6 @@ window.renderHomeView = function renderHomeView() {
       </div>
     </section>
 
-    <!-- NEXT STEP + FREE VS PREMIUM -->
     <section class="hero-grid" data-aos="fade-up">
       <div class="surface-panel section-pad">
         <div class="eyebrow">${t('journeyPreview')}</div>
@@ -165,13 +173,14 @@ window.renderHomeView = function renderHomeView() {
       </div>
     </section>
 
-    <!-- TESTIMONIALS -->
     <section data-aos="fade-up">
       <div class="eyebrow" style="margin-bottom:1.1rem;">${t('testimonials')}</div>
       <div class="testimonials-grid">
         ${testimonials.map(item => `
           <div class="testimonial-card surface-panel section-pad">
-            <div class="testimonial-stars">${'★'.repeat(item.stars)}</div>
+            <div class="testimonial-stars" style="display:flex;align-items:center;gap:2px;margin-bottom:.5rem;">
+              ${renderStars(item.stars)}
+            </div>
             <p class="testimonial-text">&ldquo;${item.text}&rdquo;</p>
             <div class="testimonial-author">
               <div class="testimonial-avatar">${item.name.charAt(0)}</div>
@@ -189,7 +198,7 @@ window.renderHomeView = function renderHomeView() {
   `;
 };
 
-// ── Partners Scroll — JS requestAnimationFrame (RTL + LTR safe) ──
+// ── Partners Scroll — JS requestAnimationFrame ──
 window.initPartnersScroll = function initPartnersScroll() {
   const track = document.getElementById('partnersTrack');
   if (!track) return;

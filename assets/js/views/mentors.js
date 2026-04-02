@@ -14,13 +14,37 @@ window.renderMentorsView = function renderMentorsView() {
 
   const filtered = filterField === 'all' ? MENTORS : MENTORS.filter(m => m.fieldKey === filterField);
 
-  function stars(rating) {
-    const full = Math.floor(rating);
-    const half = rating % 1 >= 0.5;
-    let s = '';
-    for (let i = 0; i < full; i++) s += '<span style="color:#f59e0b">★</span>';
-    if (half) s += '<span style="color:#f59e0b">½</span>';
-    return s;
+  /* ── Stars using SVG icon — no emoji ── */
+  function renderStars(rating) {
+    const total    = 5;
+    const full     = Math.floor(rating);
+    const hasHalf  = rating % 1 >= 0.5;
+    const empty    = total - full - (hasHalf ? 1 : 0);
+    const starSVG  = (filled) => `
+      <svg width="12" height="12" viewBox="0 0 24 24"
+        fill="${filled ? '#f59e0b' : 'none'}"
+        stroke="#f59e0b" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>`;
+    const halfSVG  = `
+      <svg width="12" height="12" viewBox="0 0 24 24"
+        fill="none" stroke="#f59e0b" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <defs>
+          <linearGradient id="half-grad" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="50%" stop-color="#f59e0b"/>
+            <stop offset="50%" stop-color="transparent"/>
+          </linearGradient>
+        </defs>
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+          fill="url(#half-grad)"/>
+      </svg>`;
+    return [
+      ...Array(full).fill(starSVG(true)),
+      ...(hasHalf ? [halfSVG] : []),
+      ...Array(empty).fill(starSVG(false))
+    ].join('');
   }
 
   function availBadge(m) {
@@ -56,8 +80,8 @@ window.renderMentorsView = function renderMentorsView() {
           </div>
           <div class="mentor-stat">
             <div style="display:flex;align-items:center;gap:.25rem;">
-              ${stars(m.rating)}
-              <span style="font-weight:700;font-size:.88rem;">${m.rating}</span>
+              ${renderStars(m.rating)}
+              <span style="font-weight:700;font-size:.88rem;margin-inline-start:.2rem;">${m.rating}</span>
             </div>
             <span class="text-muted" style="font-size:.75rem;">(${m.reviews} ${isAr ? 'تقييم' : 'reviews'})</span>
           </div>
@@ -109,7 +133,12 @@ window.renderMentorsView = function renderMentorsView() {
         <span class="text-muted" style="font-size:.8rem;">${isAr ? 'جلسة منجزة' : 'Sessions Done'}</span>
       </div>
       <div class="mentor-kpi">
-        <span class="mentor-kpi-num">4.9 ★</span>
+        <div style="display:flex;align-items:center;gap:.25rem;">
+          <span class="mentor-kpi-num">4.9</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" style="flex-shrink:0;">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </div>
         <span class="text-muted" style="font-size:.8rem;">${isAr ? 'متوسط التقييم' : 'Avg. Rating'}</span>
       </div>
       <div class="mentor-kpi">

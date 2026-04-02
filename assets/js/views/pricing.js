@@ -9,11 +9,10 @@ window.renderPricingView = function renderPricingView() {
   ];
 
   const cards = PRICING.map((plan, idx) => {
-    const isActive   = plan.id === 'premium' && isPremium;
-    const isHighlight = plan.id === 'bundle';
+    const isActive      = plan.id === 'premium' && isPremium;
+    const isHighlight   = plan.id === 'bundle';
     const isRecommended = plan.id === 'premium' || plan.id === 'bundle';
 
-    // ── CTA logic per plan ──
     let btnLabel, btnAction, btnDisabled = false;
 
     if (isActive) {
@@ -29,14 +28,10 @@ window.renderPricingView = function renderPricingView() {
       btnAction = `onclick="activatePlan('premium')"` ;
     } else if (plan.id === 'session') {
       btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
-      btnAction = isPremium
-        ? `onclick="navigateTo('mentors')"` 
-        : `onclick="openPremiumLock('pricing')"` ;
+      btnAction = isPremium ? `onclick="navigateTo('mentors')"` : `onclick="openPremiumLock('pricing')"` ;
     } else if (plan.id === 'full-session') {
       btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
-      btnAction = isPremium
-        ? `onclick="navigateTo('session-booking')"` 
-        : `onclick="openPremiumLock('pricing')"` ;
+      btnAction = isPremium ? `onclick="navigateTo('session-booking')"` : `onclick="openPremiumLock('pricing')"` ;
     } else if (plan.id === 'bundle') {
       btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
       btnAction = `onclick="activatePlan('bundle')"` ;
@@ -51,9 +46,7 @@ window.renderPricingView = function renderPricingView() {
 
     const borderStyle = isActive
       ? 'border:1.5px solid var(--accent);'
-      : isHighlight
-        ? 'border:1.5px solid var(--brand);'
-        : '';
+      : isHighlight ? 'border:1.5px solid var(--brand);' : '';
 
     return `
       <div
@@ -132,8 +125,8 @@ window.renderPricingView = function renderPricingView() {
       <div style="display:grid;gap:1rem;">
         ${revenueStreams.map(r => `
           <div style="display:flex;gap:1rem;align-items:flex-start;">
-            <div style="width:2.2rem;height:2.2rem;border-radius:10px;background:${r.color||'var(--accent)'}18;border:1px solid ${r.color||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <i data-lucide="${r.icon}" style="width:15px;height:15px;color:${r.color||'var(--accent)'};"></i>
+            <div style="width:2.2rem;height:2.2rem;border-radius:10px;background:var(--accent-soft);border:1px solid rgba(59,130,246,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="${r.icon}" style="width:15px;height:15px;color:var(--accent);"></i>
             </div>
             <div>
               <div style="font-weight:700;font-size:.92rem;">${isAr ? r.titleAr : r.titleEn}</div>
@@ -162,7 +155,7 @@ window.renderPricingView = function renderPricingView() {
   `;
 };
 
-// ── activatePlan — handles all plan IDs ──
+// ── activatePlan ──
 window.activatePlan = function activatePlan(planId) {
   const isAr = state.language === 'ar';
 
@@ -189,16 +182,17 @@ window.activatePlan = function activatePlan(planId) {
       updateProgress('premiumUnlocked', true);
       if (planId === 'bundle') updateProgress('sessionBooked', true);
       persistState();
+      /* ── Toast with shield-check icon — no emoji ── */
       showToast(
-        isAr ? 'تم تفعيل البريميوم! 🎉' : 'Premium activated! 🎉',
-        '#22c55e'
+        isAr ? 'تم تفعيل البريميوم' : 'Premium activated',
+        '#22c55e',
+        'shield-check'
       );
       navigateTo('progress');
     });
     return;
   }
 
-  // intro-session / full-session — redirect to mentors
   showToast(isAr ? 'اختار مرشدك لحجز الجلسة.' : 'Choose a mentor to book your session.', '#7c3aed');
   navigateTo('mentors');
 };
