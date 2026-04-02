@@ -7,8 +7,8 @@ window.escapeHtml = function escapeHtml(str = '') {
 };
 
 window.applyDocumentState = function applyDocumentState() {
-  document.documentElement.lang      = state.language;
-  document.documentElement.dir       = state.direction;
+  document.documentElement.lang         = state.language;
+  document.documentElement.dir          = state.direction;
   document.documentElement.dataset.theme = state.theme;
 };
 
@@ -21,6 +21,48 @@ window.showToast = function showToast(text, color = '#2563eb') {
     style: { background: color, borderRadius: '12px', color: '#fff' }
   }).showToast();
 };
+
+// ── Surgical patch helpers ───────────────────────────────────
+
+/** Re-render ONLY the <main> content — no header/footer flash */
+window.renderMainOnly = function renderMainOnly() {
+  const main = document.querySelector('.main-grid');
+  if (!main) { renderApp(); return; }
+  applyDocumentState();
+  main.innerHTML =
+    (state.currentView !== 'home' ? renderProgressStrip() : '') +
+    renderMainContent();
+  bindForms();
+  if (window.lucide) lucide.createIcons();
+  if (window.AOS)    { AOS.init({ duration: 550, once: true, offset: 14, easing: 'ease-out-cubic' }); AOS.refreshHard(); }
+  if (state.currentView === 'home') {
+    requestAnimationFrame(() => { if (window.initPartnersScroll) window.initPartnersScroll(); });
+  }
+};
+
+/** Patch ONLY the header — used by dropdown toggles */
+window.patchHeader = function patchHeader() {
+  const header = document.querySelector('.app-header');
+  if (!header) { renderApp(); return; }
+  const tmp = document.createElement('div');
+  tmp.innerHTML = renderHeader();
+  const newHeader = tmp.firstElementChild;
+  header.replaceWith(newHeader);
+  if (window.lucide) lucide.createIcons();
+};
+
+/** Patch ONLY the mobile panel */
+window.patchMobilePanel = function patchMobilePanel() {
+  const panel = document.querySelector('.mobile-panel');
+  if (!panel) { renderApp(); return; }
+  const tmp = document.createElement('div');
+  tmp.innerHTML = renderMobilePanel();
+  const newPanel = tmp.firstElementChild;
+  panel.replaceWith(newPanel);
+  if (window.lucide) lucide.createIcons();
+};
+
+// ── Nav helpers ──────────────────────────────────────────────
 
 window.getOrderedNav = function getOrderedNav() {
   const isPremium   = state.premiumUnlocked;
@@ -47,8 +89,8 @@ window.getOrderedNav = function getOrderedNav() {
     { id: 'recorded-library', label: isAr ? 'مكتبة الجلسات'        : 'Recorded Library',               icon: 'library',        group: 'journey', lock: !isPremium },
     { id: 'chat',             label: isAr ? 'تواصل مع مرشدك'       : 'Mentor Chat',                    icon: 'message-square', group: 'journey', lock: !isPremium },
 
-    { id: 'profile',          label: t('profile'),                                                     icon: 'user-round',     group: 'account' },
-    { id: 'auth',             label: isAr ? 'الحساب' : 'Account',                                     icon: 'log-in',         group: 'account' },
+    { id: 'profile',          label: t('profile'),    icon: 'user-round',     group: 'account' },
+    { id: 'auth',             label: isAr ? 'الحساب' : 'Account', icon: 'log-in', group: 'account' },
 
     { id: 'about',            label: t('about'),      icon: 'info',           group: 'footer' },
     { id: 'contact',          label: t('contact'),    icon: 'mail',           group: 'footer' },
@@ -84,19 +126,19 @@ window.updateProgress = function updateProgress(key, value = true) {
 };
 
 window.nextRecommendedStep = function nextRecommendedStep() {
-  const m   = state.completedMilestones;
+  const m    = state.completedMilestones;
   const isAr = state.language === 'ar';
-  if (!m.profileCompleted)       return { view: 'profile',          label: t('profileTitle') };
-  if (!m.testCompleted)          return { view: 'test',             label: t('startAssessment') };
-  if (!m.resultsViewed)          return { view: 'results',          label: t('openResults') };
-  if (!m.detailsOpened)          return { view: 'track-details',    label: t('exploreTrack') };
-  if (!m.roadmapStarted)         return { view: 'roadmap',          label: t('openRoadmap') };
-  if (!m.courseStarted)          return { view: 'platforms',        label: t('platforms') };
-  if (!m.premiumUnlocked)        return { view: 'pricing',          label: t('upgradeNow') };
-  if (!m.sessionBooked)          return { view: 'mentors',          label: t('meetMentors') };
-  if (!state.subtestComplete)    return { view: 'subtrack-test',    label: isAr ? 'اختبار التخصص الدقيق' : 'Sub-track Test' };
-  if (!state.subTrackResult)     return { view: 'sub-track-result', label: isAr ? 'تخصصك الدقيق' : 'Your Sub-track' };
-  return { view: 'progress', label: isAr ? 'الرحلة مكتملة' : 'Journey complete' };
+  if (!m.profileCompleted)    return { view: 'profile',          label: t('profileTitle') };
+  if (!m.testCompleted)       return { view: 'test',             label: t('startAssessment') };
+  if (!m.resultsViewed)       return { view: 'results',          label: t('openResults') };
+  if (!m.detailsOpened)       return { view: 'track-details',    label: t('exploreTrack') };
+  if (!m.roadmapStarted)      return { view: 'roadmap',          label: t('openRoadmap') };
+  if (!m.courseStarted)       return { view: 'platforms',        label: t('platforms') };
+  if (!m.premiumUnlocked)     return { view: 'pricing',          label: t('upgradeNow') };
+  if (!m.sessionBooked)       return { view: 'mentors',          label: t('meetMentors') };
+  if (!state.subtestComplete) return { view: 'subtrack-test',    label: isAr ? 'اختبار التخصص الدقيق' : 'Sub-track Test' };
+  if (!state.subTrackResult)  return { view: 'sub-track-result', label: isAr ? 'تخصصك الدقيق' : 'Your Sub-track' };
+  return { view: 'progress',  label: isAr ? 'الرحلة مكتملة' : 'Journey complete' };
 };
 
 window.safeProfileName = function safeProfileName() {
@@ -140,7 +182,6 @@ window.guardView = function guardView(view) {
   return true;
 };
 
-// ── Premium lock gate (used by pricing.js) ──
 window.openPremiumLock = function openPremiumLock(from) {
   const isAr = state.language === 'ar';
   Swal.fire({
@@ -156,7 +197,7 @@ window.openPremiumLock = function openPremiumLock(from) {
   }).then(r => { if (r.isConfirmed) navigateTo('pricing'); });
 };
 
-// ── URL Router ──────────────────────────────────────────────
+// ── URL Router ───────────────────────────────────────────────
 const PRIVATE_VIEWS = ['auth'];
 
 window.navigateTo = function navigateTo(view, extras = {}) {
@@ -174,7 +215,9 @@ window.navigateTo = function navigateTo(view, extras = {}) {
     if (extras.selectedTrack) params.set('track', extras.selectedTrack);
     history.pushState({ view, ...extras }, '', '?' + params.toString());
   }
-  renderApp();
+  // Surgical: update header active states + main content only — no full page flash
+  patchHeader();
+  renderMainOnly();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
@@ -187,7 +230,8 @@ window.addEventListener('popstate', function(e) {
   state.mobileMenuOpen = false;
   state.journeyOpen    = false;
   state.accountOpen    = false;
-  renderApp();
+  patchHeader();
+  renderMainOnly();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
@@ -203,8 +247,8 @@ window.initRouter = function initRouter() {
     history.replaceState({ view: state.currentView }, '', '?tab=' + state.currentView);
   }
 };
-// ────────────────────────────────────────────────────────────
 
+// Language switch needs full render (direction + all text changes)
 window.switchLanguage = function switchLanguage() {
   state.language  = state.language === 'en' ? 'ar' : 'en';
   state.direction = state.language === 'ar' ? 'rtl' : 'ltr';
@@ -212,10 +256,11 @@ window.switchLanguage = function switchLanguage() {
   renderApp();
 };
 
+// Theme switch: only update data-theme attribute — zero DOM rebuild
 window.switchTheme = function switchTheme() {
   state.theme = state.theme === 'dark' ? 'light' : 'dark';
   persistState();
-  renderApp();
+  applyDocumentState();
 };
 
 window.resetDemo = function resetDemo() {
@@ -231,36 +276,36 @@ window.resetDemo = function resetDemo() {
     color:      state.theme === 'dark' ? '#fafafa' : '#09090b'
   }).then(result => {
     if (result.isConfirmed) {
-      state.currentView        = 'home';
-      state.mobileMenuOpen     = false;
-      state.journeyOpen        = false;
-      state.accountOpen        = false;
-      state.mentorFilter       = 'all';
-      state.selectedMentor     = null;
-      state.subtestField       = null;
-      state.subtestIndex       = 0;
-      state.subtestAnswers     = {};
-      state.subtestComplete    = false;
-      state.subTrackResult     = null;
-      state.profile            = { fullName: '', college: '', year: '', email: '' };
-      state.testAnswers        = {};
-      state.scores             = {};
-      state.rankedTracks       = [];
-      state.selectedTrack      = 'embedded';
+      state.currentView         = 'home';
+      state.mobileMenuOpen      = false;
+      state.journeyOpen         = false;
+      state.accountOpen         = false;
+      state.mentorFilter        = 'all';
+      state.selectedMentor      = null;
+      state.subtestField        = null;
+      state.subtestIndex        = 0;
+      state.subtestAnswers      = {};
+      state.subtestComplete     = false;
+      state.subTrackResult      = null;
+      state.profile             = { fullName: '', college: '', year: '', email: '' };
+      state.testAnswers         = {};
+      state.scores              = {};
+      state.rankedTracks        = [];
+      state.selectedTrack       = 'embedded';
       state.completedMilestones = {
         profileCompleted: false, testCompleted: false, resultsViewed: false,
         detailsOpened:   false, roadmapStarted: false, courseStarted: false,
         premiumUnlocked: false, sessionBooked:  false
       };
-      state.premiumUnlocked    = false;
-      state.sessionRequested   = false;
+      state.premiumUnlocked     = false;
+      state.sessionRequested    = false;
       state.currentQuestionIndex = 0;
-      state.startedCourseIds   = [];
-      state.roadmapProgress    = {};
-      state.chatMessages       = [];
-      state.watchedSessions    = [];
-      state.libraryFilter      = 'all';
-      state.auth               = null;
+      state.startedCourseIds    = [];
+      state.roadmapProgress     = {};
+      state.chatMessages        = [];
+      state.watchedSessions     = [];
+      state.libraryFilter       = 'all';
+      state.auth                = null;
       persistState();
       history.replaceState({ view: 'home' }, '', '?tab=home');
       renderApp();
@@ -268,10 +313,11 @@ window.resetDemo = function resetDemo() {
   });
 };
 
+// Dropdown toggles — patch header only, never rebuild full page
 window.toggleAccountMenu = function toggleAccountMenu() {
   state.accountOpen = !state.accountOpen;
   state.journeyOpen = false;
-  renderApp();
+  patchHeader();
   if (state.accountOpen) {
     setTimeout(() => {
       function outsideHandler(e) {
@@ -279,7 +325,7 @@ window.toggleAccountMenu = function toggleAccountMenu() {
         const trigger  = document.querySelector('[data-account]');
         if (dropdown && !dropdown.contains(e.target) && trigger && !trigger.contains(e.target)) {
           state.accountOpen = false;
-          renderApp();
+          patchHeader();
           document.removeEventListener('click', outsideHandler, true);
         }
       }

@@ -7,10 +7,11 @@ function getProfileInitials() {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
+// Journey dropdown — patch header only, never full re-render
 window.toggleJourneyMenu = function toggleJourneyMenu() {
   state.journeyOpen = !state.journeyOpen;
   state.accountOpen = false;
-  renderApp();
+  patchHeader();
   if (state.journeyOpen) {
     setTimeout(() => {
       function outsideHandler(e) {
@@ -18,14 +19,14 @@ window.toggleJourneyMenu = function toggleJourneyMenu() {
         const trigger  = document.querySelector('[data-journey]');
         if (dropdown && !dropdown.contains(e.target) && trigger && !trigger.contains(e.target)) {
           state.journeyOpen = false;
-          renderApp();
+          patchHeader();
           document.removeEventListener('click', outsideHandler, true);
           window.removeEventListener('scroll', scrollHandler, true);
         }
       }
       function scrollHandler() {
         state.journeyOpen = false;
-        renderApp();
+        patchHeader();
         document.removeEventListener('click', outsideHandler, true);
         window.removeEventListener('scroll', scrollHandler, true);
       }
@@ -33,6 +34,18 @@ window.toggleJourneyMenu = function toggleJourneyMenu() {
       window.addEventListener('scroll', scrollHandler, { passive: true, capture: true });
     }, 0);
   }
+};
+
+// Mobile menu — patch panel only
+window.toggleMobileMenu = function toggleMobileMenu() {
+  state.mobileMenuOpen = !state.mobileMenuOpen;
+  patchMobilePanel();
+};
+
+window.closeMobileMenu = function closeMobileMenu(event) {
+  if (event) event.stopPropagation();
+  state.mobileMenuOpen = false;
+  patchMobilePanel();
 };
 
 window.guardedNavigate = function guardedNavigate(view) {
@@ -61,8 +74,8 @@ window.renderHeader = function renderHeader() {
   const isPro       = state.premiumUnlocked;
   const journeyItems = getJourneyDropdownItems();
   const journeyIds   = journeyItems.map(i => i.id);
-  const isJourneyActive  = journeyIds.includes(state.currentView);
-  const isAccountActive  = state.currentView === 'profile' || state.currentView === 'auth';
+  const isJourneyActive = journeyIds.includes(state.currentView);
+  const isAccountActive = state.currentView === 'profile' || state.currentView === 'auth';
 
   return `
     <header class="app-header">
@@ -82,12 +95,11 @@ window.renderHeader = function renderHeader() {
           <!-- Desktop Nav -->
           <nav class="desktop-nav">
 
-            <!-- Home -->
             <button class="nav-link ${state.currentView === 'home' ? 'is-active' : ''}" onclick="navigateTo('home')">
               ${isAr ? 'الرئيسية' : 'Home'}
             </button>
 
-            <!-- Journey dropdown (4 items) -->
+            <!-- Journey dropdown -->
             <div style="position:relative;">
               <button class="nav-link ${isJourneyActive ? 'is-active' : ''}" data-journey="true" onclick="toggleJourneyMenu()">
                 <span>${isAr ? 'رحلتي' : 'Journey'}</span>
@@ -114,12 +126,10 @@ window.renderHeader = function renderHeader() {
               ` : ''}
             </div>
 
-            <!-- Mentors (top-level) -->
             <button class="nav-link ${state.currentView === 'mentors' ? 'is-active' : ''}" onclick="navigateTo('mentors')">
               ${isAr ? 'المرشدون' : 'Mentors'}
             </button>
 
-            <!-- Pricing (top-level) -->
             <button class="nav-link ${state.currentView === 'pricing' ? 'is-active' : ''}" onclick="navigateTo('pricing')">
               ${isAr ? 'الأسعار' : 'Pricing'}
             </button>
@@ -129,14 +139,12 @@ window.renderHeader = function renderHeader() {
           <!-- Actions -->
           <div class="header-actions">
 
-            <!-- Language -->
             <button class="btn-icon" onclick="switchLanguage()" title="${state.language === 'en' ? 'العربية' : 'English'}">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>
               </svg>
             </button>
 
-            <!-- Theme -->
             <button class="btn-icon" onclick="switchTheme()" title="${state.theme === 'dark' ? t('light') : t('dark')}">
               ${state.theme === 'dark'
                 ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`
@@ -144,7 +152,6 @@ window.renderHeader = function renderHeader() {
               }
             </button>
 
-            <!-- Reset -->
             <button class="btn-icon" onclick="resetDemo()" title="Reset">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             </button>
@@ -175,31 +182,31 @@ window.renderHeader = function renderHeader() {
                   ` : ''}
 
                   <div style="padding:.5rem;display:grid;gap:.2rem;">
-                    <button class="journey-item ${state.currentView === 'profile' ? 'is-active' : ''}" onclick="navigateTo('profile');state.accountOpen=false;renderApp();">
+                    <button class="journey-item ${state.currentView === 'profile' ? 'is-active' : ''}" onclick="navigateTo('profile')">
                       <i data-lucide="user-round" style="width:14px;height:14px;color:var(--accent);"></i>
                       <span>${isAr ? 'ملفي' : 'My Profile'}</span>
                     </button>
                     ${isPro ? `
-                      <button class="journey-item ${state.currentView === 'recorded-library' ? 'is-active' : ''}" onclick="navigateTo('recorded-library');state.accountOpen=false;renderApp();">
+                      <button class="journey-item ${state.currentView === 'recorded-library' ? 'is-active' : ''}" onclick="navigateTo('recorded-library')">
                         <i data-lucide="library" style="width:14px;height:14px;color:var(--accent);"></i>
                         <span>${isAr ? 'مكتبة الجلسات' : 'Recorded Library'}</span>
                       </button>
-                      <button class="journey-item ${state.currentView === 'chat' ? 'is-active' : ''}" onclick="navigateTo('chat');state.accountOpen=false;renderApp();">
+                      <button class="journey-item ${state.currentView === 'chat' ? 'is-active' : ''}" onclick="navigateTo('chat')">
                         <i data-lucide="message-square" style="width:14px;height:14px;color:var(--accent);"></i>
                         <span>${isAr ? 'تواصل مع مرشدك' : 'Mentor Chat'}</span>
                       </button>
-                      <button class="journey-item ${state.currentView === 'session-booking' ? 'is-active' : ''}" onclick="navigateTo('session-booking');state.accountOpen=false;renderApp();">
+                      <button class="journey-item ${state.currentView === 'session-booking' ? 'is-active' : ''}" onclick="navigateTo('session-booking')">
                         <i data-lucide="calendar-days" style="width:14px;height:14px;color:var(--accent);"></i>
                         <span>${isAr ? 'احجز جلسة' : 'Book a Session'}</span>
                       </button>
                     ` : `
-                      <button class="journey-item" onclick="navigateTo('pricing');state.accountOpen=false;renderApp();" style="color:var(--accent);">
+                      <button class="journey-item" onclick="navigateTo('pricing')" style="color:var(--accent);">
                         <i data-lucide="crown" style="width:14px;height:14px;color:var(--accent);"></i>
                         <span>${isAr ? 'ترقية لـ Premium' : 'Upgrade to Premium'}</span>
                       </button>
                     `}
                     <div style="border-top:1px solid var(--border);margin:.3rem 0;"></div>
-                    <button class="journey-item" onclick="navigateTo('auth');state.accountOpen=false;renderApp();">
+                    <button class="journey-item" onclick="navigateTo('auth')">
                       <i data-lucide="log-in" style="width:14px;height:14px;color:var(--text-muted);"></i>
                       <span>${isAr ? 'تسجيل / دخول' : 'Sign In / Up'}</span>
                     </button>
@@ -212,7 +219,6 @@ window.renderHeader = function renderHeader() {
               ` : ''}
             </div>
 
-            <!-- Mobile hamburger -->
             <button class="btn-icon mobile-toggle" onclick="toggleMobileMenu()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
             </button>
@@ -230,7 +236,6 @@ window.renderMobilePanel = function renderMobilePanel() {
   const initials   = getProfileInitials();
   const hasProfile = state.profile?.fullName?.trim();
 
-  /* Flat list — simple and clear on mobile */
   const primaryItems = [
     { id: 'home',      icon: 'house',          labelEn: 'Home',        labelAr: 'الرئيسية' },
     { id: 'test',      icon: 'clipboard-list', labelEn: 'Assessment',  labelAr: 'الاختبار' },
@@ -242,11 +247,11 @@ window.renderMobilePanel = function renderMobilePanel() {
   ];
 
   const premiumItems = [
-    { id: 'session-booking',  icon: 'calendar-days',  labelEn: 'Book a Session',    labelAr: 'احجز جلسة',          lock: !isPro },
-    { id: 'recorded-library', icon: 'library',         labelEn: 'Recorded Library',  labelAr: 'مكتبة الجلسات',      lock: !isPro },
-    { id: 'chat',             icon: 'message-square',  labelEn: 'Mentor Chat',       labelAr: 'تواصل مع مرشدك',     lock: !isPro },
+    { id: 'session-booking',  icon: 'calendar-days',  labelEn: 'Book a Session',    labelAr: 'احجز جلسة',            lock: !isPro },
+    { id: 'recorded-library', icon: 'library',         labelEn: 'Recorded Library',  labelAr: 'مكتبة الجلسات',        lock: !isPro },
+    { id: 'chat',             icon: 'message-square',  labelEn: 'Mentor Chat',       labelAr: 'تواصل مع مرشدك',       lock: !isPro },
     { id: 'subtrack-test',    icon: 'flask-conical',   labelEn: 'Sub-track Test',    labelAr: 'اختبار التخصص الدقيق', lock: !state.completedMilestones?.sessionBooked },
-    { id: 'sub-track-result', icon: 'crosshair',       labelEn: 'Sub-track Result',  labelAr: 'تخصصك الدقيق',       lock: !state.completedMilestones?.sessionBooked },
+    { id: 'sub-track-result', icon: 'crosshair',       labelEn: 'Sub-track Result',  labelAr: 'تخصصك الدقيق',         lock: !state.completedMilestones?.sessionBooked },
   ];
 
   function renderItem(item) {
@@ -297,13 +302,9 @@ window.renderMobilePanel = function renderMobilePanel() {
         ` : ''}
 
         <div style="display:grid;gap:1.2rem;">
-
-          <!-- Main -->
           <div style="display:grid;gap:.3rem;">
             ${primaryItems.map(renderItem).join('')}
           </div>
-
-          <!-- Premium section -->
           <div>
             <div class="eyebrow" style="padding:0 .5rem .5rem;display:flex;align-items:center;gap:.4rem;">
               <i data-lucide="crown" style="width:11px;height:11px;color:var(--accent);"></i>
@@ -313,7 +314,6 @@ window.renderMobilePanel = function renderMobilePanel() {
               ${premiumItems.map(renderItem).join('')}
             </div>
           </div>
-
         </div>
 
       </div>
