@@ -1,12 +1,9 @@
 // ─────────────────────────────────────────────────────────
 // test.js — TrackUp Quick Assessment
-// selectAnswer / prevQuestion / nextQuestion are defined HERE ONLY.
-// main.js must NOT redefine them.
 // ─────────────────────────────────────────────────────────
 
 const LETTER_LABELS = ['A', 'B', 'C', 'D'];
 
-// ── Refresh step dots in-place ─────────────────────────────
 function _refreshDots() {
   const wrap = document.getElementById('test-step-dots');
   if (!wrap) return;
@@ -20,7 +17,6 @@ function _refreshDots() {
   }).join('');
 }
 
-// ── Refresh counter + progress bar + buttons ───────────────
 function _refreshMeta() {
   const idx    = state.currentQuestionIndex;
   const total  = QUESTIONS.length;
@@ -37,7 +33,6 @@ function _refreshMeta() {
   if (badge)   badge.textContent = `${answered}/${total} ${lang === 'ar' ? 'مكتمل' : 'answered'}`;
   if (bar)     bar.style.width   = pct + '%';
 
-  // back buttons (desktop + mobile)
   ['test-back-btn','test-back-btn-m'].forEach(id => {
     const b = document.getElementById(id);
     if (!b) return;
@@ -46,7 +41,6 @@ function _refreshMeta() {
     b.style.pointerEvents = isFirst ? 'none' : '';
   });
 
-  // next buttons
   ['test-next-btn','test-next-btn-m'].forEach(id => {
     const b = document.getElementById(id);
     if (!b) return;
@@ -57,7 +51,6 @@ function _refreshMeta() {
   });
 }
 
-// ── Build single question HTML (no icons on options) ────────
 function _buildQ() {
   const idx    = state.currentQuestionIndex;
   const q      = QUESTIONS[idx];
@@ -90,13 +83,12 @@ function _buildQ() {
   `;
 }
 
-// ── DOM-only answer selection (NO auto-advance) ─────────────
 window.selectAnswer = function selectAnswer(qId, answerId) {
   state.testAnswers[qId] = answerId;
   persistState();
 
   const container = document.getElementById('answer-options-' + qId);
-  if (!container) { renderApp(); return; }
+  if (!container) { renderMainOnly(); return; }
 
   container.querySelectorAll('.answer-option').forEach(btn => {
     const sel = btn.dataset.answerId === answerId;
@@ -109,19 +101,16 @@ window.selectAnswer = function selectAnswer(qId, answerId) {
 
   _refreshDots();
   _refreshMeta();
-  // ❌ no auto-advance — user presses Next manually
 };
 
-// ── Slide animation between questions ──────────────────────
 window.swapQuestion = function swapQuestion(dir) {
   const wrapper = document.getElementById('question-wrapper');
-  if (!wrapper) { renderApp(); return; }
+  if (!wrapper) { renderMainOnly(); return; }
 
   const rtl   = state.direction === 'rtl';
   const outX  = dir === 'next' ? (rtl ? '24px' : '-24px') : (rtl ? '-24px' : '24px');
   const inX   = dir === 'next' ? (rtl ? '-24px' : '24px') : (rtl ? '24px' : '-24px');
 
-  // exit
   wrapper.style.transition = 'opacity .17s ease, transform .17s ease';
   wrapper.style.opacity    = '0';
   wrapper.style.transform  = `translateX(${outX})`;
@@ -133,13 +122,11 @@ window.swapQuestion = function swapQuestion(dir) {
     wrapper.innerHTML = _buildQ();
     if (window.lucide) lucide.createIcons();
 
-    // snap to enter position without transition
     wrapper.style.transition = 'none';
     wrapper.style.opacity    = '0';
     wrapper.style.transform  = `translateX(${inX})`;
-    wrapper.offsetHeight; // force reflow
+    wrapper.offsetHeight;
 
-    // animate in
     wrapper.style.transition = 'opacity .24s ease, transform .24s cubic-bezier(.4,0,.2,1)';
     wrapper.style.opacity    = '1';
     wrapper.style.transform  = 'translateX(0)';
@@ -158,7 +145,6 @@ window.nextQuestion = function nextQuestion() {
   if (state.currentQuestionIndex < QUESTIONS.length - 1) swapQuestion('next');
 };
 
-// ── Main render ───────────────────────────────────────────
 window.renderTestView = function renderTestView() {
   if (!state.completedMilestones.profileCompleted) {
     return `
@@ -186,7 +172,6 @@ window.renderTestView = function renderTestView() {
   return `
   <div class="test-shell">
 
-    <!-- ── Question panel (LEFT on desktop) ── -->
     <div class="test-question-panel">
       <div class="progress-bar" style="margin-bottom:1.6rem;">
         <span id="test-progress-fill" style="width:${pct}%"></span>
@@ -194,7 +179,6 @@ window.renderTestView = function renderTestView() {
 
       <div id="question-wrapper">${_buildQ()}</div>
 
-      <!-- mobile nav — visible only below 1024px -->
       <div class="test-nav-mobile">
         <button id="test-back-btn-m" class="btn btn-secondary" onclick="prevQuestion()" ${backDisabled}>
           <i data-lucide="chevron-${lang === 'ar' ? 'right' : 'left'}" style="width:.95rem;height:.95rem;"></i>
@@ -207,7 +191,6 @@ window.renderTestView = function renderTestView() {
       </div>
     </div>
 
-    <!-- ── Meta panel (RIGHT on desktop) ── -->
     <aside class="test-meta">
       <div class="eyebrow" style="margin-bottom:.5rem;">${t('testTitle')}</div>
       <p style="font-size:1.2rem;font-weight:800;line-height:1.25;letter-spacing:-.025em;color:var(--text);">${t('testTitle')}</p>
@@ -221,7 +204,6 @@ window.renderTestView = function renderTestView() {
       <div id="test-step-dots" style="display:flex;align-items:center;gap:.4rem;margin-top:1rem;flex-wrap:wrap;">${dots}</div>
       <span id="test-answered-badge" style="display:block;font-size:.75rem;color:var(--text-faint);margin-top:.35rem;">${answered}/${QUESTIONS.length} ${lang === 'ar' ? 'مكتمل' : 'answered'}</span>
 
-      <!-- desktop nav — hidden below 1024px -->
       <div class="test-nav-desktop">
         <button id="test-back-btn" class="btn btn-secondary" onclick="prevQuestion()" ${backDisabled}>
           <i data-lucide="chevron-${lang === 'ar' ? 'right' : 'left'}" style="width:.95rem;height:.95rem;"></i>
