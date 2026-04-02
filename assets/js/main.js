@@ -11,17 +11,27 @@ window.toggleJourneyMenu = function toggleJourneyMenu() {
   state.journeyOpen = !state.journeyOpen;
   renderApp();
   if (state.journeyOpen) {
+    // close on outside click
     setTimeout(() => {
       function outsideHandler(e) {
         const dropdown = document.querySelector('.journey-dropdown');
-        const trigger = document.querySelector('.nav-link[data-journey]');
+        const trigger = document.querySelector('[data-journey]');
         if (dropdown && !dropdown.contains(e.target) && trigger && !trigger.contains(e.target)) {
           state.journeyOpen = false;
           renderApp();
           document.removeEventListener('click', outsideHandler, true);
+          window.removeEventListener('scroll', scrollHandler, true);
         }
       }
+      // close on scroll
+      function scrollHandler() {
+        state.journeyOpen = false;
+        renderApp();
+        document.removeEventListener('click', outsideHandler, true);
+        window.removeEventListener('scroll', scrollHandler, true);
+      }
       document.addEventListener('click', outsideHandler, true);
+      window.addEventListener('scroll', scrollHandler, { passive: true, capture: true });
     }, 0);
   }
 };

@@ -1,8 +1,22 @@
+/* ── helpers ── */
+function getProfileInitials() {
+  const name = (state.profile && state.profile.fullName && state.profile.fullName.trim()) || '';
+  if (!name) return '?';
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
 window.renderHeader = function renderHeader() {
   const nav = getOrderedNav();
   const primaryNav = nav.filter(item => ['home', 'profile', 'test', 'results', 'pricing'].includes(item.id));
   const journeyNav = nav.filter(item => !['home', 'profile', 'test', 'results', 'pricing'].includes(item.id));
   const isJourneyActive = ['track-details','roadmap','progress','session-booking'].includes(state.currentView);
+  const hasProfile = state.profile && state.profile.fullName && state.profile.fullName.trim();
+  const initials = getProfileInitials();
+  const isPro = state.premiumUnlocked;
 
   return `
     <header class="app-header">
@@ -15,7 +29,7 @@ window.renderHeader = function renderHeader() {
                 <path d="m19 9-5 5-4-4-3 3"/>
               </svg>
             </span>
-            <span class="brand-name">${t('appName')}</span>
+            <span class="brand-name">TrackUp</span>
           </button>
 
           <nav class="desktop-nav">
@@ -23,7 +37,7 @@ window.renderHeader = function renderHeader() {
               <button class="nav-link ${state.currentView === item.id ? 'is-active' : ''}" onclick="guardedNavigate('${item.id}')">${item.label}</button>
             `).join('')}
             <div style="position:relative;">
-              <button class="nav-link ${isJourneyActive ? 'is-active' : ''}" onclick="toggleJourneyMenu()">
+              <button class="nav-link ${isJourneyActive ? 'is-active' : ''}" data-journey="true" onclick="toggleJourneyMenu()">
                 <span>${t('journey')}</span>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s ease;transform:${state.journeyOpen ? 'rotate(180deg)' : 'rotate(0deg)'}">
                   <path d="m6 9 6 6 6-6"/>
@@ -48,6 +62,13 @@ window.renderHeader = function renderHeader() {
           </nav>
 
           <div class="header-actions">
+            <!-- Profile Avatar -->
+            ${hasProfile ? `
+              <button class="nav-avatar ${isPro ? 'nav-avatar--pro' : ''}" onclick="navigateTo('profile')" title="${state.profile.fullName}">
+                <span class="nav-avatar-initials">${initials}</span>
+                ${isPro ? `<span class="nav-avatar-badge">PRO</span>` : ''}
+              </button>
+            ` : ''}
             <button class="btn-icon" onclick="switchLanguage()" title="${state.language === 'en' ? 'العربية' : 'English'}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>
@@ -74,6 +95,9 @@ window.renderHeader = function renderHeader() {
 
 window.renderMobilePanel = function renderMobilePanel() {
   const nav = getOrderedNav();
+  const initials = getProfileInitials();
+  const hasProfile = state.profile && state.profile.fullName && state.profile.fullName.trim();
+  const isPro = state.premiumUnlocked;
   return `
     <div class="mobile-panel ${state.mobileMenuOpen ? 'is-open' : ''}" onclick="closeMobileMenu(event)">
       <div class="mobile-sheet" onclick="event.stopPropagation()">
@@ -84,12 +108,24 @@ window.renderMobilePanel = function renderMobilePanel() {
                 <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
               </svg>
             </span>
-            <span class="brand-name">${t('appName')}</span>
+            <span class="brand-name">TrackUp</span>
           </div>
           <button class="btn-icon" onclick="toggleMobileMenu()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
+        ${hasProfile ? `
+          <div style="display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--surface-2);border-radius:14px;margin-bottom:1rem;">
+            <div class="nav-avatar ${isPro ? 'nav-avatar--pro' : ''}" style="pointer-events:none;">
+              <span class="nav-avatar-initials">${initials}</span>
+              ${isPro ? `<span class="nav-avatar-badge">PRO</span>` : ''}
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:.9rem;">${state.profile.fullName}</div>
+              ${isPro ? `<div class="eyebrow" style="color:var(--accent);font-size:.7rem;">${t('premiumActive')}</div>` : `<div class="text-muted" style="font-size:.78rem;">${t('free')}</div>`}
+            </div>
+          </div>
+        ` : ''}
         <div style="display:grid;gap:.6rem;">
           ${nav.map(item => `
             <button class="btn ${state.currentView === item.id ? 'btn-secondary' : 'btn-ghost'}" style="justify-content:flex-start;" onclick="guardedNavigate('${item.id}')">
