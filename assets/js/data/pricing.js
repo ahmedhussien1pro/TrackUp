@@ -3,7 +3,7 @@ window.PRICING = [
     id: 'free',
     badge: null,
     title: { en: 'Free', ar: 'مجاني' },
-    subtitle: { en: 'Find your direction', ar: 'اكتشف مسارك' },
+    subtitle: { en: 'Find your direction', ar: 'اكتشف اتجاهك' },
     price: { en: '0', ar: '0' },
     period: { en: 'forever', ar: 'دائمًا' },
     cta: { en: 'Get Started Free', ar: 'ابدأ مجانًا' },
@@ -12,85 +12,134 @@ window.PRICING = [
         'Full profile setup',
         '10-question guided assessment',
         'Top 3 ranked specializations with scores',
-        'Basic track overview (1 track)',
-        'Roadmap preview (first 3 steps only)',
-        'Curated starter course list'
+        'Basic reason for each top track',
+        'Preview of roadmap guidance',
+        'Starter learning recommendations'
       ],
       ar: [
-        'إنشاء ملف كامل',
+        'إعداد الملف الشخصي كاملًا',
         'تقييم موجّه من 10 أسئلة',
         'أفضل 3 تخصصات مرتّبة بالنسب',
-        'نظرة عامة على مسار واحد',
-        'معاينة خارطة التطور (أول 3 خطوات)',
-        'قائمة كورسات للبداية'
+        'سبب مختصر لكل مسار مرشح',
+        'معاينة لخارطة التطور',
+        'ترشيحات تعليمية للبداية'
       ]
     },
     locked: {
-      en: ['Deep comparison analysis', 'Full roadmap', 'Mentor sessions'],
-      ar: ['تحليل مقارنة معمّق', 'خارطة تطور كاملة', 'جلسات مع مرشد']
+      en: ['Deep comparison analysis', 'Full roadmap', 'Recorded library', 'Promo codes', 'Mentor chat'],
+      ar: ['تحليل مقارنة معمّق', 'خارطة تطور كاملة', 'مكتبة الجلسات', 'برومو كود', 'تواصل مع المرشد']
     }
   },
   {
     id: 'premium',
     badge: { en: 'Most Popular', ar: 'الأكثر طلبًا' },
-    title: { en: 'Premium', ar: 'مدفوع' },
-    subtitle: { en: 'Unlock your full roadmap', ar: 'افتح مسارك بالكامل' },
-    price: { en: '199', ar: '199' },
-    period: { en: '/ month', ar: 'شهريًا' },
-    cta: { en: 'Upgrade to Premium', ar: 'اشترك دلوقتي' },
+    title: { en: 'Premium', ar: 'بريميوم' },
+    subtitle: { en: 'Unlock the full decision journey', ar: 'افتح رحلة القرار كاملة' },
+    price: { en: '149', ar: '149' },
+    period: { en: '/ month', ar: '/ شهر' },
+    currency: { en: 'EGP', ar: 'ج.م' },
+    cta: { en: 'Upgrade to Premium', ar: 'اشترك في بريميوم' },
     features: {
       en: [
         'Everything in Free',
-        'Deep track comparison (all 3 results)',
-        'Full personalized roadmap (all steps)',
-        'Why each track fits you — detailed reasoning',
-        'Sub-track selector after mentor session',
-        'Access to recorded expert sessions library',
-        'Curated course list with exclusive promo codes',
-        'Progress dashboard with goal milestones'
+        'Deep analysis across all 3 ranked tracks',
+        'Full roadmap with all steps',
+        'Recorded expert sessions library',
+        'Promo codes for partner platforms',
+        'Resident mentor chat inside the platform',
+        'Better post-result guidance and next steps'
       ],
       ar: [
-        'كل ميزات المجاني',
-        'مقارنة عميقة بين التخصصات الثلاث',
-        'خارطة تطور كاملة بجميع الخطوات',
-        'ليه كل مسار مناسبك — تحليل مفصّل',
-        'اختيار التخصص الدقيق بعد جلسة المرشد',
-        'مكتبة جلسات مسجّلة من خبراء',
-        'كورسات مختارة مع برومو كود حصري',
-        'داشبورد تقدّم مع أهداف واضحة'
+        'كل ما في المجاني',
+        'تحليل عميق بين أفضل 3 مسارات',
+        'خارطة تطور كاملة بكل الخطوات',
+        'مكتبة جلسات خبراء مسجّلة',
+        'برومو كود لمنصات شريكة',
+        'تواصل مع المرشد المقيم داخل المنصة',
+        'إرشاد أوضح بعد النتيجة والخطوات التالية'
       ]
     },
     locked: null
   },
   {
     id: 'session',
-    badge: null,
-    title: { en: 'Mentor Session', ar: 'جلسة مع مرشد' },
-    subtitle: { en: 'One-on-one expert guidance', ar: 'إرشاد فردي مع خبير' },
-    price: { en: '250–350', ar: '250–350' },
-    period: { en: '/ session', ar: 'للجلسة' },
+    badge: { en: 'Best Funnel', ar: 'أفضل مدخل' },
+    title: { en: 'Intro Session', ar: 'جلسة تعريفية' },
+    subtitle: { en: 'A guided entry without subscription', ar: 'بداية موجهة بدون اشتراك' },
+    price: { en: '199', ar: '199' },
+    period: { en: '/ session', ar: '/ جلسة' },
     currency: { en: 'EGP', ar: 'ج.م' },
-    cta: { en: 'Browse Mentors', ar: 'اطلع على المرشدين' },
+    cta: { en: 'Book Intro Session', ar: 'احجز الجلسة التعريفية' },
     note: {
-      en: 'Requires Premium plan',
-      ar: 'يتطلب الاشتراك المدفوع'
+      en: 'No subscription required',
+      ar: 'لا تحتاج اشتراك'
     },
     features: {
       en: [
-        '60-min live 1-on-1 session with a field expert',
-        'Discuss your assessment results & track fit',
-        'Custom roadmap review and adjustment',
-        'Promo codes for partner platforms (ITI, Udemy…)',
-        'Post-session sub-track test (20 questions)',
-        'Session recording shared with you'
+        'One guided 1-on-1 session',
+        'Clarify your best-fit direction',
+        'Understand the difference between tracks',
+        'A direct path into Premium if needed'
       ],
       ar: [
-        'جلسة 60 دقيقة مباشرة 1-on-1 مع خبير',
-        'نقاش نتائج تقييمك ومدى توافقك مع التخصص',
-        'مراجعة خارطة تطورك وتعديلها',
-        'برومو كودات لمنصات شريكة (ITI, Udemy...)',
-        'اختبار تخصص دقيق بعد الجلسة (20 سؤال)',
-        'تسجيل الجلسة يصلك بعدها'
+        'جلسة فردية موجهة',
+        'توضيح أنسب اتجاه لك',
+        'فهم الفرق بين المسارات',
+        'مدخل مباشر إلى البريميوم إذا احتجته'
+      ]
+    },
+    locked: null
+  },
+  {
+    id: 'full-session',
+    badge: null,
+    title: { en: 'Full Session', ar: 'جلسة كاملة' },
+    subtitle: { en: 'Live session + deep test + recording', ar: 'جلسة مباشرة + اختبار عميق + تسجيل' },
+    price: { en: '299', ar: '299' },
+    period: { en: '/ session', ar: '/ جلسة' },
+    currency: { en: 'EGP', ar: 'ج.م' },
+    cta: { en: 'Book Full Session', ar: 'احجز الجلسة الكاملة' },
+    note: {
+      en: 'Best after Premium',
+      ar: 'الأفضل بعد البريميوم'
+    },
+    features: {
+      en: [
+        '60-min live session with a mentor',
+        'Deep 20-question sub-track test',
+        'Exact specialization recommendation',
+        'Session recording included'
+      ],
+      ar: [
+        'جلسة 60 دقيقة مع مرشد',
+        'اختبار تخصص عميق من 20 سؤال',
+        'ترشيح التخصص الدقيق المناسب',
+        'تسجيل الجلسة مشمول'
+      ]
+    },
+    locked: null
+  },
+  {
+    id: 'bundle',
+    badge: { en: 'Best Value', ar: 'أفضل قيمة' },
+    title: { en: 'Bundle', ar: 'الباقة المتكاملة' },
+    subtitle: { en: 'Premium month + one full session', ar: 'شهر بريميوم + جلسة كاملة واحدة' },
+    price: { en: '399', ar: '399' },
+    period: { en: 'one time', ar: 'مرة واحدة' },
+    currency: { en: 'EGP', ar: 'ج.م' },
+    cta: { en: 'Get the Bundle', ar: 'اشترك في الباقة' },
+    features: {
+      en: [
+        'Premium access for one full month',
+        'One full 60-min mentor session',
+        'Deep sub-track test and exact result',
+        'Recorded library + mentor chat + roadmap'
+      ],
+      ar: [
+        'وصول بريميوم لمدة شهر كامل',
+        'جلسة كاملة 60 دقيقة مع مرشد',
+        'اختبار تخصص عميق ونتيجة دقيقة',
+        'مكتبة الجلسات + تواصل المرشد + الخارطة'
       ]
     },
     locked: null

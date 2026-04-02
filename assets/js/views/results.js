@@ -54,9 +54,12 @@ window.renderResultsView = function renderResultsView() {
     : `
         <div class="fit-rail-card" data-aos="fade-up" data-aos-delay="120">
           <div class="eyebrow">${t('premiumTitle')}</div>
-          <div style="font-weight:800;font-size:1.05rem;margin-top:.5rem;">${t('premiumUnlocks')}</div>
-          <p class="text-muted" style="margin-top:.5rem;">${t('strongerPaid')}</p>
-          <button class="btn btn-secondary" style="margin-top:.9rem;width:100%;" onclick="openPremiumLock('pricing')">${t('upgradeNow')}</button>
+          <div style="font-weight:800;font-size:1.05rem;margin-top:.5rem;">${lang === 'ar' ? 'افتح التحليل الكامل أو احجز جلسة' : 'Unlock full analysis or book a session'}</div>
+          <p class="text-muted" style="margin-top:.5rem;">${lang === 'ar' ? 'لو عايز مقارنة أعمق بين المسارات أو توجيه مباشر من مرشد، عندك مسارين واضحين.' : 'You now have two clear paths: unlock the full comparison or book a guided mentor session.'}</p>
+          <div style="display:grid;gap:.55rem;margin-top:.9rem;">
+            <button class="btn btn-secondary" style="width:100%;" onclick="navigateTo('pricing')">${t('upgradeNow')}</button>
+            <button class="btn btn-ghost" style="width:100%;" onclick="navigateTo('mentors')">${lang === 'ar' ? 'اطلع على المرشدين' : 'Browse Mentors'}</button>
+          </div>
         </div>
       `;
 
@@ -100,6 +103,30 @@ window.renderResultsView = function renderResultsView() {
           ${premiumRailCard}
         </div>
       </div>
+
+      ${!isPremium ? `
+        <div class="surface-soft section-pad" data-aos="fade-up">
+          <div class="page-header" style="align-items:center;gap:1rem;">
+            <div>
+              <div class="eyebrow">${lang === 'ar' ? 'الخطوة التالية' : 'Next Step'}</div>
+              <div style="font-weight:800;font-size:1.05rem;margin-top:.35rem;">${lang === 'ar' ? 'قدامك طريقين واضحين بعد النتيجة' : 'You now have two clear next moves'}</div>
+              <p class="text-muted" style="margin-top:.4rem;line-height:1.7;max-width:720px;">${lang === 'ar' ? 'إما تفتح التحليل الكامل والبريميوم، أو تبدأ بجلسة تعريفية مع مرشد لتفهم الفرق بين المسارات وتحدد خطوتك التالية.' : 'Either unlock Premium for the full analysis, or start with an intro session to validate your direction with a mentor.'}</p>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-top:1rem;">
+            <div class="surface-panel section-pad">
+              <div style="font-weight:700;">${lang === 'ar' ? 'افتح البريميوم' : 'Unlock Premium'}</div>
+              <p class="text-muted" style="margin-top:.35rem;font-size:.86rem;line-height:1.7;">${lang === 'ar' ? 'للمقارنة الكاملة، الخارطة، مكتبة الجلسات، والبرومو كود.' : 'For deep comparison, roadmap, recorded library, and promo codes.'}</p>
+              <button class="btn btn-primary" style="margin-top:.85rem;width:100%;" onclick="navigateTo('pricing')">${lang === 'ar' ? 'شوف الباقات' : 'View Plans'}</button>
+            </div>
+            <div class="surface-panel section-pad">
+              <div style="font-weight:700;">${lang === 'ar' ? 'ابدأ بجلسة تعريفية' : 'Start with an Intro Session'}</div>
+              <p class="text-muted" style="margin-top:.35rem;font-size:.86rem;line-height:1.7;">${lang === 'ar' ? 'جلسة سريعة تساعدك تفهم التراك الأنسب قبل الالتزام الكامل.' : 'A guided session to validate your track before making a bigger commitment.'}</p>
+              <button class="btn btn-secondary" style="margin-top:.85rem;width:100%;" onclick="navigateTo('mentors')">${lang === 'ar' ? 'شوف المرشدين' : 'Browse Mentors'}</button>
+            </div>
+          </div>
+        </div>
+      ` : ''}
 
       <div class="page-grid-3">
         ${[second, third].filter(Boolean).map((item, idx) => {
