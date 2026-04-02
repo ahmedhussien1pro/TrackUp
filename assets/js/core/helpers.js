@@ -24,16 +24,17 @@ window.showToast = function showToast(text, color = '#2563eb') {
 
 window.getOrderedNav = function getOrderedNav() {
   return [
-    { id: 'home',             label: t('home'),     icon: 'house' },
-    { id: 'profile',          label: t('profile'),  icon: 'user-round' },
-    { id: 'test',             label: t('test'),     icon: 'clipboard-list' },
-    { id: 'results',          label: t('results'),  icon: 'bar-chart-3' },
-    { id: 'track-details',    label: t('tracks'),   icon: 'layers-3' },
-    { id: 'roadmap',          label: t('roadmap'),  icon: 'route' },
-    { id: 'pricing',          label: t('pricing'),  icon: 'credit-card' },
-    { id: 'progress',         label: t('progress'), icon: 'target' },
-    { id: 'mentors',          label: t('mentors'),  icon: 'users-round' },
-    { id: 'session-booking',  label: t('sessions'), icon: 'calendar-days' }
+    { id: 'home',             label: t('home'),       icon: 'house' },
+    { id: 'profile',          label: t('profile'),    icon: 'user-round' },
+    { id: 'test',             label: t('test'),       icon: 'clipboard-list' },
+    { id: 'results',          label: t('results'),    icon: 'bar-chart-3' },
+    { id: 'track-details',    label: t('tracks'),     icon: 'layers-3' },
+    { id: 'roadmap',          label: t('roadmap'),    icon: 'route' },
+    { id: 'platforms',        label: t('platforms'),  icon: 'layout-grid' },
+    { id: 'pricing',          label: t('pricing'),    icon: 'credit-card' },
+    { id: 'progress',         label: t('progress'),   icon: 'target' },
+    { id: 'mentors',          label: t('mentors'),    icon: 'users-round' },
+    { id: 'session-booking',  label: t('sessions'),   icon: 'calendar-days' },
   ];
 };
 
@@ -46,7 +47,7 @@ window.getMilestones = function getMilestones() {
     { key: 'roadmapStarted',   label: t('roadmapStarted') },
     { key: 'courseStarted',    label: t('courseStarted') },
     { key: 'premiumUnlocked',  label: t('premiumUnlocked') },
-    { key: 'sessionBooked',    label: t('sessionBooked') }
+    { key: 'sessionBooked',    label: t('sessionBooked') },
   ];
 };
 
@@ -67,15 +68,15 @@ window.updateProgress = function updateProgress(key, value = true) {
 
 window.nextRecommendedStep = function nextRecommendedStep() {
   const m = state.completedMilestones;
-  if (!m.profileCompleted)  return { view: 'profile',          label: t('profileTitle') };
-  if (!m.testCompleted)     return { view: 'test',             label: t('startAssessment') };
-  if (!m.resultsViewed)     return { view: 'results',          label: t('openResults') };
-  if (!m.detailsOpened)     return { view: 'track-details',    label: t('exploreTrack') };
-  if (!m.roadmapStarted)    return { view: 'roadmap',          label: t('openRoadmap') };
-  if (!m.courseStarted)     return { view: 'courses',          label: t('openLearning') };
-  if (!m.premiumUnlocked)   return { view: 'pricing',          label: t('upgradeNow') };
-  if (!m.sessionBooked)     return { view: 'mentors',          label: t('meetMentors') };
-  return { view: 'progress', label: t('viewProgress') };
+  if (!m.profileCompleted)  return { view: 'profile',         label: t('profileTitle') };
+  if (!m.testCompleted)     return { view: 'test',            label: t('startAssessment') };
+  if (!m.resultsViewed)     return { view: 'results',         label: t('openResults') };
+  if (!m.detailsOpened)     return { view: 'track-details',   label: t('exploreTrack') };
+  if (!m.roadmapStarted)    return { view: 'roadmap',         label: t('openRoadmap') };
+  if (!m.courseStarted)     return { view: 'platforms',       label: t('platforms') };
+  if (!m.premiumUnlocked)   return { view: 'pricing',         label: t('upgradeNow') };
+  if (!m.sessionBooked)     return { view: 'mentors',         label: t('meetMentors') };
+  return { view: 'subtrack-test', label: t('startNow') };
 };
 
 window.safeProfileName = function safeProfileName() {
@@ -162,6 +163,10 @@ window.resetDemo = function resetDemo() {
       state.journeyOpen = false;
       state.mentorFilter = 'all';
       state.selectedMentor = null;
+      state.subtestField = null;
+      state.subtestIndex = 0;
+      state.subtestAnswers = {};
+      state.subtestComplete = false;
       state.profile = { fullName: '', college: '', year: '', email: '' };
       state.testAnswers = {};
       state.scores = {};

@@ -96,11 +96,12 @@ window.renderMainContent = function renderMainContent() {
     'track-details':   renderTrackDetailsView,
     roadmap:           renderRoadmapView,
     courses:           renderCoursesView,
+    platforms:         renderPlatformsView,
     pricing:           renderPricingView,
     progress:          renderProgressView,
     'session-booking': renderSessionBookingView,
     mentors:           renderMentorsView,
-    'subtrack-test':   renderSubtrackTestView
+    'subtrack-test':   renderSubtrackTestView,
   };
   return (views[state.currentView] || renderHomeView)();
 };
@@ -129,7 +130,7 @@ window.bindForms = function bindForms() {
   if (sessionForm) {
     sessionForm.addEventListener('submit', e => {
       e.preventDefault();
-      if (!state.premiumUnlocked) return openSessionGate();
+      if (!state.premiumUnlocked) return navigateTo('pricing');
       const fd = new FormData(sessionForm);
       const payload = {
         fullName: String(fd.get('fullName') || '').trim(),
