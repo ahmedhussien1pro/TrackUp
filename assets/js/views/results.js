@@ -18,7 +18,10 @@ window.renderResultsView = function renderResultsView() {
     : `${safeProfileName()}, ${topTrack.title[lang]} is your strongest fit.`;
 
   const premiumBadge = isPremium
-    ? `<span class="badge badge-accent" style="display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="shield-check" style="width:.75rem;height:.75rem;"></i>${lang === 'ar' ? 'مفعّل' : 'Premium active'}</span>`
+    ? `<span class="badge badge-accent" style="display:inline-flex;align-items:center;gap:.3rem;">
+        <i data-lucide="shield-check" style="width:.75rem;height:.75rem;"></i>
+        ${t('premiumActiveBadge')}
+       </span>`
     : '';
 
   const topCTAs = isPremium
@@ -42,9 +45,9 @@ window.renderResultsView = function renderResultsView() {
         <div class="fit-rail-card" style="border-color:rgba(21,150,242,.3);" data-aos="fade-up" data-aos-delay="120">
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;">
             <i data-lucide="shield-check" style="width:1rem;height:1rem;color:var(--brand);"></i>
-            <span style="font-weight:700;font-size:.9rem;">${lang === 'ar' ? 'التحليل المدفوع مفعّل' : 'Premium analysis active'}</span>
+            <span style="font-weight:700;font-size:.9rem;">${t('premiumAnalysisActive')}</span>
           </div>
-          <p class="text-muted" style="font-size:.85rem;line-height:1.7;">${lang === 'ar' ? 'كل محتوى التحليل المتقدم متاح لك الآن.' : 'All advanced analysis content is now available to you.'}</p>
+          <p class="text-muted" style="font-size:.85rem;line-height:1.7;">${t('premiumAnalysisDesc')}</p>
           <button class="btn btn-secondary" style="margin-top:.9rem;width:100%;" onclick="navigateTo('platforms')">
             <i data-lucide="layout-grid" style="width:.85rem;height:.85rem;"></i>
             ${t('explorePlatformsBtn')}
@@ -54,11 +57,11 @@ window.renderResultsView = function renderResultsView() {
     : `
         <div class="fit-rail-card" data-aos="fade-up" data-aos-delay="120">
           <div class="eyebrow">${t('premiumTitle')}</div>
-          <div style="font-weight:800;font-size:1.05rem;margin-top:.5rem;">${lang === 'ar' ? 'افتح التحليل الكامل أو احجز جلسة' : 'Unlock full analysis or book a session'}</div>
-          <p class="text-muted" style="margin-top:.5rem;">${lang === 'ar' ? 'لو عايز مقارنة أعمق بين المسارات أو توجيه مباشر من مرشد، عندك مسارين واضحين.' : 'You now have two clear paths: unlock the full comparison or book a guided mentor session.'}</p>
+          <div style="font-weight:800;font-size:1.05rem;margin-top:.5rem;">${t('unlockOrBook')}</div>
+          <p class="text-muted" style="margin-top:.5rem;">${t('unlockOrBookDesc')}</p>
           <div style="display:grid;gap:.55rem;margin-top:.9rem;">
             <button class="btn btn-secondary" style="width:100%;" onclick="navigateTo('pricing')">${t('upgradeNow')}</button>
-            <button class="btn btn-ghost" style="width:100%;" onclick="navigateTo('mentors')">${lang === 'ar' ? 'اطلع على المرشدين' : 'Browse Mentors'}</button>
+            <button class="btn btn-ghost" style="width:100%;" onclick="navigateTo('mentors')">${t('browseMentors')}</button>
           </div>
         </div>
       `;
@@ -108,21 +111,21 @@ window.renderResultsView = function renderResultsView() {
         <div class="surface-soft section-pad" data-aos="fade-up">
           <div class="page-header" style="align-items:center;gap:1rem;">
             <div>
-              <div class="eyebrow">${lang === 'ar' ? 'الخطوة التالية' : 'Next Step'}</div>
-              <div style="font-weight:800;font-size:1.05rem;margin-top:.35rem;">${lang === 'ar' ? 'قدامك طريقين واضحين بعد النتيجة' : 'You now have two clear next moves'}</div>
-              <p class="text-muted" style="margin-top:.4rem;line-height:1.7;max-width:720px;">${lang === 'ar' ? 'إما تفتح التحليل الكامل والبريميوم، أو تبدأ بجلسة تعريفية مع مرشد لتفهم الفرق بين المسارات وتحدد خطوتك التالية.' : 'Either unlock Premium for the full analysis, or start with an intro session to validate your direction with a mentor.'}</p>
+              <div class="eyebrow">${t('nextStepLabel')}</div>
+              <div style="font-weight:800;font-size:1.05rem;margin-top:.35rem;">${t('twoMovesTitle')}</div>
+              <p class="text-muted" style="margin-top:.4rem;line-height:1.7;max-width:720px;">${t('twoMovesDesc')}</p>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-top:1rem;">
             <div class="surface-panel section-pad">
-              <div style="font-weight:700;">${lang === 'ar' ? 'افتح البريميوم' : 'Unlock Premium'}</div>
-              <p class="text-muted" style="margin-top:.35rem;font-size:.86rem;line-height:1.7;">${lang === 'ar' ? 'للمقارنة الكاملة، الخارطة، مكتبة الجلسات، والبرومو كود.' : 'For deep comparison, roadmap, recorded library, and promo codes.'}</p>
-              <button class="btn btn-primary" style="margin-top:.85rem;width:100%;" onclick="navigateTo('pricing')">${lang === 'ar' ? 'شوف الباقات' : 'View Plans'}</button>
+              <div style="font-weight:700;">${t('unlockPremiumLabel')}</div>
+              <p class="text-muted" style="margin-top:.35rem;font-size:.86rem;line-height:1.7;">${t('unlockPremiumDesc')}</p>
+              <button class="btn btn-primary" style="margin-top:.85rem;width:100%;" onclick="navigateTo('pricing')">${t('viewPlans')}</button>
             </div>
             <div class="surface-panel section-pad">
-              <div style="font-weight:700;">${lang === 'ar' ? 'ابدأ بجلسة تعريفية' : 'Start with an Intro Session'}</div>
-              <p class="text-muted" style="margin-top:.35rem;font-size:.86rem;line-height:1.7;">${lang === 'ar' ? 'جلسة سريعة تساعدك تفهم التراك الأنسب قبل الالتزام الكامل.' : 'A guided session to validate your track before making a bigger commitment.'}</p>
-              <button class="btn btn-secondary" style="margin-top:.85rem;width:100%;" onclick="navigateTo('mentors')">${lang === 'ar' ? 'شوف المرشدين' : 'Browse Mentors'}</button>
+              <div style="font-weight:700;">${t('introSessionLabel')}</div>
+              <p class="text-muted" style="margin-top:.35rem;font-size:.86rem;line-height:1.7;">${t('introSessionDesc')}</p>
+              <button class="btn btn-secondary" style="margin-top:.85rem;width:100%;" onclick="navigateTo('mentors')">${t('browseMentors')}</button>
             </div>
           </div>
         </div>
@@ -138,7 +141,7 @@ window.renderResultsView = function renderResultsView() {
               `
             : `
                 <button class="btn btn-secondary" onclick="openTrack('${item.id}')">${t('viewDetails')}</button>
-                <button class="btn btn-ghost" onclick="openPremiumLock('pricing')">${lang === 'ar' ? 'فتح التحليل' : 'Unlock analysis'}</button>
+                <button class="btn btn-ghost" onclick="openPremiumLock('pricing')">${t('unlockAnalysis')}</button>
               `;
           const reason = isPremium
             ? (tr.reasons[lang][2] || tr.reasons[lang][1] || tr.reasons[lang][0])
