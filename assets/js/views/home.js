@@ -12,6 +12,13 @@ window.renderHomeView = function renderHomeView() {
     return `<path class="wave-noise wave-noise-${i + 1}" d="M0,${y} C60,${y - a} 120,${y + a} 180,${y} S260,${y - a} 300,${y}"/>`;
   }).join('');
 
+  const arrow = state.direction === 'rtl' ? ' ← ' : ' → ';
+  const journeySteps = [
+    t('profile'), t('test'), t('results'),
+    t('roadmap'), t('coursesTitle'), t('progress'),
+    t('premium'), t('sessions')
+  ].join(arrow);
+
   return `
     <!-- HERO -->
     <section class="home-hero" data-aos="fade-up">
@@ -39,8 +46,6 @@ window.renderHomeView = function renderHomeView() {
           </svg>
 
           <div class="signal-endpoint"></div>
-
-          <!-- translated labels -->
           <span class="signal-label-noise">${t('signalNoise')}</span>
           <span class="signal-label-clear">${t('signalClear')}</span>
         </div>
@@ -61,7 +66,7 @@ window.renderHomeView = function renderHomeView() {
     <section class="hero-grid" data-aos="fade-up">
       <div class="surface-panel section-pad">
         <div class="eyebrow">${t('journeyPreview')}</div>
-        <div class="text-muted" style="margin-top:.8rem;line-height:1.8;font-size:.88rem;">Profile → Test → Results → Roadmap → Learning → Progress → Premium → Session</div>
+        <div class="text-muted" style="margin-top:.8rem;line-height:1.8;font-size:.85rem;">${journeySteps}</div>
         <div style="margin-top:1rem;">
           <div class="surface-soft section-pad">
             <div style="font-weight:700;color:var(--accent);">${t('nextStep')}</div>
