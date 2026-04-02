@@ -28,7 +28,7 @@ window.renderHomeView = function renderHomeView() {
     [ 'Basic track overview',           'نظرة عامة على المسار',         true,  true  ],
     [ 'Full fit analysis & reasons',    'تحليل كامل مع الأسباب',        false, true  ],
     [ 'Detailed roadmap (step-by-step)','خارطة تطور تفصيلية',           false, true  ],
-    [ 'Starter course recommendations', 'توصيات كورسات للبداية',        false, true  ],
+    [ 'Platform recommendations',       'توصيات منصات التعلم',          false, true  ],
     [ 'Progress tracking',              'تتبع التقدم',                  false, true  ],
     [ 'One-on-one expert sessions',     'جلسات فردية مع خبير',          false, true  ],
   ];
@@ -44,6 +44,45 @@ window.renderHomeView = function renderHomeView() {
       <div style="display:flex;justify-content:center;width:3.5rem;">${paid  ? check : cross}</div>
     </div>
   `).join('');
+
+  // Partners data — logos will be swapped for real PNGs later
+  // Each partner: id, label, color (brand color for placeholder chip)
+  const partners = [
+    { id:'udemy',            label:'Udemy',            color:'#a435f0' },
+    { id:'coursera',         label:'Coursera',         color:'#0056d2' },
+    { id:'iti',              label:'ITI Egypt',        color:'#005f87' },
+    { id:'tryhackme',        label:'TryHackMe',        color:'#88cc14' },
+    { id:'datacamp',         label:'DataCamp',         color:'#03ef62' },
+    { id:'frontend_masters', label:'Frontend Masters', color:'#c02d28' },
+    { id:'cybrary',          label:'Cybrary',          color:'#00c0ef' },
+    { id:'hackthebox',       label:'Hack The Box',     color:'#9fef00' },
+    // duplicated for seamless infinite loop
+    { id:'udemy2',           label:'Udemy',            color:'#a435f0' },
+    { id:'coursera2',        label:'Coursera',         color:'#0056d2' },
+    { id:'iti2',             label:'ITI Egypt',        color:'#005f87' },
+    { id:'tryhackme2',       label:'TryHackMe',        color:'#88cc14' },
+    { id:'datacamp2',        label:'DataCamp',         color:'#03ef62' },
+    { id:'frontend_masters2',label:'Frontend Masters', color:'#c02d28' },
+    { id:'cybrary2',         label:'Cybrary',          color:'#00c0ef' },
+    { id:'hackthebox2',      label:'Hack The Box',     color:'#9fef00' },
+  ];
+
+  // Partner chip — shows placeholder text chip OR <img> if PNG exists in /assets/partners/
+  // To swap: drop udemy.png, coursera.png, etc. into assets/partners/ folder
+  // The img has onerror fallback to the text chip automatically
+  const partnerChip = (p) => `
+    <div class="partner-chip">
+      <img
+        src="./assets/partners/${p.id.replace(/\d+$/,'')}.png"
+        alt="${p.label}"
+        class="partner-logo-img"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+      />
+      <span class="partner-logo-fallback" style="display:none;background:${p.color}18;color:${p.color};border:1px solid ${p.color}33;">
+        ${p.label}
+      </span>
+    </div>
+  `;
 
   return `
     <!-- HERO -->
@@ -71,6 +110,16 @@ window.renderHomeView = function renderHomeView() {
           <div class="signal-endpoint"></div>
           <span class="signal-label-noise">${t('signalNoise')}</span>
           <span class="signal-label-clear">${t('signalClear')}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARTNERS AUTO-SLIDE -->
+    <section class="partners-section" data-aos="fade-up">
+      <div class="eyebrow" style="text-align:center;margin-bottom:1.1rem;">${t('partnersTitle')}</div>
+      <div class="partners-track-wrap">
+        <div class="partners-track">
+          ${partners.map(p => partnerChip(p)).join('')}
         </div>
       </div>
     </section>
@@ -117,7 +166,7 @@ window.renderHomeView = function renderHomeView() {
         </div>
         ${featureRows}
         <button class="btn btn-primary" style="width:100%;margin-top:1.1rem;" onclick="navigateTo('pricing')">
-          ${isAr ? 'شوف الباقات' : 'View pricing'}
+          ${isAr ? 'شوف الأسعار' : 'View pricing'}
           <i data-lucide="arrow-${isAr ? 'left' : 'right'}" style="width:.9rem;height:.9rem;"></i>
         </button>
       </div>
