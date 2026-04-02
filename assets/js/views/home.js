@@ -6,14 +6,10 @@ window.renderHomeView = function renderHomeView() {
     { name: t('testimonial3Name'), role: t('testimonial3Role'), text: t('testimonial3Text'), stars: 5 }
   ];
 
-  /* —— 8 noise wave paths at different vertical offsets —— */
   const noiseOffsets = [80, 100, 115, 130, 165, 178, 192, 210];
   const noiseWaves = noiseOffsets.map((y, i) => {
-    const a = 18 + (i % 3) * 8;   /* amplitude */
-    const half = 150;
-    return `<path class="wave-noise wave-noise-${i + 1}"
-      d="M0,${y} C60,${y - a} 120,${y + a} 180,${y} S260,${y - a} 300,${y}"
-    />`;
+    const a = 18 + (i % 3) * 8;
+    return `<path class="wave-noise wave-noise-${i + 1}" d="M0,${y} C60,${y - a} 120,${y + a} 180,${y} S260,${y - a} 300,${y}"/>`;
   }).join('');
 
   return `
@@ -33,32 +29,20 @@ window.renderHomeView = function renderHomeView() {
       <!-- Signal Detection Visual -->
       <div class="home-hero-visual" aria-hidden="true">
         <div class="signal-scene">
-          <!-- oscilloscope grid -->
           <div class="signal-grid"></div>
-          <!-- scan sweep line -->
           <div class="signal-scan"></div>
 
           <svg class="signal-svg" viewBox="0 0 300 300" preserveAspectRatio="none">
-            <!-- noise waves -->
             ${noiseWaves}
-
-            <!-- the ONE clear signal emerging -->
-            <path class="wave-signal"
-              d="M0,150 C60,90 120,210 180,150 S260,90 300,150"
-            />
-
-            <!-- path line that forms after signal clears -->
-            <path class="wave-path"
-              d="M0,150 L300,150"
-            />
+            <path class="wave-signal" d="M0,150 C60,90 120,210 180,150 S260,90 300,150"/>
+            <path class="wave-path"   d="M0,150 L300,150"/>
           </svg>
 
-          <!-- endpoint glow dot -->
           <div class="signal-endpoint"></div>
 
-          <!-- labels -->
-          <span class="signal-label-noise">noise</span>
-          <span class="signal-label-clear">clear signal</span>
+          <!-- translated labels -->
+          <span class="signal-label-noise">${t('signalNoise')}</span>
+          <span class="signal-label-clear">${t('signalClear')}</span>
         </div>
       </div>
     </section>
