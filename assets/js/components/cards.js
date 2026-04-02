@@ -50,3 +50,29 @@ window.renderMilestoneList = function renderMilestoneList() {
     `;
   }).join('');
 };
+
+/**
+ * renderQuickLinks — renders a grid of shortcut buttons
+ * @param {Array<{id, icon, labelEn, labelAr}>} items
+ */
+window.renderQuickLinks = function renderQuickLinks(items) {
+  const isAr = state.language === 'ar';
+  return `
+    <section data-aos="fade-up">
+      <div class="eyebrow" style="margin-bottom:1rem;">
+        ${isAr ? 'روابط سريعة' : 'Quick Links'}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem;">
+        ${items.map(item => `
+          <button
+            class="surface-panel btn-ghost"
+            style="display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:.9rem .5rem;border-radius:14px;cursor:pointer;transition:background .15s;"
+            onclick="guardedNavigate('${item.id}')">
+            <i data-lucide="${item.icon}" style="width:20px;height:20px;color:var(--accent);"></i>
+            <span style="font-size:.82rem;font-weight:600;">${isAr ? item.labelAr : item.labelEn}</span>
+          </button>
+        `).join('')}
+      </div>
+    </section>
+  `;
+};
