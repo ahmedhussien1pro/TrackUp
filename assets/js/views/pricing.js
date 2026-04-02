@@ -3,66 +3,66 @@ window.renderPricingView = function renderPricingView() {
   const isAr = state.language === 'ar';
 
   const revenueStreams = [
-    {
-      icon: 'credit-card',
-      titleEn: 'Subscriptions',
-      titleAr: 'اشتراكات شهرية',
-      descEn: 'Monthly recurring revenue from Premium plan subscribers.',
-      descAr: 'دخل شهري متكرّر من مشتركي الباقة المدفوعة.',
-      color: '#2563eb'
-    },
-    {
-      icon: 'calendar-check',
-      titleEn: 'Session Fees',
-      titleAr: 'رسوم الجلسات',
-      descEn: 'Platform takes 20% commission on every booked mentor session.',
-      descAr: 'المنصة تأخذ 20% عمولة من كل جلسة تُحجز.',
-      color: '#7c3aed'
-    },
-    {
-      icon: 'tag',
-      titleEn: 'Affiliate Commissions',
-      titleAr: 'عمولات الشراكات',
-      descEn: 'Revenue share with ITI, Udemy, and career centers via promo codes.',
-      descAr: 'حصة من اشتراكات ITI وUdemy ومراكز التدريب عبر برومو كودات.',
-      color: '#059669'
-    }
+    { icon:'credit-card',    titleEn:'Subscriptions',        titleAr:'اشتراكات شهرية',    descEn:'Monthly recurring revenue from Premium plan subscribers.',                          descAr:'دخل شهري متكرّر من مشتركي الباقة المدفوعة.' },
+    { icon:'calendar-check', titleEn:'Session Fees',          titleAr:'رسوم الجلسات',       descEn:'Platform takes 20% commission on every booked mentor session.',                     descAr:'المنصة تأخذ 20% عمولة من كل جلسة تُحجز.' },
+    { icon:'tag',            titleEn:'Affiliate Commissions', titleAr:'عمولات الشراكات',    descEn:'Revenue share with ITI, Udemy, and career centers via promo codes.',               descAr:'حصة من اشتراكات ITI وUdemy ومراكز التدريب عبر برومو كودات.' }
   ];
 
   const cards = PRICING.map((plan, idx) => {
-    const isActive = (plan.id === 'premium') && isPremium;
-    const isRecommended = plan.id === 'premium';
-    const isSession = plan.id === 'session';
+    const isActive   = plan.id === 'premium' && isPremium;
+    const isHighlight = plan.id === 'bundle';
+    const isRecommended = plan.id === 'premium' || plan.id === 'bundle';
 
+    // ── CTA logic per plan ──
     let btnLabel, btnAction, btnDisabled = false;
+
     if (isActive) {
-      btnLabel = isAr ? 'مفعّل' : 'Active';
-      btnAction = `onclick="navigateTo('progress')"`;  
+      btnLabel   = isAr ? 'مفعّل' : 'Active';
+      btnAction  = `onclick="navigateTo('progress')"` ;
       btnDisabled = true;
     } else if (plan.id === 'free') {
-      btnLabel = isPremium ? (isAr ? 'مستخدمٌ حاليًا' : 'Currently Using') : plan.cta[isAr ? 'ar' : 'en'];
-      btnAction = `onclick="activatePlan('free')"`;  
+      btnLabel   = isPremium ? (isAr ? 'مستخدمٌ حاليًا' : 'Currently Using') : (isAr ? plan.cta.ar : plan.cta.en);
+      btnAction  = `onclick="activatePlan('free')"` ;
       btnDisabled = isPremium;
-    } else if (isSession) {
-      btnLabel = plan.cta[isAr ? 'ar' : 'en'];
-      btnAction = isPremium ? `onclick="navigateTo('mentors')"` : `onclick="activatePlan('premium')"`;  
+    } else if (plan.id === 'premium') {
+      btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
+      btnAction = `onclick="activatePlan('premium')"` ;
+    } else if (plan.id === 'session') {
+      btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
+      btnAction = isPremium
+        ? `onclick="navigateTo('mentors')"` 
+        : `onclick="openPremiumLock('pricing')"` ;
+    } else if (plan.id === 'full-session') {
+      btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
+      btnAction = isPremium
+        ? `onclick="navigateTo('session-booking')"` 
+        : `onclick="openPremiumLock('pricing')"` ;
+    } else if (plan.id === 'bundle') {
+      btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
+      btnAction = `onclick="activatePlan('bundle')"` ;
     } else {
-      btnLabel = plan.cta[isAr ? 'ar' : 'en'];
-      btnAction = `onclick="activatePlan('${plan.id}')"`;  
+      btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
+      btnAction = `onclick="activatePlan('${plan.id}')"` ;
     }
 
     const priceDisplay = plan.id === 'free'
       ? (isAr ? 'مجاني' : 'Free')
-      : `${isAr ? plan.price.ar : plan.price.en} <span style="font-size:1rem;font-weight:500;color:var(--text-muted);">${isAr ? 'ج.م' : 'EGP'}</span>`;
+      : `${isAr ? plan.price.ar : plan.price.en} <span style="font-size:1rem;font-weight:500;color:var(--text-muted);">${plan.currency ? (isAr ? plan.currency.ar : plan.currency.en) : ''}</span>`;
+
+    const borderStyle = isActive
+      ? 'border:1.5px solid var(--accent);'
+      : isHighlight
+        ? 'border:1.5px solid var(--brand);'
+        : '';
 
     return `
       <div
         class="pricing-card ${isRecommended ? 'is-recommended' : ''}"
-        style="${isActive ? 'border:1.5px solid var(--accent);' : ''}position:relative;"
-        data-aos="fade-up" data-aos-delay="${idx * 80}">
+        style="${borderStyle}position:relative;"
+        data-aos="fade-up" data-aos-delay="${idx * 60}">
 
         ${plan.badge ? `
-          <div style="position:absolute;top:-12px;${isAr ? 'right' : 'left'}:50%;transform:translateX(${isAr ? '50%' : '-50%'});background:var(--accent);color:#fff;font-size:.72rem;font-weight:800;padding:3px 14px;border-radius:99px;white-space:nowrap;">
+          <div style="position:absolute;top:-12px;${isAr ? 'right' : 'left'}:50%;transform:translateX(${isAr ? '50%' : '-50%'});background:${isHighlight ? 'var(--brand)' : 'var(--accent)'};color:#fff;font-size:.72rem;font-weight:800;padding:3px 14px;border-radius:99px;white-space:nowrap;">
             ${isAr ? plan.badge.ar : plan.badge.en}
           </div>
         ` : ''}
@@ -75,7 +75,7 @@ window.renderPricingView = function renderPricingView() {
         <div style="margin:1rem 0;padding:1rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
           <span style="font-size:2.2rem;font-weight:800;line-height:1;">${priceDisplay}</span>
           <div class="text-muted" style="font-size:.8rem;margin-top:.3rem;">${isAr ? plan.period.ar : plan.period.en}</div>
-          ${isSession && plan.note ? `<div style="font-size:.75rem;color:#f59e0b;margin-top:.3rem;font-weight:600;">* ${isAr ? plan.note.ar : plan.note.en}</div>` : ''}
+          ${plan.note ? `<div style="font-size:.75rem;color:#f59e0b;margin-top:.3rem;font-weight:600;">* ${isAr ? plan.note.ar : plan.note.en}</div>` : ''}
         </div>
 
         <ul style="list-style:none;padding:0;margin:0 0 1rem;display:grid;gap:.55rem;flex:1;">
@@ -94,7 +94,7 @@ window.renderPricingView = function renderPricingView() {
         </ul>
 
         <button
-          class="btn ${isRecommended && !isActive ? 'btn-primary' : 'btn-secondary'}"
+          class="btn ${(isRecommended && !isActive) ? 'btn-primary' : 'btn-secondary'}"
           style="width:100%;${btnDisabled ? 'opacity:.65;cursor:default;' : ''}"
           ${btnAction}
           ${btnDisabled ? 'disabled' : ''}>
@@ -132,8 +132,8 @@ window.renderPricingView = function renderPricingView() {
       <div style="display:grid;gap:1rem;">
         ${revenueStreams.map(r => `
           <div style="display:flex;gap:1rem;align-items:flex-start;">
-            <div style="width:2.2rem;height:2.2rem;border-radius:10px;background:${r.color}18;border:1px solid ${r.color}33;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <i data-lucide="${r.icon}" style="width:15px;height:15px;color:${r.color};"></i>
+            <div style="width:2.2rem;height:2.2rem;border-radius:10px;background:${r.color||'var(--accent)'}18;border:1px solid ${r.color||'var(--accent)'}33;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i data-lucide="${r.icon}" style="width:15px;height:15px;color:${r.color||'var(--accent)'};"></i>
             </div>
             <div>
               <div style="font-weight:700;font-size:.92rem;">${isAr ? r.titleAr : r.titleEn}</div>
@@ -160,4 +160,45 @@ window.renderPricingView = function renderPricingView() {
       </div>
     </div>
   `;
+};
+
+// ── activatePlan — handles all plan IDs ──
+window.activatePlan = function activatePlan(planId) {
+  const isAr = state.language === 'ar';
+
+  if (planId === 'free') {
+    showToast(isAr ? 'أنت على الخطة المجانية.' : 'You are on the Free plan.', '#2563eb');
+    return;
+  }
+
+  if (planId === 'premium' || planId === 'bundle') {
+    Swal.fire({
+      title: isAr ? 'تفعيل البريميوم' : 'Activate Premium',
+      text:  isAr
+        ? `هتفعّل الـ ${planId === 'bundle' ? 'Bundle (Premium + جلسة)' : 'Premium'} — هتفتح كل المحتوى.`
+        : `Activate ${planId === 'bundle' ? 'Bundle (Premium + Session)' : 'Premium'} — all content unlocked.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: isAr ? 'تأكيد' : 'Confirm',
+      cancelButtonText:  isAr ? 'إلغاء' : 'Cancel',
+      confirmButtonColor: '#2563eb',
+      background: state.theme === 'dark' ? '#0a0a0a' : '#ffffff',
+      color:      state.theme === 'dark' ? '#fafafa' : '#09090b'
+    }).then(r => {
+      if (!r.isConfirmed) return;
+      updateProgress('premiumUnlocked', true);
+      if (planId === 'bundle') updateProgress('sessionBooked', true);
+      persistState();
+      showToast(
+        isAr ? 'تم تفعيل البريميوم! 🎉' : 'Premium activated! 🎉',
+        '#22c55e'
+      );
+      navigateTo('progress');
+    });
+    return;
+  }
+
+  // intro-session / full-session — redirect to mentors
+  showToast(isAr ? 'اختار مرشدك لحجز الجلسة.' : 'Choose a mentor to book your session.', '#7c3aed');
+  navigateTo('mentors');
 };
