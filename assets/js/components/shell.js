@@ -7,30 +7,24 @@ function getProfileInitials() {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
-/* ── Nested dropdown state ── */
-if (!window._navSubOpen) window._navSubOpen = null;
-
 window.toggleJourneyMenu = function toggleJourneyMenu() {
-  state.journeyOpen  = !state.journeyOpen;
-  state.accountOpen  = false;
-  window._navSubOpen = null;
+  state.journeyOpen = !state.journeyOpen;
+  state.accountOpen = false;
   renderApp();
   if (state.journeyOpen) {
     setTimeout(() => {
       function outsideHandler(e) {
-        const dd = document.querySelector('.journey-dropdown');
-        const tr = document.querySelector('[data-journey]');
-        if (dd && !dd.contains(e.target) && tr && !tr.contains(e.target)) {
-          state.journeyOpen  = false;
-          window._navSubOpen = null;
+        const dropdown = document.querySelector('.journey-dropdown');
+        const trigger  = document.querySelector('[data-journey]');
+        if (dropdown && !dropdown.contains(e.target) && trigger && !trigger.contains(e.target)) {
+          state.journeyOpen = false;
           renderApp();
           document.removeEventListener('click', outsideHandler, true);
           window.removeEventListener('scroll', scrollHandler, true);
         }
       }
       function scrollHandler() {
-        state.journeyOpen  = false;
-        window._navSubOpen = null;
+        state.journeyOpen = false;
         renderApp();
         document.removeEventListener('click', outsideHandler, true);
         window.removeEventListener('scroll', scrollHandler, true);
@@ -41,114 +35,34 @@ window.toggleJourneyMenu = function toggleJourneyMenu() {
   }
 };
 
-window.openNavSub = function openNavSub(key, e) {
-  e && e.stopPropagation();
-  window._navSubOpen = window._navSubOpen === key ? null : key;
-  renderApp();
-};
-
 window.guardedNavigate = function guardedNavigate(view) {
   if (!guardView(view)) return;
   navigateTo(view);
 };
 
-/* ── Journey sub-menu data ── */
-function getJourneySubs() {
-  const isPremium   = state.premiumUnlocked;
-  const sessionDone = state.completedMilestones?.sessionBooked;
-  const isAr        = state.language === 'ar';
-
+/* ──────────────────────────────────────────────
+   Journey dropdown — 4 core steps only
+────────────────────────────────────────────── */
+function getJourneyDropdownItems() {
+  const isAr = state.language === 'ar';
   return [
-    {
-      key: 'path',
-      icon: 'map',
-      labelEn: 'Your Path',
-      labelAr: 'مسارك',
-      items: [
-        { id: 'profile',       icon: 'user-round',     labelEn: 'Profile',        labelAr: 'ملفي' },
-        { id: 'test',          icon: 'clipboard-list', labelEn: 'Assessment',     labelAr: 'الاختبار' },
-        { id: 'results',       icon: 'bar-chart-3',    labelEn: 'Results',        labelAr: 'النتائج' },
-        { id: 'track-details', icon: 'layers-3',       labelEn: 'Track Details',  labelAr: 'تفاصيل المسار' },
-        { id: 'roadmap',       icon: 'route',          labelEn: 'Roadmap',        labelAr: 'خارطة التطور' },
-        { id: 'platforms',     icon: 'layout-grid',    labelEn: 'Platforms',      labelAr: 'منصات التعلم' },
-        { id: 'progress',      icon: 'target',         labelEn: 'Progress',       labelAr: 'تقدمي' },
-      ]
-    },
-    {
-      key: 'support',
-      icon: 'users-round',
-      labelEn: 'Expert Support',
-      labelAr: 'الدعم المتخصص',
-      items: [
-        { id: 'mentors',         icon: 'users-round',   labelEn: 'Mentors',         labelAr: 'المرشدين' },
-        { id: 'session-booking', icon: 'calendar-days', labelEn: 'Book a Session',  labelAr: 'احجز جلسة', lock: !isPremium },
-      ]
-    },
-    {
-      key: 'premium',
-      icon: 'crown',
-      labelEn: 'Premium',
-      labelAr: 'Premium',
-      items: [
-        { id: 'recorded-library', icon: 'library',        labelEn: 'Recorded Library',    labelAr: 'مكتبة الجلسات',       lock: !isPremium },
-        { id: 'chat',             icon: 'message-square', labelEn: 'Mentor Chat',          labelAr: 'تواصل مع مرشدك',      lock: !isPremium },
-        { id: 'subtrack-test',    icon: 'flask-conical',  labelEn: 'Sub-track Test',       labelAr: 'اختبار التخصص الدقيق', lock: !sessionDone },
-        { id: 'sub-track-result', icon: 'crosshair',      labelEn: 'Sub-track Result',     labelAr: 'تخصصك الدقيق',        lock: !sessionDone },
-      ]
-    }
+    { id: 'test',     icon: 'clipboard-list', labelEn: 'Assessment',  labelAr: 'الاختبار' },
+    { id: 'results',  icon: 'bar-chart-3',    labelEn: 'Results',     labelAr: 'النتائج' },
+    { id: 'roadmap',  icon: 'route',          labelEn: 'Roadmap',     labelAr: 'خارطة التطور' },
+    { id: 'progress', icon: 'target',         labelEn: 'Progress',    labelAr: 'تقدمي' },
   ];
 }
 
 window.renderHeader = function renderHeader() {
-  const isAr         = state.language === 'ar';
-  const hasProfile   = state.profile?.fullName?.trim();
-  const initials     = getProfileInitials();
-  const isPro        = state.premiumUnlocked;
-  const subs         = getJourneySubs();
-  const allJourneyIds = subs.flatMap(s => s.items.map(i => i.id));
-  const isJourneyActive = allJourneyIds.includes(state.currentView);
-  const isAccountActive = state.currentView === 'profile' || state.currentView === 'auth';
-  const dir          = state.direction;
-
-  /* ── nested sub-panel HTML ── */
-  function renderSubPanel(sub) {
-    const isOpen   = window._navSubOpen === sub.key;
-    const subLabel = isAr ? sub.labelAr : sub.labelEn;
-    const hasActive = sub.items.some(i => i.id === state.currentView);
-
-    return `
-      <div class="nav-sub-group" data-sub="${sub.key}">
-        <button
-          class="journey-item nav-sub-trigger ${hasActive ? 'is-active' : ''}"
-          onclick="openNavSub('${sub.key}', event)">
-          <i data-lucide="${sub.icon}" style="width:14px;height:14px;flex-shrink:0;color:var(--accent);"></i>
-          <span style="flex:1;text-align:start;">${subLabel}</span>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            style="flex-shrink:0;transition:transform .18s;transform:${isOpen ? 'rotate(90deg)' : (dir==='rtl'?'rotate(180deg)':'rotate(0deg)')};color:var(--text-muted);">
-            <path d="m9 18 6-6-6-6"/>
-          </svg>
-        </button>
-
-        ${isOpen ? `
-          <div class="nav-sub-panel fade-up-soft">
-            ${sub.items.map(item => {
-              const isActive = state.currentView === item.id;
-              const locked   = item.lock;
-              return `
-                <button
-                  class="journey-item journey-sub-item ${isActive ? 'is-active' : ''} ${locked ? 'is-locked' : ''}"
-                  onclick="${locked ? `openPremiumLock('${item.id}')` : `guardedNavigate('${item.id}')`}"
-                  style="${locked ? 'opacity:.5;' : ''}">
-                  <i data-lucide="${locked ? 'lock' : item.icon}" style="width:13px;height:13px;flex-shrink:0;color:${locked ? 'var(--text-muted)' : 'var(--accent)'};"></i>
-                  <span style="flex:1;text-align:start;font-size:.84rem;">${isAr ? item.labelAr : item.labelEn}</span>
-                  ${locked ? `<span class="nav-lock-badge">${isAr ? 'مقفول' : 'PRO'}</span>` : ''}
-                </button>`;
-            }).join('')}
-          </div>
-        ` : ''}
-      </div>
-    `;
-  }
+  const isAr        = state.language === 'ar';
+  const dir         = state.direction;
+  const hasProfile  = state.profile?.fullName?.trim();
+  const initials    = getProfileInitials();
+  const isPro       = state.premiumUnlocked;
+  const journeyItems = getJourneyDropdownItems();
+  const journeyIds   = journeyItems.map(i => i.id);
+  const isJourneyActive  = journeyIds.includes(state.currentView);
+  const isAccountActive  = state.currentView === 'profile' || state.currentView === 'auth';
 
   return `
     <header class="app-header">
@@ -170,13 +84,13 @@ window.renderHeader = function renderHeader() {
 
             <!-- Home -->
             <button class="nav-link ${state.currentView === 'home' ? 'is-active' : ''}" onclick="navigateTo('home')">
-              ${t('home')}
+              ${isAr ? 'الرئيسية' : 'Home'}
             </button>
 
-            <!-- Journey (nested) -->
+            <!-- Journey dropdown (4 items) -->
             <div style="position:relative;">
               <button class="nav-link ${isJourneyActive ? 'is-active' : ''}" data-journey="true" onclick="toggleJourneyMenu()">
-                <span>${t('journey')}</span>
+                <span>${isAr ? 'رحلتي' : 'Journey'}</span>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                   style="transition:transform .2s;transform:${state.journeyOpen ? 'rotate(180deg)' : 'rotate(0deg)'}">
                   <path d="m6 9 6 6 6-6"/>
@@ -185,20 +99,29 @@ window.renderHeader = function renderHeader() {
 
               ${state.journeyOpen ? `
                 <div class="journey-dropdown surface-panel fade-up-soft"
-                  style="position:absolute;top:calc(100% + 8px);${dir === 'rtl' ? 'left:0;' : 'right:0;'}min-width:260px;z-index:300;">
-                  <div class="journey-dropdown-header">
-                    <span class="eyebrow">${t('journey')}</span>
-                  </div>
-                  <div class="journey-dropdown-items" style="padding:.4rem;display:grid;gap:.2rem;">
-                    ${subs.map(s => renderSubPanel(s)).join('')}
-                  </div>
+                  style="position:absolute;top:calc(100% + 8px);${dir === 'rtl' ? 'left:0;' : 'right:0;'}min-width:200px;z-index:300;padding:.4rem;">
+                  ${journeyItems.map(item => {
+                    const isActive = state.currentView === item.id;
+                    return `
+                      <button
+                        class="journey-item ${isActive ? 'is-active' : ''}"
+                        onclick="guardedNavigate('${item.id}')">
+                        <i data-lucide="${item.icon}" style="width:14px;height:14px;flex-shrink:0;color:var(--accent);"></i>
+                        <span style="flex:1;text-align:start;">${isAr ? item.labelAr : item.labelEn}</span>
+                      </button>`;
+                  }).join('')}
                 </div>
               ` : ''}
             </div>
 
-            <!-- Pricing -->
+            <!-- Mentors (top-level) -->
+            <button class="nav-link ${state.currentView === 'mentors' ? 'is-active' : ''}" onclick="navigateTo('mentors')">
+              ${isAr ? 'المرشدون' : 'Mentors'}
+            </button>
+
+            <!-- Pricing (top-level) -->
             <button class="nav-link ${state.currentView === 'pricing' ? 'is-active' : ''}" onclick="navigateTo('pricing')">
-              ${t('pricing')}
+              ${isAr ? 'الأسعار' : 'Pricing'}
             </button>
 
           </nav>
@@ -241,7 +164,7 @@ window.renderHeader = function renderHeader() {
 
               ${state.accountOpen ? `
                 <div class="account-dropdown surface-panel fade-up-soft"
-                  style="position:absolute;top:calc(100% + 8px);${dir === 'rtl' ? 'left:0;' : 'right:0;'}min-width:200px;z-index:300;">
+                  style="position:absolute;top:calc(100% + 8px);${dir === 'rtl' ? 'left:0;' : 'right:0;'}min-width:220px;z-index:300;">
 
                   ${hasProfile ? `
                     <div style="padding:.75rem 1rem .6rem;border-bottom:1px solid var(--border);">
@@ -254,13 +177,32 @@ window.renderHeader = function renderHeader() {
                   <div style="padding:.5rem;display:grid;gap:.2rem;">
                     <button class="journey-item ${state.currentView === 'profile' ? 'is-active' : ''}" onclick="navigateTo('profile');state.accountOpen=false;renderApp();">
                       <i data-lucide="user-round" style="width:14px;height:14px;color:var(--accent);"></i>
-                      <span>${t('profile')}</span>
+                      <span>${isAr ? 'ملفي' : 'My Profile'}</span>
                     </button>
-                    <button class="journey-item ${state.currentView === 'auth' ? 'is-active' : ''}" onclick="navigateTo('auth');state.accountOpen=false;renderApp();">
-                      <i data-lucide="log-in" style="width:14px;height:14px;color:var(--accent);"></i>
+                    ${isPro ? `
+                      <button class="journey-item ${state.currentView === 'recorded-library' ? 'is-active' : ''}" onclick="navigateTo('recorded-library');state.accountOpen=false;renderApp();">
+                        <i data-lucide="library" style="width:14px;height:14px;color:var(--accent);"></i>
+                        <span>${isAr ? 'مكتبة الجلسات' : 'Recorded Library'}</span>
+                      </button>
+                      <button class="journey-item ${state.currentView === 'chat' ? 'is-active' : ''}" onclick="navigateTo('chat');state.accountOpen=false;renderApp();">
+                        <i data-lucide="message-square" style="width:14px;height:14px;color:var(--accent);"></i>
+                        <span>${isAr ? 'تواصل مع مرشدك' : 'Mentor Chat'}</span>
+                      </button>
+                      <button class="journey-item ${state.currentView === 'session-booking' ? 'is-active' : ''}" onclick="navigateTo('session-booking');state.accountOpen=false;renderApp();">
+                        <i data-lucide="calendar-days" style="width:14px;height:14px;color:var(--accent);"></i>
+                        <span>${isAr ? 'احجز جلسة' : 'Book a Session'}</span>
+                      </button>
+                    ` : `
+                      <button class="journey-item" onclick="navigateTo('pricing');state.accountOpen=false;renderApp();" style="color:var(--accent);">
+                        <i data-lucide="crown" style="width:14px;height:14px;color:var(--accent);"></i>
+                        <span>${isAr ? 'ترقية لـ Premium' : 'Upgrade to Premium'}</span>
+                      </button>
+                    `}
+                    <div style="border-top:1px solid var(--border);margin:.3rem 0;"></div>
+                    <button class="journey-item" onclick="navigateTo('auth');state.accountOpen=false;renderApp();">
+                      <i data-lucide="log-in" style="width:14px;height:14px;color:var(--text-muted);"></i>
                       <span>${isAr ? 'تسجيل / دخول' : 'Sign In / Up'}</span>
                     </button>
-                    <div style="border-top:1px solid var(--border);margin:.3rem 0;"></div>
                     <button class="journey-item" onclick="resetDemo()" style="color:var(--danger,#dc2626);">
                       <i data-lucide="rotate-ccw" style="width:14px;height:14px;color:var(--danger,#dc2626);"></i>
                       <span>${t('resetNow') || 'Reset'}</span>
@@ -283,45 +225,43 @@ window.renderHeader = function renderHeader() {
 };
 
 window.renderMobilePanel = function renderMobilePanel() {
-  const isAr      = state.language === 'ar';
-  const isPremium = state.premiumUnlocked;
-  const sessionDone = state.completedMilestones?.sessionBooked;
-  const initials  = getProfileInitials();
+  const isAr       = state.language === 'ar';
+  const isPro      = state.premiumUnlocked;
+  const initials   = getProfileInitials();
   const hasProfile = state.profile?.fullName?.trim();
-  const isPro = state.premiumUnlocked;
 
-  const sections = [
-    {
-      titleEn: 'Your Path', titleAr: 'مسارك',
-      items: [
-        { id: 'home',          icon: 'house',          labelEn: 'Home',           labelAr: 'الرئيسية' },
-        { id: 'profile',       icon: 'user-round',     labelEn: 'Profile',        labelAr: 'ملفي' },
-        { id: 'test',          icon: 'clipboard-list', labelEn: 'Assessment',     labelAr: 'الاختبار' },
-        { id: 'results',       icon: 'bar-chart-3',    labelEn: 'Results',        labelAr: 'النتائج' },
-        { id: 'track-details', icon: 'layers-3',       labelEn: 'Track Details',  labelAr: 'تفاصيل المسار' },
-        { id: 'roadmap',       icon: 'route',          labelEn: 'Roadmap',        labelAr: 'خارطة التطور' },
-        { id: 'platforms',     icon: 'layout-grid',    labelEn: 'Platforms',      labelAr: 'منصات التعلم' },
-        { id: 'progress',      icon: 'target',         labelEn: 'Progress',       labelAr: 'تقدمي' },
-        { id: 'pricing',       icon: 'credit-card',    labelEn: 'Pricing',        labelAr: 'الأسعار' },
-      ]
-    },
-    {
-      titleEn: 'Expert Support', titleAr: 'الدعم المتخصص',
-      items: [
-        { id: 'mentors',         icon: 'users-round',   labelEn: 'Mentors',        labelAr: 'المرشدين' },
-        { id: 'session-booking', icon: 'calendar-days', labelEn: 'Book a Session', labelAr: 'احجز جلسة', lock: !isPremium },
-      ]
-    },
-    {
-      titleEn: 'Premium', titleAr: 'Premium',
-      items: [
-        { id: 'recorded-library', icon: 'library',        labelEn: 'Recorded Library',     labelAr: 'مكتبة الجلسات',        lock: !isPremium },
-        { id: 'chat',             icon: 'message-square', labelEn: 'Mentor Chat',           labelAr: 'تواصل مع مرشدك',       lock: !isPremium },
-        { id: 'subtrack-test',    icon: 'flask-conical',  labelEn: 'Sub-track Test',        labelAr: 'اختبار التخصص الدقيق',  lock: !sessionDone },
-        { id: 'sub-track-result', icon: 'crosshair',      labelEn: 'Sub-track Result',      labelAr: 'تخصصك الدقيق',         lock: !sessionDone },
-      ]
-    }
+  /* Flat list — simple and clear on mobile */
+  const primaryItems = [
+    { id: 'home',      icon: 'house',          labelEn: 'Home',        labelAr: 'الرئيسية' },
+    { id: 'test',      icon: 'clipboard-list', labelEn: 'Assessment',  labelAr: 'الاختبار' },
+    { id: 'results',   icon: 'bar-chart-3',    labelEn: 'Results',     labelAr: 'النتائج' },
+    { id: 'roadmap',   icon: 'route',          labelEn: 'Roadmap',     labelAr: 'خارطة التطور' },
+    { id: 'progress',  icon: 'target',         labelEn: 'Progress',    labelAr: 'تقدمي' },
+    { id: 'mentors',   icon: 'users-round',    labelEn: 'Mentors',     labelAr: 'المرشدون' },
+    { id: 'pricing',   icon: 'credit-card',    labelEn: 'Pricing',     labelAr: 'الأسعار' },
   ];
+
+  const premiumItems = [
+    { id: 'session-booking',  icon: 'calendar-days',  labelEn: 'Book a Session',    labelAr: 'احجز جلسة',          lock: !isPro },
+    { id: 'recorded-library', icon: 'library',         labelEn: 'Recorded Library',  labelAr: 'مكتبة الجلسات',      lock: !isPro },
+    { id: 'chat',             icon: 'message-square',  labelEn: 'Mentor Chat',       labelAr: 'تواصل مع مرشدك',     lock: !isPro },
+    { id: 'subtrack-test',    icon: 'flask-conical',   labelEn: 'Sub-track Test',    labelAr: 'اختبار التخصص الدقيق', lock: !state.completedMilestones?.sessionBooked },
+    { id: 'sub-track-result', icon: 'crosshair',       labelEn: 'Sub-track Result',  labelAr: 'تخصصك الدقيق',       lock: !state.completedMilestones?.sessionBooked },
+  ];
+
+  function renderItem(item) {
+    const isActive = state.currentView === item.id;
+    const locked   = item.lock;
+    return `
+      <button
+        class="btn ${isActive ? 'btn-secondary' : 'btn-ghost'}"
+        style="justify-content:flex-start;gap:.65rem;${locked ? 'opacity:.45;' : ''}"
+        onclick="${locked ? `openPremiumLock('${item.id}')` : `guardedNavigate('${item.id}')`}">
+        <i data-lucide="${locked ? 'lock' : item.icon}" style="width:15px;height:15px;flex-shrink:0;"></i>
+        <span style="flex:1;text-align:start;">${isAr ? item.labelAr : item.labelEn}</span>
+        ${locked ? `<span class="nav-lock-badge">${isAr ? 'مقفول' : 'PRO'}</span>` : ''}
+      </button>`;
+  }
 
   return `
     <div class="mobile-panel ${state.mobileMenuOpen ? 'is-open' : ''}" onclick="closeMobileMenu(event)">
@@ -356,27 +296,24 @@ window.renderMobilePanel = function renderMobilePanel() {
           </div>
         ` : ''}
 
-        <div style="display:grid;gap:1rem;">
-          ${sections.map(sec => `
-            <div>
-              <div class="eyebrow" style="padding:0 .5rem .5rem;">${isAr ? sec.titleAr : sec.titleEn}</div>
-              <div style="display:grid;gap:.3rem;">
-                ${sec.items.map(item => {
-                  const isActive = state.currentView === item.id;
-                  const locked   = item.lock;
-                  return `
-                    <button
-                      class="btn ${isActive ? 'btn-secondary' : 'btn-ghost'}"
-                      style="justify-content:flex-start;gap:.65rem;${locked ? 'opacity:.45;' : ''}"
-                      onclick="${locked ? `openPremiumLock('${item.id}')` : `guardedNavigate('${item.id}')`}">
-                      <i data-lucide="${locked ? 'lock' : item.icon}" style="width:15px;height:15px;flex-shrink:0;"></i>
-                      <span style="flex:1;text-align:start;">${isAr ? item.labelAr : item.labelEn}</span>
-                      ${locked ? `<span class="nav-lock-badge">${isAr ? 'مقفول' : 'PRO'}</span>` : ''}
-                    </button>`;
-                }).join('')}
-              </div>
+        <div style="display:grid;gap:1.2rem;">
+
+          <!-- Main -->
+          <div style="display:grid;gap:.3rem;">
+            ${primaryItems.map(renderItem).join('')}
+          </div>
+
+          <!-- Premium section -->
+          <div>
+            <div class="eyebrow" style="padding:0 .5rem .5rem;display:flex;align-items:center;gap:.4rem;">
+              <i data-lucide="crown" style="width:11px;height:11px;color:var(--accent);"></i>
+              Premium
             </div>
-          `).join('')}
+            <div style="display:grid;gap:.3rem;">
+              ${premiumItems.map(renderItem).join('')}
+            </div>
+          </div>
+
         </div>
 
       </div>
