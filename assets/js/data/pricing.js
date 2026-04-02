@@ -1,42 +1,98 @@
 window.PRICING = [
   {
     id: 'free',
+    badge: null,
     title: { en: 'Free', ar: 'مجاني' },
+    subtitle: { en: 'Find your direction', ar: 'اكتشف مسارك' },
     price: { en: '0', ar: '0' },
-    label: { en: 'Start here', ar: 'ابدأ من هنا' },
+    period: { en: 'forever', ar: 'دائمًا' },
+    cta: { en: 'Get Started Free', ar: 'ابدأ مجانًا' },
     features: {
-      en: ['Profile setup', 'Short assessment', 'Top 3 ranked results', 'Basic track details', 'Roadmap preview', 'Starter learning'],
-      ar: ['إعداد الملف', 'اختبار قصير', 'أفضل 3 نتائج', 'تفاصيل أساسية للمسارات', 'معاينة الخارطة', 'التعلم المبدئي']
-    }
-  },
-  {
-    id: 'pro',
-    title: { en: 'Pro', ar: 'احترافي' },
-    price: { en: 'EGP 149', ar: '149 ج.م' },
-    label: { en: 'More guidance', ar: 'إرشاد أكثر' },
-    features: {
-      en: ['Deeper roadmap access', 'More learning guidance', 'Stronger progress support', 'Extended details'],
-      ar: ['وصول أعمق للخارطة', 'إرشاد تعلم إضافي', 'دعم تقدم أقوى', 'تفاصيل موسعة']
+      en: [
+        'Full profile setup',
+        '10-question guided assessment',
+        'Top 3 ranked specializations with scores',
+        'Basic track overview (1 track)',
+        'Roadmap preview (first 3 steps only)',
+        'Curated starter course list'
+      ],
+      ar: [
+        'إنشاء ملف كامل',
+        'تقييم موجّه من 10 أسئلة',
+        'أفضل 3 تخصصات مرتّبة بالنسب',
+        'نظرة عامة على مسار واحد',
+        'معاينة خارطة التطور (أول 3 خطوات)',
+        'قائمة كورسات للبداية'
+      ]
+    },
+    locked: {
+      en: ['Deep comparison analysis', 'Full roadmap', 'Mentor sessions'],
+      ar: ['تحليل مقارنة معمّق', 'خارطة تطور كاملة', 'جلسات مع مرشد']
     }
   },
   {
     id: 'premium',
-    title: { en: 'Premium Analysis / Mentor', ar: 'تحليل مدفوع / إرشاد' },
-    price: { en: 'EGP 249', ar: '249 ج.م' },
-    label: { en: 'Recommended paid tier', ar: 'الباقة المدفوعة المقترحة' },
+    badge: { en: 'Most Popular', ar: 'الأكثر طلبًا' },
+    title: { en: 'Premium', ar: 'مدفوع' },
+    subtitle: { en: 'Unlock your full roadmap', ar: 'افتح مسارك بالكامل' },
+    price: { en: '199', ar: '199' },
+    period: { en: '/ month', ar: 'شهريًا' },
+    cta: { en: 'Upgrade to Premium', ar: 'اشترك دلوقتي' },
     features: {
-      en: ['Personalized fit analysis', 'Tailored roadmap guidance', 'Mentor-style insight', 'Deeper recommendations'],
-      ar: ['تحليل ملاءمة مخصص', 'توجيه خارطة مخصص', 'رؤية إرشادية', 'توصيات أعمق']
-    }
+      en: [
+        'Everything in Free',
+        'Deep track comparison (all 3 results)',
+        'Full personalized roadmap (all steps)',
+        'Why each track fits you — detailed reasoning',
+        'Sub-track selector after mentor session',
+        'Access to recorded expert sessions library',
+        'Curated course list with exclusive promo codes',
+        'Progress dashboard with goal milestones'
+      ],
+      ar: [
+        'كل ميزات المجاني',
+        'مقارنة عميقة بين التخصصات الثلاث',
+        'خارطة تطور كاملة بجميع الخطوات',
+        'ليه كل مسار مناسبك — تحليل مفصّل',
+        'اختيار التخصص الدقيق بعد جلسة المرشد',
+        'مكتبة جلسات مسجّلة من خبراء',
+        'كورسات مختارة مع برومو كود حصري',
+        'داشبورد تقدّم مع أهداف واضحة'
+      ]
+    },
+    locked: null
   },
   {
     id: 'session',
-    title: { en: 'Session Booking', ar: 'حجز جلسة' },
-    price: { en: 'EGP 299', ar: '299 ج.م' },
-    label: { en: 'Paid one-on-one support', ar: 'دعم فردي مدفوع' },
+    badge: null,
+    title: { en: 'Mentor Session', ar: 'جلسة مع مرشد' },
+    subtitle: { en: 'One-on-one expert guidance', ar: 'إرشاد فردي مع خبير' },
+    price: { en: '250–350', ar: '250–350' },
+    period: { en: '/ session', ar: 'للجلسة' },
+    currency: { en: 'EGP', ar: 'ج.م' },
+    cta: { en: 'Browse Mentors', ar: 'اطلع على المرشدين' },
+    note: {
+      en: 'Requires Premium plan',
+      ar: 'يتطلب الاشتراك المدفوع'
+    },
     features: {
-      en: ['One-on-one discussion', 'Track decision review', 'Roadmap clarification', 'Practical next-step advice'],
-      ar: ['جلسة فردية', 'مراجعة قرار المسار', 'توضيح الخارطة', 'نصائح عملية للخطوات التالية']
-    }
+      en: [
+        '60-min live 1-on-1 session with a field expert',
+        'Discuss your assessment results & track fit',
+        'Custom roadmap review and adjustment',
+        'Promo codes for partner platforms (ITI, Udemy…)',
+        'Post-session sub-track test (20 questions)',
+        'Session recording shared with you'
+      ],
+      ar: [
+        'جلسة 60 دقيقة مباشرة 1-on-1 مع خبير',
+        'نقاش نتائج تقييمك ومدى توافقك مع التخصص',
+        'مراجعة خارطة تطورك وتعديلها',
+        'برومو كودات لمنصات شريكة (ITI, Udemy...)',
+        'اختبار تخصص دقيق بعد الجلسة (20 سؤال)',
+        'تسجيل الجلسة يصلك بعدها'
+      ]
+    },
+    locked: null
   }
 ];
