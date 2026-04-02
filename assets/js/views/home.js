@@ -45,9 +45,9 @@ window.renderHomeView = function renderHomeView() {
     </div>
   `).join('');
 
-  // Partners data — logos will be swapped for real PNGs later
-  // Each partner: id, label, color (brand color for placeholder chip)
-  const partners = [
+  // Partners — 8 unique items, NOT duplicated in HTML
+  // JS will handle the seamless loop by cloning the track
+  const partnersList = [
     { id:'udemy',            label:'Udemy',            color:'#a435f0' },
     { id:'coursera',         label:'Coursera',         color:'#0056d2' },
     { id:'iti',              label:'ITI Egypt',        color:'#005f87' },
@@ -56,24 +56,12 @@ window.renderHomeView = function renderHomeView() {
     { id:'frontend_masters', label:'Frontend Masters', color:'#c02d28' },
     { id:'cybrary',          label:'Cybrary',          color:'#00c0ef' },
     { id:'hackthebox',       label:'Hack The Box',     color:'#9fef00' },
-    // duplicated for seamless infinite loop
-    { id:'udemy2',           label:'Udemy',            color:'#a435f0' },
-    { id:'coursera2',        label:'Coursera',         color:'#0056d2' },
-    { id:'iti2',             label:'ITI Egypt',        color:'#005f87' },
-    { id:'tryhackme2',       label:'TryHackMe',        color:'#88cc14' },
-    { id:'datacamp2',        label:'DataCamp',         color:'#03ef62' },
-    { id:'frontend_masters2',label:'Frontend Masters', color:'#c02d28' },
-    { id:'cybrary2',         label:'Cybrary',          color:'#00c0ef' },
-    { id:'hackthebox2',      label:'Hack The Box',     color:'#9fef00' },
   ];
 
-  // Partner chip — shows placeholder text chip OR <img> if PNG exists in /assets/partners/
-  // To swap: drop udemy.png, coursera.png, etc. into assets/partners/ folder
-  // The img has onerror fallback to the text chip automatically
   const partnerChip = (p) => `
     <div class="partner-chip">
       <img
-        src="./assets/partners/${p.id.replace(/\d+$/,'')}.png"
+        src="./assets/partners/${p.id}.png"
         alt="${p.label}"
         class="partner-logo-img"
         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
@@ -118,8 +106,8 @@ window.renderHomeView = function renderHomeView() {
     <section class="partners-section" data-aos="fade-up">
       <div class="eyebrow" style="text-align:center;margin-bottom:1.1rem;">${t('partnersTitle')}</div>
       <div class="partners-track-wrap">
-        <div class="partners-track">
-          ${partners.map(p => partnerChip(p)).join('')}
+        <div class="partners-track" id="partnersTrack">
+          ${partnersList.map(p => partnerChip(p)).join('')}
         </div>
       </div>
     </section>
@@ -192,4 +180,63 @@ window.renderHomeView = function renderHomeView() {
       </div>
     </section>
   `;
+};
+
+// ── Partners Scroll — JS requestAnimationFrame (RTL + LTR safe) ──
+window.initPartnersScroll = function initPartnersScroll() {
+  const track = document.getElementById('partnersTrack');
+  if (!track) return;
+
+  // Cancel any previous animation loop
+  if (window._partnersRAF) cancelAnimationFrame(window._partnersRAF);
+
+  // Clone all chips and append for seamless loop
+  const originals = Array.from(track.children);
+  // Remove old clones first (in case re-init)
+  track.querySelectorAll('[data-clone]').forEach(el => el.remove());
+  originals.forEach(chip => {
+    const clone = chip.cloneNode(true);
+    clone.setAttribute('data-clone', '1');
+    track.appendChild(clone);
+  });
+
+  const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.lang === 'ar';
+  const speed = 0.5; // px per frame
+  let pos = 0;
+  let paused = false;
+
+  track.addEventListener('mouseenter', () => { paused = true; });
+  track.addEventListener('mouseleave', () => { paused = false; });
+
+  function getHalfWidth() {
+    // Half = width of original set (before clones)
+    return track.scrollWidth / 2;
+  }
+
+  function loop() {
+    if (!paused) {
+      if (isRTL) {
+        // RTL: move right → left visually = positive translateX increasing
+        // But we offset by full half to start from middle
+        pos -= speed;
+        const half = getHalfWidth();
+        if (Math.abs(pos) >= half) pos = 0;
+        track.style.transform = `translateX(${pos}px)`;
+      } else {
+        // LTR: move left
+        pos -= speed;
+        const half = getHalfWidth();
+        if (Math.abs(pos) >= half) pos = 0;
+        track.style.transform = `translateX(${pos}px)`;
+      }
+    }
+    window._partnersRAF = requestAnimationFrame(loop);
+  }
+
+  // In RTL, start from negative half so items are visible immediately
+  if (isRTL) {
+    pos = -getHalfWidth();
+  }
+
+  loop();
 };
