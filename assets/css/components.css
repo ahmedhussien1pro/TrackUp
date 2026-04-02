@@ -51,6 +51,7 @@ html[data-theme="light"] .badge-accent { color: #1d4ed8; }
   border: 1px solid transparent;
   transition: transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
   will-change: transform;
+  cursor: pointer;
 }
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
@@ -172,6 +173,8 @@ html[data-theme="light"] .badge-accent { color: #1d4ed8; }
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--accent), #93c5fd);
+  min-width: 0;
+  transition: width .4s ease;
 }
 .answer-option {
   width: 100%;
@@ -181,6 +184,7 @@ html[data-theme="light"] .badge-accent { color: #1d4ed8; }
   border: 1px solid var(--border);
   background: var(--surface-2);
   transition: .18s ease;
+  cursor: pointer;
 }
 .answer-option:hover { border-color: var(--border-strong); transform: translateY(-1px); }
 .answer-option.selected {
@@ -223,12 +227,25 @@ html[data-theme="light"] .step-card.locked::after {
   border-color: rgba(59,130,246,.18);
   background: rgba(59,130,246,.08);
 }
+
+/* ── Section Titles with gradient ── */
 .section-title {
   font-size: clamp(1.5rem, 2vw, 2.1rem);
   line-height: 1.1;
   font-weight: 800;
   letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 120%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
+html[data-theme="light"] .section-title {
+  background: linear-gradient(135deg, #09090b 0%, var(--accent) 130%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .eyebrow {
   display: inline-flex;
   align-items: center;
