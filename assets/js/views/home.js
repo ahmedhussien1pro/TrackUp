@@ -22,9 +22,8 @@ window.renderHomeView = function renderHomeView() {
   const lang = state.language;
   const isAr = lang === 'ar';
 
-  // Feature rows: [label_en, label_ar, free, premium]
   const features = [
-    [ 'Quick assessment (5 questions)', 'تقييم سريع (٥ أسئلة)',       true,  true  ],
+    [ 'Quick assessment (5 questions)', 'تقييم سريع (٥ أسئلة)',        true,  true  ],
     [ 'Ranked results (top 3 tracks)',  'نتائج مرتبة (أفضل ٣ مسارات)', true,  true  ],
     [ 'Basic track overview',           'نظرة عامة على المسار',         true,  true  ],
     [ 'Full fit analysis & reasons',    'تحليل كامل مع الأسباب',        false, true  ],
@@ -60,7 +59,6 @@ window.renderHomeView = function renderHomeView() {
         </div>
       </div>
 
-      <!-- Signal Detection Visual -->
       <div class="home-hero-visual" aria-hidden="true">
         <div class="signal-scene">
           <div class="signal-grid"></div>
@@ -89,8 +87,6 @@ window.renderHomeView = function renderHomeView() {
 
     <!-- NEXT STEP + FREE VS PREMIUM -->
     <section class="hero-grid" data-aos="fade-up">
-
-      <!-- Next step card -->
       <div class="surface-panel section-pad">
         <div class="eyebrow">${t('journeyPreview')}</div>
         <div class="text-muted" style="margin-top:.8rem;line-height:1.8;font-size:.85rem;">${journeySteps}</div>
@@ -103,11 +99,8 @@ window.renderHomeView = function renderHomeView() {
         </div>
       </div>
 
-      <!-- Free vs Premium comparison -->
       <div class="surface-panel section-pad">
         <div class="eyebrow" style="margin-bottom:.9rem;">${t('freePaid')}</div>
-
-        <!-- Column headers -->
         <div style="display:grid;grid-template-columns:1fr auto auto;gap:.75rem;align-items:center;
           padding-bottom:.65rem;border-bottom:1px solid var(--border-strong);">
           <span></span>
@@ -122,10 +115,7 @@ window.renderHomeView = function renderHomeView() {
             </span>
           </div>
         </div>
-
-        <!-- Rows -->
         ${featureRows}
-
         <button class="btn btn-primary" style="width:100%;margin-top:1.1rem;" onclick="navigateTo('pricing')">
           ${isAr ? 'شوف الباقات' : 'View pricing'}
           <i data-lucide="arrow-${isAr ? 'left' : 'right'}" style="width:.9rem;height:.9rem;"></i>
@@ -139,7 +129,7 @@ window.renderHomeView = function renderHomeView() {
       <div class="testimonials-grid">
         ${testimonials.map(item => `
           <div class="testimonial-card surface-panel section-pad">
-            <div class="testimonial-stars">${'★'.repeat(item.stars)}</div>
+            <div class="testimonial-stars">${'&#9733;'.repeat(item.stars)}</div>
             <p class="testimonial-text">&ldquo;${item.text}&rdquo;</p>
             <div class="testimonial-author">
               <div class="testimonial-avatar">${item.name.charAt(0)}</div>
