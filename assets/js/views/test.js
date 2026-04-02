@@ -1,142 +1,101 @@
 // ============================================================
-// test.js — TrackUp quick assessment view
-// Key rules:
-//   • selectAnswer() updates DOM directly — no full renderApp()
-//   • navigating questions uses slide animation via swapQuestion()
-//   • renderTestView() only called on first load / full re-render
+// test.js — TrackUp Quick Assessment
+// selectAnswer / prevQuestion / nextQuestion are ONLY here.
+// main.js must NOT redefine them.
 // ============================================================
 
 const LETTER_LABELS = ['A', 'B', 'C', 'D'];
 
-// ─── DOM-only answer selection (no re-render) ───
+// Icons matched to common answer themes (falls back to 'dot')
+const OPTION_ICONS = [
+  ['wrench','code-2','shuffle'],          // workStyle
+  ['heart','minus','x'],                  // programming (aLot/somewhat/no)
+  ['hard-hat','building-2','layers-3'],   // environment
+  ['banknote','shield','plane'],          // goal
+  ['zap','gauge','feather'],              // pressure
+];
+
+// ─── DOM-only answer selection ───
 window.selectAnswer = function selectAnswer(questionId, answerId) {
-  // 1. Save to state
   state.testAnswers[questionId] = answerId;
   persistState();
 
-  // 2. Update classes on answer buttons without re-rendering
   const container = document.getElementById('answer-options-' + questionId);
-  if (!container) {
-    // Fallback: full re-render (shouldn't happen)
-    renderApp();
-    return;
-  }
+  if (!container) { renderApp(); return; }
 
   container.querySelectorAll('.answer-option').forEach(btn => {
-    const isSelected = btn.dataset.answerId === answerId;
-    btn.classList.toggle('selected', isSelected);
-    // Swap icon
-    const icon = btn.querySelector('[data-lucide]');
-    if (icon) {
-      icon.setAttribute('data-lucide', isSelected ? 'check-circle-2' : 'circle');
-    }
-    // Re-render lucide icons for this button only
+    const sel = btn.dataset.answerId === answerId;
+    btn.classList.toggle('selected', sel);
+    const chk = btn.querySelector('[data-lucide="check-circle-2"], [data-lucide="circle"]');
+    if (chk) chk.setAttribute('data-lucide', sel ? 'check-circle-2' : 'circle');
   });
   if (window.lucide) lucide.createIcons({ nodes: [container] });
 
-  // 3. Update next / submit button state (re-enable if was disabled)
-  const nextBtn = document.getElementById('test-next-btn');
-  if (nextBtn) nextBtn.removeAttribute('disabled');
+  // update answered badge
+  const badge = document.getElementById('test-answered-badge');
+  if (badge) {
+    const answered = QUESTIONS.filter(q => state.testAnswers[q.id]).length;
+    badge.textContent = answered + '/' + QUESTIONS.length + ' ' + (state.language === 'ar' ? 'مكتمل' : 'answered');
+  }
 
-  // 4. Auto-advance after short delay for better UX
+  // update step dots
+  _refreshStepDots();
+
+  // auto-advance (not on last question)
   clearTimeout(window._autoAdvanceTimer);
   window._autoAdvanceTimer = setTimeout(() => {
-    const isLast = state.currentQuestionIndex >= QUESTIONS.length - 1;
-    if (isLast) {
-      // On last question, just highlight — don't auto-submit
-      return;
-    }
-    swapQuestion('next');
-  }, 440);
+    if (state.currentQuestionIndex < QUESTIONS.length - 1) swapQuestion('next');
+  }, 480);
 };
 
-// ─── Smooth question swap with slide animation ───
+// ─── Slide between questions ───
 window.swapQuestion = function swapQuestion(direction) {
   const wrapper = document.getElementById('question-wrapper');
   if (!wrapper) { renderApp(); return; }
 
-  const exitClass = 'q-exit';
-  const enterClass = 'q-enter';
-
-  wrapper.classList.add(exitClass);
+  wrapper.classList.add('q-exit');
 
   setTimeout(() => {
-    // Move index
-    if (direction === 'next') {
-      if (state.currentQuestionIndex < QUESTIONS.length - 1) state.currentQuestionIndex += 1;
-    } else {
-      if (state.currentQuestionIndex > 0) state.currentQuestionIndex -= 1;
-    }
+    if (direction === 'next' && state.currentQuestionIndex < QUESTIONS.length - 1) state.currentQuestionIndex += 1;
+    if (direction === 'prev' && state.currentQuestionIndex > 0) state.currentQuestionIndex -= 1;
 
-    // Inject new question HTML
-    wrapper.innerHTML = buildQuestionBody();
-    wrapper.classList.remove(exitClass);
-    wrapper.classList.add(enterClass);
+    wrapper.innerHTML = _buildQuestionBody();
+    wrapper.classList.remove('q-exit');
+    wrapper.classList.add('q-enter');
     if (window.lucide) lucide.createIcons({ nodes: [wrapper] });
+    setTimeout(() => wrapper.classList.remove('q-enter'), 360);
 
-    // Update progress bar
+    // progress bar
     const bar = document.getElementById('test-progress-fill');
     if (bar) bar.style.width = ((state.currentQuestionIndex + 1) / QUESTIONS.length * 100) + '%';
 
-    // Update counter
+    // counter
     const counter = document.getElementById('test-counter');
     if (counter) counter.textContent = (state.currentQuestionIndex + 1) + '/' + QUESTIONS.length;
 
-    // Swap Next / Submit button
+    // swap next/submit button
     const nextBtn = document.getElementById('test-next-btn');
     if (nextBtn) {
       const isLast = state.currentQuestionIndex >= QUESTIONS.length - 1;
       nextBtn.textContent = isLast ? t('submitAssessment') : t('next');
-      nextBtn.onclick = isLast ? submitAssessment : () => {
-        const q = QUESTIONS[state.currentQuestionIndex];
-        if (!state.testAnswers[q.id]) return showToast(t('answerNeeded'), '#dc2626');
-        swapQuestion('next');
-      };
+      if (!isLast) nextBtn.innerHTML += ' <i data-lucide="chevron-' + (state.language === 'ar' ? 'left' : 'right') + '" style="width:.95rem;height:.95rem;display:inline;"></i>';
+      nextBtn.onclick = isLast
+        ? () => submitAssessment()
+        : () => { const q = QUESTIONS[state.currentQuestionIndex]; if (!state.testAnswers[q.id]) return showToast(t('answerNeeded'), '#dc2626'); swapQuestion('next'); };
     }
 
-    // Clear enter class after animation ends
-    setTimeout(() => wrapper.classList.remove(enterClass), 350);
-  }, 200);
+    // back button state
+    const backBtn = document.getElementById('test-back-btn');
+    if (backBtn) {
+      backBtn.disabled = state.currentQuestionIndex === 0;
+      backBtn.style.opacity = state.currentQuestionIndex === 0 ? '.35' : '1';
+    }
+
+    _refreshStepDots();
+    if (window.lucide) lucide.createIcons();
+  }, 210);
 };
 
-// ─── Build question body HTML ───
-function buildQuestionBody() {
-  const q = QUESTIONS[state.currentQuestionIndex];
-  const answer = state.testAnswers[q.id];
-  const lang = state.language;
-  const idx = state.currentQuestionIndex;
-
-  return `
-    <div class="surface-soft section-pad">
-      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
-        <div class="eyebrow">${t('question')} ${idx + 1}</div>
-      </div>
-      <div style="font-size:clamp(1.1rem,2.5vw,1.4rem);font-weight:800;line-height:1.35;margin-bottom:1.4rem;">${q.text[lang]}</div>
-      <div id="answer-options-${q.id}" style="display:grid;gap:.7rem;">
-        ${q.options.map((option, i) => `
-          <button
-            class="answer-option ${answer === option.id ? 'selected' : ''}"
-            data-answer-id="${option.id}"
-            onclick="selectAnswer('${q.id}','${option.id}')"
-            type="button"
-          >
-            <div style="display:flex;align-items:center;gap:.85rem;">
-              <span class="answer-letter">${LETTER_LABELS[i] || (i+1)}</span>
-              <span class="answer-text">${option.text[lang]}</span>
-              <i
-                data-lucide="${answer === option.id ? 'check-circle-2' : 'circle'}"
-                class="answer-check"
-                style="margin-${lang === 'ar' ? 'right' : 'left'}:auto;"
-              ></i>
-            </div>
-          </button>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-
-// ─── Override global prevQuestion / nextQuestion to use swapQuestion ───
 window.prevQuestion = function prevQuestion() {
   if (state.currentQuestionIndex > 0) swapQuestion('prev');
 };
@@ -146,6 +105,55 @@ window.nextQuestion = function nextQuestion() {
   if (!state.testAnswers[q.id]) return showToast(t('answerNeeded'), '#dc2626');
   if (state.currentQuestionIndex < QUESTIONS.length - 1) swapQuestion('next');
 };
+
+// ─── Build question inner HTML ───
+function _buildQuestionBody() {
+  const idx  = state.currentQuestionIndex;
+  const q    = QUESTIONS[idx];
+  const answer = state.testAnswers[q.id];
+  const lang = state.language;
+  const icons = OPTION_ICONS[idx] || [];
+
+  return `
+    <div class="q-question-text">${q.text[lang]}</div>
+    <div id="answer-options-${q.id}" class="answer-grid">
+      ${q.options.map((opt, i) => `
+        <button
+          class="answer-option ${answer === opt.id ? 'selected' : ''}"
+          data-answer-id="${opt.id}"
+          onclick="selectAnswer('${q.id}','${opt.id}')"
+          type="button"
+        >
+          <span class="answer-icon-wrap">
+            <i data-lucide="${icons[i] || 'circle'}" class="answer-icon"></i>
+          </span>
+          <span class="answer-letter">${LETTER_LABELS[i] || (i+1)}</span>
+          <span class="answer-text">${opt.text[lang]}</span>
+          <i data-lucide="${answer === opt.id ? 'check-circle-2' : 'circle'}" class="answer-check"></i>
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ─── Refresh step dots in-place ───
+function _refreshStepDots() {
+  const dotsEl = document.getElementById('test-step-dots');
+  if (!dotsEl) return;
+  dotsEl.innerHTML = QUESTIONS.map((_, i) => {
+    const done   = !!state.testAnswers[QUESTIONS[i].id];
+    const active = i === state.currentQuestionIndex;
+    return `<div style="
+      width:${active ? '1.7rem' : '.5rem'};
+      height:.5rem;
+      border-radius:999px;
+      background:${done ? 'var(--brand)' : active ? 'var(--brand)' : 'var(--surface-4)'};
+      opacity:${done || active ? '1' : '.35'};
+      transition:width .28s cubic-bezier(.4,0,.2,1),background .2s ease;
+      flex-shrink:0;
+    "></div>`;
+  }).join('');
+}
 
 // ─── Main render ───
 window.renderTestView = function renderTestView() {
@@ -159,83 +167,92 @@ window.renderTestView = function renderTestView() {
     `;
   }
 
-  const lang = state.language;
-  const isLast = state.currentQuestionIndex >= QUESTIONS.length - 1;
-  const q = QUESTIONS[state.currentQuestionIndex];
-  const progressPct = ((state.currentQuestionIndex + 1) / QUESTIONS.length) * 100;
-
-  // Step dots row
-  const stepDots = QUESTIONS.map((_, i) => {
-    const done = !!state.testAnswers[QUESTIONS[i].id];
+  const lang      = state.language;
+  const isLast    = state.currentQuestionIndex >= QUESTIONS.length - 1;
+  const pct       = ((state.currentQuestionIndex + 1) / QUESTIONS.length) * 100;
+  const answered  = QUESTIONS.filter(q => state.testAnswers[q.id]).length;
+  const stepDots  = QUESTIONS.map((_, i) => {
+    const done   = !!state.testAnswers[QUESTIONS[i].id];
     const active = i === state.currentQuestionIndex;
-    return `
-      <div style="
-        width:${active ? '1.6rem' : '.55rem'};
-        height:.55rem;
-        border-radius:999px;
-        background:${done ? 'var(--brand)' : active ? 'var(--brand)' : 'var(--surface-4)'};
-        opacity:${done || active ? '1' : '.4'};
-        transition:width .25s ease, background .2s ease;
-        flex-shrink:0;
-      "></div>
-    `;
+    return `<div style="width:${active ? '1.7rem' : '.5rem'};height:.5rem;border-radius:999px;background:${done ? 'var(--brand)' : active ? 'var(--brand)' : 'var(--surface-4)'};opacity:${done || active ? '1' : '.35'};transition:width .28s cubic-bezier(.4,0,.2,1),background .2s ease;flex-shrink:0;"></div>`;
   }).join('');
 
   return `
-    <section class="surface-panel section-pad" data-aos="fade-up">
+    <section class="test-shell" data-aos="fade-up">
 
-      <!-- Header -->
-      <div class="page-header">
-        <div>
-          <div class="eyebrow">${t('testTitle')}</div>
-          <h2 class="section-title" style="margin-top:.6rem;">${t('testTitle')}</h2>
-          <p class="text-muted" style="margin-top:.5rem;">${t('testDesc')}</p>
+      <!-- Left panel: metadata -->
+      <aside class="test-meta-panel">
+        <div class="eyebrow" style="margin-bottom:.7rem;">${t('testTitle')}</div>
+        <h2 class="section-title" style="font-size:clamp(1.3rem,2vw,1.75rem);">${t('testTitle')}</h2>
+        <p class="text-muted" style="margin-top:.65rem;line-height:1.75;font-size:.9rem;">${t('testDesc')}</p>
+
+        <div class="test-meta-counter">
+          <span class="test-counter-big" id="test-counter">${state.currentQuestionIndex + 1}<span style="font-size:1.1rem;font-weight:500;opacity:.5;">/${QUESTIONS.length}</span></span>
+          <span class="eyebrow" style="margin-top:.2rem;">${t('question')}</span>
         </div>
-        <div class="surface-soft section-pad" style="min-width:140px;text-align:center;">
-          <div class="eyebrow">${t('question')}</div>
-          <div id="test-counter" style="font-weight:800;font-size:1.3rem;margin-top:.4rem;">${state.currentQuestionIndex + 1}/${QUESTIONS.length}</div>
+
+        <!-- Step dots -->
+        <div id="test-step-dots" style="display:flex;align-items:center;gap:.4rem;margin-top:1.2rem;flex-wrap:wrap;">
+          ${stepDots}
         </div>
-      </div>
-
-      <!-- Progress bar -->
-      <div class="progress-bar" style="margin-top:1.2rem;">
-        <span id="test-progress-fill" style="width:${progressPct}%"></span>
-      </div>
-
-      <!-- Step dots -->
-      <div style="display:flex;align-items:center;gap:.4rem;margin-top:.75rem;">
-        ${stepDots}
-        <span style="font-size:.75rem;color:var(--muted);margin-${lang === 'ar' ? 'right' : 'left'}:.4rem;">
-          ${QUESTIONS.filter(qq => state.testAnswers[qq.id]).length}/${QUESTIONS.length} ${lang === 'ar' ? 'مكتمل' : 'answered'}
+        <span id="test-answered-badge" style="font-size:.78rem;color:var(--text-muted);margin-top:.5rem;display:block;">
+          ${answered}/${QUESTIONS.length} ${lang === 'ar' ? 'مكتمل' : 'answered'}
         </span>
-      </div>
 
-      <!-- Question block (swappable) -->
-      <div id="question-wrapper" style="margin-top:1.2rem;">
-        ${buildQuestionBody()}
-      </div>
+        <!-- Nav buttons on desktop -->
+        <div class="test-meta-nav">
+          <button
+            id="test-back-btn"
+            class="btn btn-secondary"
+            onclick="prevQuestion()"
+            ${state.currentQuestionIndex === 0 ? 'disabled style="opacity:.35;"' : ''}
+          >
+            <i data-lucide="chevron-${lang === 'ar' ? 'right' : 'left'}" style="width:1rem;height:1rem;"></i>
+            ${t('back')}
+          </button>
+          <button
+            id="test-next-btn"
+            class="btn btn-primary"
+            onclick="${isLast ? 'submitAssessment()' : 'nextQuestion()'}"
+          >
+            ${isLast ? t('submitAssessment') : t('next')}
+            ${!isLast ? `<i data-lucide="chevron-${lang === 'ar' ? 'left' : 'right'}" style="width:1rem;height:1rem;"></i>` : ''}
+          </button>
+        </div>
+        <p style="font-size:.75rem;color:var(--text-faint);margin-top:.65rem;">
+          ${lang === 'ar' ? 'يتقدم تلقائياً بعد الاختيار' : 'Auto-advances on selection'}
+        </p>
+      </aside>
 
-      <!-- Navigation -->
-      <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.2rem;align-items:center;">
-        <button
-          class="btn btn-secondary"
-          onclick="prevQuestion()"
-          ${state.currentQuestionIndex === 0 ? 'disabled style="opacity:.4;cursor:default;"' : ''}
-        >
-          <i data-lucide="chevron-${lang === 'ar' ? 'right' : 'left'}" style="width:1rem;height:1rem;"></i>
-          ${t('back')}
-        </button>
-        <button
-          id="test-next-btn"
-          class="btn btn-primary"
-          onclick="${ isLast ? 'submitAssessment()' : 'nextQuestion()' }"
-        >
-          ${ isLast ? t('submitAssessment') : t('next') }
-          <i data-lucide="chevron-${lang === 'ar' ? 'left' : 'right'}" style="width:1rem;height:1rem;"></i>
-        </button>
-        <span style="font-size:.8rem;color:var(--muted);margin-${lang === 'ar' ? 'right' : 'left'}:auto;">
-          ${lang === 'ar' ? 'سيتقدم تلقائياً بعد الاختيار' : 'Auto-advances on selection'}
-        </span>
+      <!-- Right panel: question -->
+      <div class="test-question-panel">
+        <!-- Progress bar -->
+        <div class="progress-bar" style="margin-bottom:1.5rem;">
+          <span id="test-progress-fill" style="width:${pct}%"></span>
+        </div>
+
+        <div id="question-wrapper">
+          ${_buildQuestionBody()}
+        </div>
+
+        <!-- Mobile nav (hidden on desktop via CSS) -->
+        <div class="test-mobile-nav">
+          <button
+            class="btn btn-secondary"
+            onclick="prevQuestion()"
+            ${state.currentQuestionIndex === 0 ? 'disabled style="opacity:.35;"' : ''}
+          >
+            <i data-lucide="chevron-${lang === 'ar' ? 'right' : 'left'}" style="width:1rem;height:1rem;"></i>
+            ${t('back')}
+          </button>
+          <button
+            class="btn btn-primary"
+            onclick="${isLast ? 'submitAssessment()' : 'nextQuestion()'}"
+          >
+            ${isLast ? t('submitAssessment') : t('next')}
+            ${!isLast ? `<i data-lucide="chevron-${lang === 'ar' ? 'left' : 'right'}" style="width:1rem;height:1rem;"></i>` : ''}
+          </button>
+        </div>
       </div>
     </section>
   `;
