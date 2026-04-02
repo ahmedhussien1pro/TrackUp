@@ -1,12 +1,10 @@
 // ============================================================
 // auth.js — Login / Register / Guest gate
-// Guest flow: user can skip login and continue as guest.
-// Auth state stored in state.auth (never persisted to localStorage).
 // ============================================================
 
 window.renderAuthView = function renderAuthView() {
   const isAr   = state.language === 'ar';
-  const mode   = state._authMode || 'login'; // 'login' | 'register'
+  const mode   = state._authMode || 'login';
 
   return `
     <div style="display:flex;align-items:center;justify-content:center;min-height:60vh;padding:2rem 0;">
@@ -56,7 +54,7 @@ window.renderAuthView = function renderAuthView() {
           </button>
           <p class="text-muted" style="font-size:.74rem;text-align:center;margin-top:.5rem;line-height:1.6;">
             ${isAr
-              ? 'الضيوف يمكنهم استخدام التقييم والنتائج. يتم حفظ بياناتك محلياً فقط.'
+              ? 'الضيوف يمكنهم استخدام التقييم والنتائج. يتم حفظ بياناتك محليًا فقط.'
               : 'Guests can use the assessment & results. Data is saved locally only.'}
           </p>
         </div>
@@ -130,7 +128,7 @@ function renderRegisterForm(isAr) {
 // ── Auth actions ──
 window.setAuthMode = function setAuthMode(mode) {
   state._authMode = mode;
-  renderApp();
+  renderMainOnly();
 };
 
 window.toggleAuthPwd = function toggleAuthPwd(inputId, btn) {
@@ -148,7 +146,6 @@ window.submitLogin = function submitLogin(e) {
   const password = document.getElementById('authPassword')?.value;
   if (!email || !password) return;
 
-  // Simulate auth — replace with real API call when backend is ready
   const stored = StorageAPI.get('trackup_user_' + email, null);
   if (!stored) {
     showToast(state.language === 'ar' ? 'البريد غير مسجل.' : 'Email not registered.', '#dc2626');
@@ -158,10 +155,9 @@ window.submitLogin = function submitLogin(e) {
     showToast(state.language === 'ar' ? 'كلمة المرور غلط.' : 'Wrong password.', '#dc2626');
     return;
   }
-  // Restore user data
   state.auth = { email, name: stored.name, isGuest: false };
   if (stored.profile) state.profile = stored.profile;
-  showToast((state.language === 'ar' ? 'أهلاً ' : 'Welcome ') + stored.name, '#16a34a');
+  showToast((state.language === 'ar' ? 'أهلًا ' : 'Welcome ') + stored.name, '#16a34a');
   navigateTo('home');
 };
 
@@ -180,12 +176,11 @@ window.submitRegister = function submitRegister(e) {
     showToast(state.language === 'ar' ? 'البريد ده مسجل قبل كده.' : 'Email already registered.', '#f59e0b');
     return;
   }
-  // Save new user
   StorageAPI.set('trackup_user_' + email, { name, password: btoa(password), profile: state.profile });
   state.auth = { email, name, isGuest: false };
   state.profile = { ...state.profile, fullName: name, email };
   persistState();
-  showToast((state.language === 'ar' ? 'تم إنشاء حسابك! أهلاً ' : 'Account created! Welcome ') + name, '#16a34a');
+  showToast((state.language === 'ar' ? 'تم إنشاء حسابك! أهلًا ' : 'Account created! Welcome ') + name, '#16a34a');
   navigateTo('profile');
 };
 
