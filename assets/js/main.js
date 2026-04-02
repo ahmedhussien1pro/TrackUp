@@ -1,6 +1,12 @@
 // toggleMobileMenu, closeMobileMenu, toggleJourneyMenu, guardedNavigate
 // are defined in shell.js — do NOT redefine here
 
+/* ── Views where the progress strip should appear ── */
+const JOURNEY_VIEWS = new Set([
+  'test', 'results', 'track-details', 'roadmap',
+  'courses', 'progress', 'subtrack-test', 'sub-track-result'
+]);
+
 window.submitAssessment = function submitAssessment() {
   const missing = QUESTIONS.find(q => !state.testAnswers[q.id]);
   if (missing) return showToast(t('answerNeeded'), '#dc2626');
@@ -133,7 +139,8 @@ window.bindForms = function bindForms() {
 window.renderApp = function renderApp() {
   applyDocumentState();
   const app = document.getElementById('app');
-  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderMobilePanel()}<main class="container-shell main-grid">${state.currentView !== 'home' ? renderProgressStrip() : ''}${renderMainContent()}</main>${renderFooter()}${renderBottomNav()}</div>`;
+  const showStrip = JOURNEY_VIEWS.has(state.currentView);
+  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderMobilePanel()}<main class="container-shell main-grid">${showStrip ? renderProgressStrip() : ''}${renderMainContent()}</main>${renderFooter()}${renderBottomNav()}</div>`;
   bindForms();
   if (window.lucide) lucide.createIcons();
   if (window.AOS) { AOS.init({ duration: 550, once: true, offset: 14, easing: 'ease-out-cubic' }); AOS.refreshHard(); }
