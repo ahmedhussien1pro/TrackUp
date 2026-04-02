@@ -19,6 +19,33 @@ window.renderHomeView = function renderHomeView() {
     t('premium'), t('sessions')
   ].join(arrow);
 
+  const lang = state.language;
+  const isAr = lang === 'ar';
+
+  // Feature rows: [label_en, label_ar, free, premium]
+  const features = [
+    [ 'Quick assessment (5 questions)', 'تقييم سريع (٥ أسئلة)',       true,  true  ],
+    [ 'Ranked results (top 3 tracks)',  'نتائج مرتبة (أفضل ٣ مسارات)', true,  true  ],
+    [ 'Basic track overview',           'نظرة عامة على المسار',         true,  true  ],
+    [ 'Full fit analysis & reasons',    'تحليل كامل مع الأسباب',        false, true  ],
+    [ 'Detailed roadmap (step-by-step)','خارطة تطور تفصيلية',           false, true  ],
+    [ 'Starter course recommendations', 'توصيات كورسات للبداية',        false, true  ],
+    [ 'Progress tracking',              'تتبع التقدم',                  false, true  ],
+    [ 'One-on-one expert sessions',     'جلسات فردية مع خبير',          false, true  ],
+  ];
+
+  const check = `<i data-lucide="check" style="width:1rem;height:1rem;color:var(--accent);"></i>`;
+  const cross  = `<span style="display:inline-block;width:.5rem;height:1.5px;background:var(--surface-4);border-radius:2px;"></span>`;
+
+  const featureRows = features.map(([en, ar, free, paid]) => `
+    <div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:.75rem;
+      padding:.7rem 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:.88rem;font-weight:500;color:var(--text-muted);">${isAr ? ar : en}</span>
+      <div style="display:flex;justify-content:center;width:3.5rem;">${free  ? check : cross}</div>
+      <div style="display:flex;justify-content:center;width:3.5rem;">${paid  ? check : cross}</div>
+    </div>
+  `).join('');
+
   return `
     <!-- HERO -->
     <section class="home-hero" data-aos="fade-up">
@@ -38,13 +65,11 @@ window.renderHomeView = function renderHomeView() {
         <div class="signal-scene">
           <div class="signal-grid"></div>
           <div class="signal-scan"></div>
-
           <svg class="signal-svg" viewBox="0 0 300 300" preserveAspectRatio="none">
             ${noiseWaves}
             <path class="wave-signal" d="M0,150 C60,90 120,210 180,150 S260,90 300,150"/>
             <path class="wave-path"   d="M0,150 L300,150"/>
           </svg>
-
           <div class="signal-endpoint"></div>
           <span class="signal-label-noise">${t('signalNoise')}</span>
           <span class="signal-label-clear">${t('signalClear')}</span>
@@ -62,8 +87,10 @@ window.renderHomeView = function renderHomeView() {
       </div>
     </section>
 
-    <!-- NEXT STEP + FREE VS PAID -->
+    <!-- NEXT STEP + FREE VS PREMIUM -->
     <section class="hero-grid" data-aos="fade-up">
+
+      <!-- Next step card -->
       <div class="surface-panel section-pad">
         <div class="eyebrow">${t('journeyPreview')}</div>
         <div class="text-muted" style="margin-top:.8rem;line-height:1.8;font-size:.85rem;">${journeySteps}</div>
@@ -75,13 +102,34 @@ window.renderHomeView = function renderHomeView() {
           </div>
         </div>
       </div>
+
+      <!-- Free vs Premium comparison -->
       <div class="surface-panel section-pad">
-        <div class="eyebrow">${t('freePaid')}</div>
-        <p class="text-muted" style="margin-top:.8rem;line-height:1.8;">${t('freePaidDesc')}</p>
-        <div style="display:grid;gap:.75rem;margin-top:1rem;">
-          <div class="surface-soft section-pad"><span class="badge">${t('free')}</span><div class="text-muted" style="margin-top:.65rem;">${t('freeAccess')}</div></div>
-          <div class="fit-rail-card"><span class="badge badge-accent">${t('premium')}</span><div class="text-muted" style="margin-top:.65rem;">${t('paidAccess')}</div></div>
+        <div class="eyebrow" style="margin-bottom:.9rem;">${t('freePaid')}</div>
+
+        <!-- Column headers -->
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:.75rem;align-items:center;
+          padding-bottom:.65rem;border-bottom:1px solid var(--border-strong);">
+          <span></span>
+          <div style="display:flex;flex-direction:column;align-items:center;width:3.5rem;">
+            <span style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);">
+              ${isAr ? 'مجاني' : 'Free'}
+            </span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;width:3.5rem;">
+            <span style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);">
+              ${isAr ? 'مدفوع' : 'Premium'}
+            </span>
+          </div>
         </div>
+
+        <!-- Rows -->
+        ${featureRows}
+
+        <button class="btn btn-primary" style="width:100%;margin-top:1.1rem;" onclick="navigateTo('pricing')">
+          ${isAr ? 'شوف الباقات' : 'View pricing'}
+          <i data-lucide="arrow-${isAr ? 'left' : 'right'}" style="width:.9rem;height:.9rem;"></i>
+        </button>
       </div>
     </section>
 
