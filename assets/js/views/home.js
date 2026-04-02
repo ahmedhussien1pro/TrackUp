@@ -18,22 +18,45 @@ window.renderHomeView = function renderHomeView() {
           <button class="btn btn-accent-outline" onclick="navigateTo('pricing')">${t('viewPricing')}</button>
         </div>
       </div>
+
+      <!-- 3D Concept: Confusion → Clarity -->
       <div class="home-hero-visual" aria-hidden="true">
-        <div class="orbit-scene">
-          <div class="orbit-ring orbit-ring-1"></div>
-          <div class="orbit-ring orbit-ring-2"></div>
-          <div class="orbit-ring orbit-ring-3"></div>
-          <div class="orbit-core">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)">
-              <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
+        <div class="clarity-scene">
+
+          <!-- ripple rings expanding from center -->
+          <div class="clarity-ripple"></div>
+          <div class="clarity-ripple"></div>
+          <div class="clarity-ripple"></div>
+
+          <!-- scattered question marks = confusion state -->
+          <div class="chaos-node">?</div>
+          <div class="chaos-node">?</div>
+          <div class="chaos-node">?</div>
+          <div class="chaos-node">?</div>
+          <div class="chaos-node">?</div>
+          <div class="chaos-node">?</div>
+          <div class="chaos-node">?</div>
+          <div class="chaos-node">?</div>
+
+          <!-- converging path lines pointing inward -->
+          <div class="clarity-paths">
+            <div class="path-line"></div>
+            <div class="path-line"></div>
+            <div class="path-line"></div>
+            <div class="path-line"></div>
+            <div class="path-line"></div>
+            <div class="path-line"></div>
+          </div>
+
+          <!-- central clarity core with checkmark -->
+          <div class="clarity-core">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);">
+              <path d="M20 6 9 17l-5-5"/>
             </svg>
           </div>
-          <div class="orbit-dot dot-1"></div>
-          <div class="orbit-dot dot-2"></div>
-          <div class="orbit-dot dot-3"></div>
-          <div class="orbit-label label-power">Power</div>
-          <div class="orbit-label label-embedded">Embedded</div>
-          <div class="orbit-label label-comms">Comms</div>
+
+          <span class="clarity-label-chaos">confusion</span>
+          <span class="clarity-label-clear">clarity</span>
         </div>
       </div>
     </section>
@@ -52,7 +75,7 @@ window.renderHomeView = function renderHomeView() {
     <section class="hero-grid" data-aos="fade-up">
       <div class="surface-panel section-pad">
         <div class="eyebrow">${t('journeyPreview')}</div>
-        <div class="text-muted" style="margin-top:.8rem;line-height:1.8;font-size:.88rem;">Profile → Test → Results → Track Details → Roadmap → Learning → Progress → Premium → Session</div>
+        <div class="text-muted" style="margin-top:.8rem;line-height:1.8;font-size:.88rem;">Profile → Test → Results → Roadmap → Learning → Progress → Premium → Session</div>
         <div style="margin-top:1rem;">
           <div class="surface-soft section-pad">
             <div style="font-weight:700;color:var(--accent);">${t('nextStep')}</div>

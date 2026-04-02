@@ -24,116 +24,151 @@
   letter-spacing: .04em;
 }
 
-/* ── Orbit 3D Animation ── */
+/* ════════════════════════════════════════
+   DECISION CLARITY — 3D Hero Visual
+   Concept: scattered question marks (chaos/confusion)
+   converging into a single glowing checkmark (clarity/decision)
+   ════════════════════════════════════════ */
 .home-hero-visual {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 320px;
+  min-height: 340px;
 }
-.orbit-scene {
+
+.clarity-scene {
   position: relative;
-  width: 260px;
-  height: 260px;
-  perspective: 600px;
-}
-.orbit-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid rgba(59,130,246,.22);
+  width: 300px;
+  height: 300px;
+  perspective: 900px;
   transform-style: preserve-3d;
-  animation: orbitSpin linear infinite;
 }
-.orbit-ring-1 {
-  animation-duration: 9s;
-  transform: rotateX(72deg) rotateZ(0deg);
-  border-color: rgba(59,130,246,.35);
-}
-.orbit-ring-2 {
-  width: 72%; height: 72%;
-  inset: 14%;
-  animation-duration: 6s;
-  animation-direction: reverse;
-  transform: rotateX(55deg) rotateZ(60deg);
-  border-color: rgba(59,130,246,.2);
-}
-.orbit-ring-3 {
-  width: 46%; height: 46%;
-  inset: 27%;
-  animation-duration: 4s;
-  transform: rotateX(40deg) rotateZ(120deg);
-  border-color: rgba(59,130,246,.15);
-}
-@keyframes orbitSpin {
-  to { transform: rotateX(72deg) rotateZ(360deg); }
-}
-.orbit-ring-2 { animation-name: orbitSpin2; }
-@keyframes orbitSpin2 {
-  from { transform: rotateX(55deg) rotateZ(60deg); }
-  to   { transform: rotateX(55deg) rotateZ(-300deg); }
-}
-.orbit-ring-3 { animation-name: orbitSpin3; }
-@keyframes orbitSpin3 {
-  from { transform: rotateX(40deg) rotateZ(120deg); }
-  to   { transform: rotateX(40deg) rotateZ(480deg); }
-}
-.orbit-core {
+
+/* ── Central decision core ── */
+.clarity-core {
   position: absolute;
   inset: 50%;
   transform: translate(-50%, -50%);
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: linear-gradient(145deg, var(--surface-3), var(--surface));
-  border: 1px solid rgba(59,130,246,.3);
-  box-shadow: 0 0 32px rgba(59,130,246,.18);
+  background: radial-gradient(circle at 38% 38%, rgba(59,130,246,.22), transparent 70%), var(--surface);
+  border: 1.5px solid rgba(59,130,246,.45);
+  box-shadow: 0 0 40px rgba(59,130,246,.22), 0 0 0 12px rgba(59,130,246,.06), 0 0 0 24px rgba(59,130,246,.03);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: corePulse 3s ease-in-out infinite;
+  z-index: 10;
+  animation: coreGlow 3.5s ease-in-out infinite;
 }
-@keyframes corePulse {
-  0%,100% { box-shadow: 0 0 24px rgba(59,130,246,.18); }
-  50%      { box-shadow: 0 0 48px rgba(59,130,246,.35); }
+@keyframes coreGlow {
+  0%,100% { box-shadow: 0 0 30px rgba(59,130,246,.2), 0 0 0 10px rgba(59,130,246,.05); }
+  50%      { box-shadow: 0 0 60px rgba(59,130,246,.4), 0 0 0 20px rgba(59,130,246,.09); }
 }
-.orbit-dot {
+
+/* ── Ripple rings from center ── */
+.clarity-ripple {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  inset: 50%;
   border-radius: 50%;
-  background: var(--accent);
-  top: 50%;
-  left: 50%;
-  transform-origin: 0 0;
-  box-shadow: 0 0 8px rgba(59,130,246,.6);
+  border: 1px solid rgba(59,130,246,.18);
+  transform: translate(-50%,-50%) scale(1);
+  animation: rippleOut 3.5s ease-out infinite;
+  pointer-events: none;
 }
-.dot-1 { animation: dotOrbit1 9s linear infinite; }
-.dot-2 { animation: dotOrbit2 6s linear infinite; }
-.dot-3 { animation: dotOrbit3 4s linear infinite; }
-@keyframes dotOrbit1 {
-  from { transform: rotate(0deg) translateX(130px) rotate(0deg); }
-  to   { transform: rotate(360deg) translateX(130px) rotate(-360deg); }
+.clarity-ripple:nth-child(2) { animation-delay: 1.1s; }
+.clarity-ripple:nth-child(3) { animation-delay: 2.2s; }
+@keyframes rippleOut {
+  0%   { width: 80px; height: 80px; opacity: .6; }
+  100% { width: 280px; height: 280px; opacity: 0; }
 }
-@keyframes dotOrbit2 {
-  from { transform: rotate(120deg) translateX(94px) rotate(-120deg); }
-  to   { transform: rotate(480deg) translateX(94px) rotate(-480deg); }
-}
-@keyframes dotOrbit3 {
-  from { transform: rotate(240deg) translateX(60px) rotate(-240deg); }
-  to   { transform: rotate(600deg) translateX(60px) rotate(-600deg); }
-}
-.orbit-label {
+
+/* ── Floating question marks (chaos nodes) ── */
+.chaos-node {
   position: absolute;
-  font-size: .72rem;
-  font-weight: 700;
-  letter-spacing: .06em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 1.1rem;
+  font-weight: 900;
   color: var(--text-muted);
+  animation: chaosFloat linear infinite;
+  box-shadow: var(--shadow-sm);
+  transition: all .4s ease;
+}
+/* positions — scattered around the scene */
+.chaos-node:nth-child(4)  { top: 6%;  left: 10%; animation-duration: 6s;  animation-delay: 0s;    color: rgba(148,163,184,.5); }
+.chaos-node:nth-child(5)  { top: 4%;  left: 60%; animation-duration: 7.5s; animation-delay: -.8s;  color: rgba(148,163,184,.4); }
+.chaos-node:nth-child(6)  { top: 26%; left: 2%;  animation-duration: 5s;  animation-delay: -1.5s; color: rgba(148,163,184,.45); }
+.chaos-node:nth-child(7)  { top: 26%; right: 2%; animation-duration: 8s;  animation-delay: -.4s;  color: rgba(148,163,184,.4); }
+.chaos-node:nth-child(8)  { bottom: 22%; left: 4%;  animation-duration: 6.5s; animation-delay: -2s; color: rgba(148,163,184,.45); }
+.chaos-node:nth-child(9)  { bottom: 22%; right: 4%; animation-duration: 7s;  animation-delay: -1s;  color: rgba(148,163,184,.4); }
+.chaos-node:nth-child(10) { bottom: 4%; left: 30%; animation-duration: 5.5s; animation-delay: -.6s; color: rgba(148,163,184,.45); }
+.chaos-node:nth-child(11) { bottom: 4%; right: 20%; animation-duration: 9s;  animation-delay: -3s;  color: rgba(148,163,184,.35); }
+
+@keyframes chaosFloat {
+  0%,100% { transform: translateY(0px) rotate(-4deg); }
+  25%      { transform: translateY(-9px) rotate(3deg); }
+  50%      { transform: translateY(-4px) rotate(-2deg); }
+  75%      { transform: translateY(-12px) rotate(5deg); }
+}
+
+/* ── Converging path lines (SVG drawn via CSS) ── */
+.clarity-paths {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ── Arrow / path from chaos to center ── */
+.path-line {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(59,130,246,.18));
+  transform-origin: right center;
+  animation: pathPulse 3s ease-in-out infinite;
+}
+.path-line:nth-child(1) { width: 90px; top: 25%;  left: 14%;  transform: rotate(-28deg); animation-delay: 0s; }
+.path-line:nth-child(2) { width: 80px; top: 14%;  left: 62%;  transform: rotate(38deg);  animation-delay: .5s; }
+.path-line:nth-child(3) { width: 70px; top: 33%;  left: 5%;   transform: rotate(-8deg);  animation-delay: 1s; }
+.path-line:nth-child(4) { width: 70px; top: 33%;  right: 5%;  transform: rotate(8deg);   animation-delay: 1.5s; }
+.path-line:nth-child(5) { width: 80px; bottom: 30%; left: 8%;  transform: rotate(20deg);  animation-delay: .7s; }
+.path-line:nth-child(6) { width: 80px; bottom: 30%; right: 8%; transform: rotate(-20deg); animation-delay: 1.2s; }
+@keyframes pathPulse {
+  0%,100% { opacity: .3; }
+  50%      { opacity: .8; }
+}
+
+/* ── Stage label above/below ── */
+.clarity-label-chaos {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: rgba(148,163,184,.45);
+  text-transform: uppercase;
   white-space: nowrap;
 }
-.label-power    { top: 12%;  left: 50%; transform: translateX(-50%); color: rgba(59,130,246,.9); }
-.label-embedded { bottom: 22%; left: 6%; }
-.label-comms    { bottom: 22%; right: 6%; }
+.clarity-label-clear {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  color: rgba(59,130,246,.65);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 
 /* ── Buttons ── */
 .btn-accent-outline {
