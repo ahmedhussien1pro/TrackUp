@@ -24,28 +24,29 @@ window.showToast = function showToast(text, color = '#2563eb') {
 
 window.getOrderedNav = function getOrderedNav() {
   return [
-    { id: 'home', label: t('home'), icon: 'house' },
-    { id: 'profile', label: t('profile'), icon: 'user-round' },
-    { id: 'test', label: t('test'), icon: 'clipboard-list' },
-    { id: 'results', label: t('results'), icon: 'bar-chart-3' },
-    { id: 'track-details', label: t('tracks'), icon: 'layers-3' },
-    { id: 'roadmap', label: t('roadmap'), icon: 'route' },
-    { id: 'pricing', label: t('pricing'), icon: 'credit-card' },
-    { id: 'progress', label: t('progress'), icon: 'target' },
-    { id: 'session-booking', label: t('sessions'), icon: 'calendar-days' }
+    { id: 'home',             label: t('home'),     icon: 'house' },
+    { id: 'profile',          label: t('profile'),  icon: 'user-round' },
+    { id: 'test',             label: t('test'),     icon: 'clipboard-list' },
+    { id: 'results',          label: t('results'),  icon: 'bar-chart-3' },
+    { id: 'track-details',    label: t('tracks'),   icon: 'layers-3' },
+    { id: 'roadmap',          label: t('roadmap'),  icon: 'route' },
+    { id: 'pricing',          label: t('pricing'),  icon: 'credit-card' },
+    { id: 'progress',         label: t('progress'), icon: 'target' },
+    { id: 'mentors',          label: t('mentors'),  icon: 'users-round' },
+    { id: 'session-booking',  label: t('sessions'), icon: 'calendar-days' }
   ];
 };
 
 window.getMilestones = function getMilestones() {
   return [
     { key: 'profileCompleted', label: t('profileCompleted') },
-    { key: 'testCompleted', label: t('testCompleted') },
-    { key: 'resultsViewed', label: t('resultsViewed') },
-    { key: 'detailsOpened', label: t('detailsOpened') },
-    { key: 'roadmapStarted', label: t('roadmapStarted') },
-    { key: 'courseStarted', label: t('courseStarted') },
-    { key: 'premiumUnlocked', label: t('premiumUnlocked') },
-    { key: 'sessionBooked', label: t('sessionBooked') }
+    { key: 'testCompleted',    label: t('testCompleted') },
+    { key: 'resultsViewed',    label: t('resultsViewed') },
+    { key: 'detailsOpened',    label: t('detailsOpened') },
+    { key: 'roadmapStarted',   label: t('roadmapStarted') },
+    { key: 'courseStarted',    label: t('courseStarted') },
+    { key: 'premiumUnlocked',  label: t('premiumUnlocked') },
+    { key: 'sessionBooked',    label: t('sessionBooked') }
   ];
 };
 
@@ -66,14 +67,14 @@ window.updateProgress = function updateProgress(key, value = true) {
 
 window.nextRecommendedStep = function nextRecommendedStep() {
   const m = state.completedMilestones;
-  if (!m.profileCompleted) return { view: 'profile', label: t('profileTitle') };
-  if (!m.testCompleted) return { view: 'test', label: t('startAssessment') };
-  if (!m.resultsViewed) return { view: 'results', label: t('openResults') };
-  if (!m.detailsOpened) return { view: 'track-details', label: t('exploreTrack') };
-  if (!m.roadmapStarted) return { view: 'roadmap', label: t('openRoadmap') };
-  if (!m.courseStarted) return { view: 'courses', label: t('openLearning') };
-  if (!m.premiumUnlocked) return { view: 'pricing', label: t('upgradeNow') };
-  if (!m.sessionBooked) return { view: 'session-booking', label: t('bookSession') };
+  if (!m.profileCompleted)  return { view: 'profile',          label: t('profileTitle') };
+  if (!m.testCompleted)     return { view: 'test',             label: t('startAssessment') };
+  if (!m.resultsViewed)     return { view: 'results',          label: t('openResults') };
+  if (!m.detailsOpened)     return { view: 'track-details',    label: t('exploreTrack') };
+  if (!m.roadmapStarted)    return { view: 'roadmap',          label: t('openRoadmap') };
+  if (!m.courseStarted)     return { view: 'courses',          label: t('openLearning') };
+  if (!m.premiumUnlocked)   return { view: 'pricing',          label: t('upgradeNow') };
+  if (!m.sessionBooked)     return { view: 'mentors',          label: t('meetMentors') };
   return { view: 'progress', label: t('viewProgress') };
 };
 
@@ -105,7 +106,7 @@ window.guardView = function guardView(view) {
     navigateTo('profile');
     return false;
   }
-  if (['results', 'track-details', 'roadmap', 'courses'].includes(view) && !state.rankedTracks.length) {
+  if (['results','track-details','roadmap','courses'].includes(view) && !state.rankedTracks.length) {
     showToast(t('noResults'), '#f59e0b');
     navigateTo('test');
     return false;
@@ -159,20 +160,17 @@ window.resetDemo = function resetDemo() {
       state.currentView = 'home';
       state.mobileMenuOpen = false;
       state.journeyOpen = false;
+      state.mentorFilter = 'all';
+      state.selectedMentor = null;
       state.profile = { fullName: '', college: '', year: '', email: '' };
       state.testAnswers = {};
       state.scores = {};
       state.rankedTracks = [];
       state.selectedTrack = 'embedded';
       state.completedMilestones = {
-        profileCompleted: false,
-        testCompleted: false,
-        resultsViewed: false,
-        detailsOpened: false,
-        roadmapStarted: false,
-        courseStarted: false,
-        premiumUnlocked: false,
-        sessionBooked: false
+        profileCompleted: false, testCompleted: false, resultsViewed: false,
+        detailsOpened: false, roadmapStarted: false, courseStarted: false,
+        premiumUnlocked: false, sessionBooked: false
       };
       state.premiumUnlocked = false;
       state.sessionRequested = false;
