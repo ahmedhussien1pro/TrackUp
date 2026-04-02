@@ -10,31 +10,25 @@ window.renderPlatformsView = function renderPlatformsView() {
   const isPremium = state.premiumUnlocked;
 
   const userSubtrack = getUserSubtrack();
-  const topIds = userSubtrack ? (SUBTRACK_TOP_PLATFORMS[userSubtrack] || []) : [];
-  const topPlatforms = topIds.map(id => ALL_PLATFORMS.find(p => p.id === id)).filter(Boolean);
+  const topIds = userSubtrack ? SUBTRACK_TOP_PLATFORMS[userSubtrack] || [] : [];
+  const topPlatforms = topIds
+    .map((id) => ALL_PLATFORMS.find((p) => p.id === id))
+    .filter(Boolean);
 
-  // Read filter from URL hash: #platforms-free / #platforms-paid / #platforms-freemium / #platforms-all
-  // Fallback to window._platformFilter for backwards compat
-  const hashFilter = (location.hash.match(/^#platforms-(.+)$/) || [])[1];
-  if (hashFilter && ['all','free','paid','freemium'].includes(hashFilter)) {
-    window._platformFilter = hashFilter;
-  }
   if (window._platformFilter === undefined) window._platformFilter = 'all';
   const filter = window._platformFilter;
 
-  const filtered = filter === 'all'
-    ? ALL_PLATFORMS
-    : ALL_PLATFORMS.filter(p => p.type === filter);
+  const filtered =
+    filter === 'all'
+      ? ALL_PLATFORMS
+      : ALL_PLATFORMS.filter((p) => p.type === filter);
 
-  const typeLabel = { free: isAr ? 'مجاني' : 'Free', paid: isAr ? 'مدفوع' : 'Paid', freemium: 'Freemium' };
+  const typeLabel = {
+    free: isAr ? 'مجاني' : 'Free',
+    paid: isAr ? 'مدفوع' : 'Paid',
+    freemium: 'Freemium',
+  };
   const typeColor = { free: '#16a34a', paid: '#2563eb', freemium: '#d97706' };
-
-  const tabItems = [
-    { key: 'all',      labelEn: 'All',      labelAr: 'الكل' },
-    { key: 'free',     labelEn: 'Free',     labelAr: 'مجاني' },
-    { key: 'freemium', labelEn: 'Freemium', labelAr: 'Freemium' },
-    { key: 'paid',     labelEn: 'Paid',     labelAr: 'مدفوع' },
-  ];
 
   function platformCard(p, highlight = false) {
     const showPromo = p.promoCode && isPremium;
@@ -55,7 +49,9 @@ window.renderPlatformsView = function renderPlatformsView() {
               ${p.promoCode ? `<span class="platform-badge" style="background:#16a34a18;color:#16a34a;border-color:#16a34a33;font-size:.68rem;">PROMO</span>` : ''}
             </div>
             <p class="text-muted" style="font-size:.83rem;line-height:1.6;margin-top:.3rem;">${isAr ? p.descAr : p.descEn}</p>
-            ${showPromo ? `
+            ${
+              showPromo
+                ? `
               <div style="display:flex;align-items:center;gap:.4rem;margin-top:.5rem;">
                 <span style="font-size:.75rem;color:var(--text-muted);">${isAr ? 'كود خصم:' : 'Promo code:'}</span>
                 <code class="promo-code-chip" onclick="copyPromo('${p.promoCode}',event)">
@@ -63,7 +59,9 @@ window.renderPlatformsView = function renderPlatformsView() {
                   ${p.promoCode}
                 </code>
               </div>
-            ` : blurPromo ? `
+            `
+                : blurPromo
+                  ? `
               <div style="display:flex;align-items:center;gap:.4rem;margin-top:.5rem;">
                 <span style="font-size:.75rem;color:var(--text-muted);">${isAr ? 'كود خصم:' : 'Promo code:'}</span>
                 <span style="font-size:.78rem;filter:blur(4px);background:var(--surface-3);padding:2px 10px;border-radius:6px;user-select:none;color:var(--text-muted);cursor:pointer;"
@@ -75,7 +73,9 @@ window.renderPlatformsView = function renderPlatformsView() {
                   ${isAr ? 'للمدفوع' : 'Premium'}
                 </span>
               </div>
-            ` : ''}
+            `
+                  : ''
+            }
           </div>
           <div style="flex-shrink:0;">
             <span class="btn btn-secondary" style="font-size:.78rem;padding:.35rem .8rem;pointer-events:none;">
@@ -97,12 +97,16 @@ window.renderPlatformsView = function renderPlatformsView() {
           <div class="eyebrow">${isAr ? 'منصات التعلم' : 'Learning Platforms'}</div>
           <h2 class="section-title" style="margin-top:.4rem;">${isAr ? 'اختار منصتك وابدأ' : 'Pick Your Platform & Start'}</h2>
           <p class="text-muted" style="font-size:.88rem;margin-top:.4rem;max-width:560px;line-height:1.7;">
-            ${isAr
-              ? 'منصات مجانية ومدفوعة مختارة بعناية بناءً على تخصصك. أعضاء الباقة المدفوعة يحصلون على كود خصم حصري.'
-              : 'Carefully curated free and paid platforms based on your sub-track. Premium members get exclusive promo codes.'}
+            ${
+              isAr
+                ? 'منصات مجانية ومدفوعة مختارة بعناية بناءً على تخصصك. أعضاء الباقة المدفوعة يحصلون على كود خصم حصري.'
+                : 'Carefully curated free and paid platforms based on your sub-track. Premium members get exclusive promo codes.'
+            }
           </p>
         </div>
-        ${!isPremium ? `
+        ${
+          !isPremium
+            ? `
           <div class="surface-soft section-pad" style="border:1px solid rgba(234,179,8,.2);max-width:240px;">
             <div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.3rem;">
               <i data-lucide="lock" style="width:.9rem;height:.9rem;color:#eab308;"></i>
@@ -113,10 +117,14 @@ window.renderPlatformsView = function renderPlatformsView() {
               ${isAr ? 'الباقات' : 'View Pricing'}
             </button>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
 
-      ${topPlatforms.length ? `
+      ${
+        topPlatforms.length
+          ? `
         <div class="surface-panel section-pad" data-aos="fade-up">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;">
             <div>
@@ -127,14 +135,15 @@ window.renderPlatformsView = function renderPlatformsView() {
             </div>
             <span class="mentor-tag" style="font-size:.8rem;display:inline-flex;align-items:center;gap:.3rem;">
               <i data-lucide="layers-3" style="width:.85rem;height:.85rem;"></i>
-              ${isAr ? (SUBTRACK_PLATFORMS[userSubtrack]?.nameAr || '') : (SUBTRACK_PLATFORMS[userSubtrack]?.nameEn || '')}
+              ${isAr ? SUBTRACK_PLATFORMS[userSubtrack]?.nameAr || '' : SUBTRACK_PLATFORMS[userSubtrack]?.nameEn || ''}
             </span>
           </div>
           <div style="display:grid;gap:.75rem;">
-            ${topPlatforms.map(p => platformCard(p, true)).join('')}
+            ${topPlatforms.map((p) => platformCard(p, true)).join('')}
           </div>
         </div>
-      ` : `
+      `
+          : `
         <div class="surface-panel section-pad" style="text-align:center;" data-aos="fade-up">
           <div style="margin-bottom:.75rem;">
             <i data-lucide="compass" style="width:2rem;height:2rem;color:var(--accent);opacity:.6;"></i>
@@ -143,37 +152,44 @@ window.renderPlatformsView = function renderPlatformsView() {
             ${isAr ? 'خلِ نجيبلك توصيات شخصية' : 'Get personalised recommendations'}
           </div>
           <p class="text-muted" style="font-size:.88rem;line-height:1.7;max-width:400px;margin:0 auto .9rem;">
-            ${isAr
-              ? 'بعد ما تكمل اختبار التخصص هتلاقي 4 منصات هي الأنسب لك بالضبط.'
-              : 'Complete the sub-track test to unlock your personalised top-4 platform picks.'}
+            ${
+              isAr
+                ? 'بعد ما تكمل اختبار التخصص هتلاقي 4 منصات هي الأنسب لك بالضبط.'
+                : 'Complete the sub-track test to unlock your personalised top-4 platform picks.'
+            }
           </p>
           <button class="btn btn-primary" onclick="navigateTo('subtrack-test')">
             <i data-lucide="clipboard-check" style="width:.9rem;height:.9rem;"></i>
             ${isAr ? 'ابدأ الاختبار' : 'Take Sub-track Test'}
           </button>
         </div>
-      `}
+      `
+      }
 
-      <!-- Browse All with full-width tabs + URL hash -->
+      <!-- Browse All -->
       <div class="surface-panel section-pad" data-aos="fade-up">
-        <div style="margin-bottom:1rem;">
-          <div class="eyebrow">${isAr ? 'جميع المنصات' : 'Browse All Platforms'}</div>
-          <div style="font-size:.83rem;color:var(--text-muted);margin-top:.2rem;">${filtered.length} ${isAr ? 'منصة' : 'platforms'}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;">
+          <div>
+            <div class="eyebrow">${isAr ? 'جميع المنصات' : 'Browse All Platforms'}</div>
+            <div style="font-size:.83rem;color:var(--text-muted);margin-top:.2rem;">${filtered.length} ${isAr ? 'منصة' : 'platforms'}</div>
+          </div>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+            ${['all', 'free', 'freemium', 'paid']
+              .map(
+                (f) => `
+              <button
+                onclick="setPlatformFilter('${f}')"
+                class="btn ${filter === f ? 'btn-primary' : 'btn-secondary'}"
+                style="font-size:.78rem;padding:.3rem .8rem;">
+                ${f === 'all' ? (isAr ? 'الكل' : 'All') : f === 'free' ? (isAr ? 'مجاني' : 'Free') : f === 'freemium' ? 'Freemium' : isAr ? 'مدفوع' : 'Paid'}
+              </button>
+            `,
+              )
+              .join('')}
+          </div>
         </div>
-        <!-- Full-width tab bar -->
-        <div class="tab-bar" role="tablist">
-          ${tabItems.map(tab => `
-            <button
-              role="tab"
-              aria-selected="${filter === tab.key}"
-              class="tab-btn ${filter === tab.key ? 'tab-btn--active' : ''}"
-              onclick="setPlatformFilter('${tab.key}')">
-              ${isAr ? tab.labelAr : tab.labelEn}
-            </button>
-          `).join('')}
-        </div>
-        <div style="display:grid;gap:.75rem;margin-top:1rem;">
-          ${filtered.map(p => platformCard(p, false)).join('')}
+        <div style="display:grid;gap:.75rem;">
+          ${filtered.map((p) => platformCard(p, false)).join('')}
         </div>
       </div>
 
@@ -183,8 +199,6 @@ window.renderPlatformsView = function renderPlatformsView() {
 
 window.setPlatformFilter = function setPlatformFilter(f) {
   window._platformFilter = f;
-  // Update URL hash as indicator without page reload
-  history.replaceState(null, '', '#platforms-' + f);
   renderApp();
 };
 
@@ -192,33 +206,50 @@ window.copyPromo = function copyPromo(code, e) {
   e.preventDefault();
   e.stopPropagation();
   navigator.clipboard?.writeText(code).then(() => {
-    showToast((state.language === 'ar' ? 'تم نسخ الكود: ' : 'Copied: ') + code, '#16a34a');
+    showToast(
+      (state.language === 'ar' ? 'تم نسخ الكود: ' : 'Copied: ') + code,
+      '#16a34a',
+    );
   });
 };
 
 window.getUserSubtrack = function getUserSubtrack() {
   if (!state.subtestComplete || !state.subtestAnswers) return null;
   const fieldMap = {
-    power:'electrical', embedded:'electrical', communications:'electrical',
-    frontend:'software', backend:'software', data:'software', cyber:'software',
-    'mechanical-design':'mechanical','mechanical-mfg':'mechanical','mechanical-thermal':'mechanical',
-    'civil-structural':'civil','civil-water':'civil','civil-geo':'civil',
+    power: 'electrical',
+    embedded: 'electrical',
+    communications: 'electrical',
+    frontend: 'software',
+    backend: 'software',
+    data: 'software',
+    cyber: 'software',
+    'mechanical-design': 'mechanical',
+    'mechanical-mfg': 'mechanical',
+    'mechanical-thermal': 'mechanical',
+    'civil-structural': 'civil',
+    'civil-water': 'civil',
+    'civil-geo': 'civil',
   };
   const topTrack = state.rankedTracks?.[0]?.id || '';
   const fieldKey = fieldMap[topTrack] || 'software';
-  const questions = (typeof SUBTRACK_QUESTIONS !== 'undefined' && SUBTRACK_QUESTIONS[fieldKey])
-    ? SUBTRACK_QUESTIONS[fieldKey]
-    : (typeof SUBTRACK_QUESTIONS !== 'undefined' ? SUBTRACK_QUESTIONS.software : []);
+  const questions =
+    typeof SUBTRACK_QUESTIONS !== 'undefined' && SUBTRACK_QUESTIONS[fieldKey]
+      ? SUBTRACK_QUESTIONS[fieldKey]
+      : typeof SUBTRACK_QUESTIONS !== 'undefined'
+        ? SUBTRACK_QUESTIONS.software
+        : [];
   if (!questions.length) return null;
   const scores = {};
-  questions.forEach(q => {
+  questions.forEach((q) => {
     const sel = state.subtestAnswers[q.id];
     if (!sel) return;
     const optIdx = parseInt(sel.split('_').pop(), 10);
     const opt = q.options[optIdx];
     if (!opt) return;
-    Object.entries(opt.scores).forEach(([track, pts]) => { scores[track] = (scores[track] || 0) + pts; });
+    Object.entries(opt.scores).forEach(([track, pts]) => {
+      scores[track] = (scores[track] || 0) + pts;
+    });
   });
-  const ranked = Object.entries(scores).sort((a,b) => b[1]-a[1]);
+  const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   return ranked[0]?.[0] || null;
 };
