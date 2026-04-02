@@ -1,0 +1,74 @@
+/* ============================================================
+   Quick Links bar  —  contextual navigation inside views
+   ============================================================ */
+
+.ql-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: .85rem 1rem;
+  border-radius: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  margin-top: 1.5rem;
+}
+
+.ql-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  flex: 1;
+}
+
+.ql-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .4rem .85rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background .15s,
+    border-color .15s,
+    color .15s,
+    transform .15s;
+  white-space: nowrap;
+}
+.ql-item:hover:not(.ql-item--active):not(.ql-item--locked) {
+  background: var(--surface-3);
+  border-color: var(--accent);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+.ql-item--active {
+  background: var(--accent-soft);
+  border-color: rgba(59,130,246,.3);
+  color: var(--accent);
+  font-weight: 700;
+  cursor: default;
+}
+.ql-item--locked {
+  opacity: .55;
+  cursor: pointer;
+}
+.ql-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .ql-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ql-items {
+    width: 100%;
+  }
+}

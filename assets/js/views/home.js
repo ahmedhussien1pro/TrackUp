@@ -45,8 +45,6 @@ window.renderHomeView = function renderHomeView() {
     </div>
   `).join('');
 
-  // Partners — 8 unique items, NOT duplicated in HTML
-  // JS will handle the seamless loop by cloning the track
   const partnersList = [
     { id:'udemy',            label:'Udemy',            color:'#a435f0' },
     { id:'coursera',         label:'Coursera',         color:'#0056d2' },
@@ -71,6 +69,17 @@ window.renderHomeView = function renderHomeView() {
       </span>
     </div>
   `;
+
+  /* Quick links for Home — all key pages */
+  const homeQuickLinks = [
+    { id:'profile',  icon:'user-round',     labelEn:'Profile',     labelAr:'ملفي' },
+    { id:'test',     icon:'clipboard-list', labelEn:'Assessment',  labelAr:'الاختبار' },
+    { id:'results',  icon:'bar-chart-3',    labelEn:'Results',     labelAr:'النتائج' },
+    { id:'roadmap',  icon:'route',          labelEn:'Roadmap',     labelAr:'خارطة التطور' },
+    { id:'progress', icon:'target',         labelEn:'Progress',    labelAr:'تقدمي' },
+    { id:'mentors',  icon:'users-round',    labelEn:'Mentors',     labelAr:'المرشدون' },
+    { id:'pricing',  icon:'credit-card',    labelEn:'Pricing',     labelAr:'الأسعار' },
+  ];
 
   return `
     <!-- HERO -->
@@ -142,14 +151,10 @@ window.renderHomeView = function renderHomeView() {
           padding-bottom:.65rem;border-bottom:1px solid var(--border-strong);">
           <span></span>
           <div style="display:flex;flex-direction:column;align-items:center;width:3.5rem;">
-            <span style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);">
-              ${isAr ? 'مجاني' : 'Free'}
-            </span>
+            <span style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);">${isAr ? 'مجاني' : 'Free'}</span>
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;width:3.5rem;">
-            <span style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);">
-              ${isAr ? 'مدفوع' : 'Premium'}
-            </span>
+            <span style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);">${isAr ? 'مدفوع' : 'Premium'}</span>
           </div>
         </div>
         ${featureRows}
@@ -166,7 +171,7 @@ window.renderHomeView = function renderHomeView() {
       <div class="testimonials-grid">
         ${testimonials.map(item => `
           <div class="testimonial-card surface-panel section-pad">
-            <div class="testimonial-stars">${'&#9733;'.repeat(item.stars)}</div>
+            <div class="testimonial-stars">${'★'.repeat(item.stars)}</div>
             <p class="testimonial-text">&ldquo;${item.text}&rdquo;</p>
             <div class="testimonial-author">
               <div class="testimonial-avatar">${item.name.charAt(0)}</div>
@@ -179,6 +184,8 @@ window.renderHomeView = function renderHomeView() {
         `).join('')}
       </div>
     </section>
+
+    ${renderQuickLinks(homeQuickLinks)}
   `;
 };
 
@@ -186,57 +193,28 @@ window.renderHomeView = function renderHomeView() {
 window.initPartnersScroll = function initPartnersScroll() {
   const track = document.getElementById('partnersTrack');
   if (!track) return;
-
-  // Cancel any previous animation loop
   if (window._partnersRAF) cancelAnimationFrame(window._partnersRAF);
-
-  // Clone all chips and append for seamless loop
   const originals = Array.from(track.children);
-  // Remove old clones first (in case re-init)
   track.querySelectorAll('[data-clone]').forEach(el => el.remove());
   originals.forEach(chip => {
     const clone = chip.cloneNode(true);
     clone.setAttribute('data-clone', '1');
     track.appendChild(clone);
   });
-
-  const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.lang === 'ar';
-  const speed = 0.5; // px per frame
+  const speed = 0.5;
   let pos = 0;
   let paused = false;
-
   track.addEventListener('mouseenter', () => { paused = true; });
   track.addEventListener('mouseleave', () => { paused = false; });
-
-  function getHalfWidth() {
-    // Half = width of original set (before clones)
-    return track.scrollWidth / 2;
-  }
-
+  function getHalfWidth() { return track.scrollWidth / 2; }
   function loop() {
     if (!paused) {
-      if (isRTL) {
-        // RTL: move right → left visually = positive translateX increasing
-        // But we offset by full half to start from middle
-        pos -= speed;
-        const half = getHalfWidth();
-        if (Math.abs(pos) >= half) pos = 0;
-        track.style.transform = `translateX(${pos}px)`;
-      } else {
-        // LTR: move left
-        pos -= speed;
-        const half = getHalfWidth();
-        if (Math.abs(pos) >= half) pos = 0;
-        track.style.transform = `translateX(${pos}px)`;
-      }
+      pos -= speed;
+      const half = getHalfWidth();
+      if (Math.abs(pos) >= half) pos = 0;
+      track.style.transform = `translateX(${pos}px)`;
     }
     window._partnersRAF = requestAnimationFrame(loop);
   }
-
-  // In RTL, start from negative half so items are visible immediately
-  if (isRTL) {
-    pos = -getHalfWidth();
-  }
-
   loop();
 };

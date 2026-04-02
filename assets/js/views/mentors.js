@@ -1,19 +1,18 @@
 window.renderMentorsView = function renderMentorsView() {
   const isAr = state.language === 'ar';
   const filterField = state.mentorFilter || 'all';
+  const isPremium = state.premiumUnlocked;
 
   const fields = [
-    { key: 'all', labelEn: 'All Mentors', labelAr: 'كل المرشدين' },
-    { key: 'electrical', labelEn: 'Electrical', labelAr: 'كهربائية' },
-    { key: 'software', labelEn: 'Software', labelAr: 'برمجيات' },
-    { key: 'mechanical', labelEn: 'Mechanical', labelAr: 'ميكانيكا' },
-    { key: 'civil', labelEn: 'Civil', labelAr: 'مدنية' },
-    { key: 'general', labelEn: 'Career Guidance', labelAr: 'إرشاد مهني' }
+    { key: 'all',       labelEn: 'All Mentors',     labelAr: 'كل المرشدين' },
+    { key: 'electrical',labelEn: 'Electrical',      labelAr: 'كهربائية' },
+    { key: 'software',  labelEn: 'Software',        labelAr: 'برمجيات' },
+    { key: 'mechanical',labelEn: 'Mechanical',      labelAr: 'ميكانيكا' },
+    { key: 'civil',     labelEn: 'Civil',           labelAr: 'مدنية' },
+    { key: 'general',   labelEn: 'Career Guidance', labelAr: 'إرشاد مهني' }
   ];
 
-  const filtered = filterField === 'all'
-    ? MENTORS
-    : MENTORS.filter(m => m.fieldKey === filterField);
+  const filtered = filterField === 'all' ? MENTORS : MENTORS.filter(m => m.fieldKey === filterField);
 
   function stars(rating) {
     const full = Math.floor(rating);
@@ -45,15 +44,10 @@ window.renderMentorsView = function renderMentorsView() {
         </div>
         ${availBadge(m)}
       </div>
-
       <p style="font-size:.86rem;color:var(--text-muted);line-height:1.75;margin:.85rem 0;">${isAr ? m.bioAr : m.bioEn}</p>
-
       <div class="mentor-tags">
-        ${(isAr ? m.specializationsAr : m.specializations).map(s =>
-          `<span class="mentor-tag">${s}</span>`
-        ).join('')}
+        ${(isAr ? m.specializationsAr : m.specializations).map(s => `<span class="mentor-tag">${s}</span>`).join('')}
       </div>
-
       <div class="mentor-card-footer">
         <div class="mentor-stats">
           <div class="mentor-stat">
@@ -72,15 +66,20 @@ window.renderMentorsView = function renderMentorsView() {
             <span class="text-muted" style="font-size:.75rem;">${isAr ? '/ جلسة' : '/ session'}</span>
           </div>
         </div>
-        <button
-          class="btn btn-primary"
-          style="min-width:130px;"
-          onclick="bookMentor('${m.id}')">
+        <button class="btn btn-primary" style="min-width:130px;" onclick="bookMentor('${m.id}')">
           ${isAr ? 'احجز جلسة' : 'Book Session'}
         </button>
       </div>
     </div>
   `).join('');
+
+  const quickLinks = [
+    { id:'session-booking', icon:'calendar-days', labelEn:'Book a Session',   labelAr:'احجز جلسة',     lock: !isPremium },
+    { id:'roadmap',         icon:'route',         labelEn:'My Roadmap',       labelAr:'خارطتي' },
+    { id:'progress',        icon:'target',        labelEn:'My Progress',      labelAr:'تقدمي' },
+    { id:'pricing',         icon:'credit-card',   labelEn:'Pricing',          labelAr:'الأسعار' },
+    { id:'chat',            icon:'message-square',labelEn:'Mentor Chat',      labelAr:'شات المرشد',    lock: !isPremium },
+  ];
 
   return `
     <div class="page-header" data-aos="fade-up">
@@ -90,7 +89,6 @@ window.renderMentorsView = function renderMentorsView() {
       </div>
     </div>
 
-    <!-- Filter Pills -->
     <div class="mentor-filters" data-aos="fade-up">
       ${fields.map(f => `
         <button
@@ -101,7 +99,6 @@ window.renderMentorsView = function renderMentorsView() {
       `).join('')}
     </div>
 
-    <!-- Stats Bar -->
     <div class="mentor-stats-bar surface-panel" data-aos="fade-up">
       <div class="mentor-kpi">
         <span class="mentor-kpi-num">5</span>
@@ -121,17 +118,17 @@ window.renderMentorsView = function renderMentorsView() {
       </div>
     </div>
 
-    <!-- Cards Grid -->
     <div class="mentors-grid">
       ${filtered.length ? cards : `<div class="surface-panel section-pad" style="text-align:center;color:var(--text-muted);">No mentors found for this filter.</div>`}
     </div>
 
-    <!-- Bottom CTA -->
     <div class="surface-panel section-pad" style="text-align:center;" data-aos="fade-up">
       <div style="font-weight:700;font-size:1.05rem;margin-bottom:.5rem;">${isAr ? 'مش لاقي المرشد المناسب؟' : "Can't find the right mentor?"}</div>
       <p class="text-muted" style="margin-bottom:1rem;font-size:.9rem;">${isAr ? 'ابدأ التقييم وهنرشحلك المرشد الأنسب بناءً على تخصصك.' : 'Complete the assessment and we will match you with the best mentor for your field.'}</p>
       <button class="btn btn-primary" onclick="guardedNavigate('profile')">${t('startAssessment')}</button>
     </div>
+
+    ${renderQuickLinks(quickLinks)}
   `;
 };
 
