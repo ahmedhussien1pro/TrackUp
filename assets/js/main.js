@@ -102,6 +102,9 @@ window.renderMainContent = function renderMainContent() {
     'session-booking': renderSessionBookingView,
     mentors:           renderMentorsView,
     'subtrack-test':   renderSubtrackTestView,
+    about:             renderAboutView,
+    contact:           renderContactView,
+    auth:              renderAuthView,
   };
   return (views[state.currentView] || renderHomeView)();
 };
@@ -169,7 +172,6 @@ window.renderApp = function renderApp() {
   bindForms();
   if (window.lucide) lucide.createIcons();
   if (window.AOS) { AOS.init({ duration: 550, once: true, offset: 14, easing: 'ease-out-cubic' }); AOS.refreshHard(); }
-  // Partners scroll — init after DOM is ready
   if (state.currentView === 'home') {
     requestAnimationFrame(() => {
       if (window.initPartnersScroll) window.initPartnersScroll();
@@ -177,4 +179,6 @@ window.renderApp = function renderApp() {
   }
 };
 state.direction = state.language === 'ar' ? 'rtl' : 'ltr';
+// Init auth state (session only — not persisted)
+if (!state.auth) state.auth = null;
 renderApp();

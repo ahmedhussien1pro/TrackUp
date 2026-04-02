@@ -1,0 +1,211 @@
+// ============================================================
+// auth.js — Login / Register / Guest gate
+// Guest flow: user can skip login and continue as guest.
+// Auth state stored in state.auth (never persisted to localStorage).
+// ============================================================
+
+window.renderAuthView = function renderAuthView() {
+  const isAr   = state.language === 'ar';
+  const mode   = state._authMode || 'login'; // 'login' | 'register'
+
+  return `
+    <div style="display:flex;align-items:center;justify-content:center;min-height:60vh;padding:2rem 0;">
+      <div style="width:100%;max-width:420px;" data-aos="fade-up">
+
+        <!-- Brand -->
+        <div style="text-align:center;margin-bottom:1.75rem;">
+          <div class="brand-block" style="justify-content:center;pointer-events:none;margin-bottom:.5rem;">
+            <span class="brand-mark">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)">
+                <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
+              </svg>
+            </span>
+            <span class="brand-name" style="font-size:1.2rem;">TrackUp</span>
+          </div>
+          <p class="text-muted" style="font-size:.85rem;">
+            ${isAr ? 'ابدأ مسارك الهندسي الصح' : 'Start your engineering journey'}
+          </p>
+        </div>
+
+        <!-- Card -->
+        <div class="surface-panel section-pad">
+
+          <!-- Tab toggle -->
+          <div class="tab-bar" style="margin-bottom:1.25rem;">
+            <button class="tab-btn ${mode === 'login'    ? 'tab-btn--active' : ''}" onclick="setAuthMode('login')">
+              ${isAr ? 'تسجيل دخول' : 'Login'}
+            </button>
+            <button class="tab-btn ${mode === 'register' ? 'tab-btn--active' : ''}" onclick="setAuthMode('register')">
+              ${isAr ? 'إنشاء حساب' : 'Register'}
+            </button>
+          </div>
+
+          ${mode === 'login' ? renderLoginForm(isAr) : renderRegisterForm(isAr)}
+
+          <!-- Divider -->
+          <div style="display:flex;align-items:center;gap:.75rem;margin:1.1rem 0;">
+            <div style="flex:1;height:1px;background:var(--border);"></div>
+            <span style="font-size:.75rem;color:var(--text-faint);">${isAr ? 'أو' : 'or'}</span>
+            <div style="flex:1;height:1px;background:var(--border);"></div>
+          </div>
+
+          <!-- Guest CTA -->
+          <button class="btn btn-secondary" style="width:100%;" onclick="continueAsGuest()">
+            <i data-lucide="user" style="width:.9rem;height:.9rem;"></i>
+            ${isAr ? 'متابعة كـ ضيف' : 'Continue as Guest'}
+          </button>
+          <p class="text-muted" style="font-size:.74rem;text-align:center;margin-top:.5rem;line-height:1.6;">
+            ${isAr
+              ? 'الضيوف يمكنهم استخدام التقييم والنتائج. يتم حفظ بياناتك محلياً فقط.'
+              : 'Guests can use the assessment & results. Data is saved locally only.'}
+          </p>
+        </div>
+
+      </div>
+    </div>
+  `;
+};
+
+function renderLoginForm(isAr) {
+  return `
+    <form onsubmit="submitLogin(event)">
+      <div class="form-group" style="margin-bottom:.75rem;">
+        <label class="form-label">${isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+        <input class="form-input" id="authEmail" type="email" placeholder="name@mail.com" autocomplete="email" required />
+      </div>
+      <div class="form-group" style="margin-bottom:.75rem;">
+        <label class="form-label">${isAr ? 'كلمة المرور' : 'Password'}</label>
+        <div style="position:relative;">
+          <input class="form-input" id="authPassword" type="password"
+            placeholder="${isAr ? '••••••••' : '••••••••'}" autocomplete="current-password" required
+            style="padding-${state.direction === 'rtl' ? 'left' : 'right'}:2.5rem;" />
+          <button type="button" onclick="toggleAuthPwd('authPassword',this)"
+            style="position:absolute;top:50%;${state.direction === 'rtl' ? 'left' : 'right'}:.7rem;transform:translateY(-50%);
+              background:none;border:none;cursor:pointer;color:var(--text-faint);padding:0;">
+            <i data-lucide="eye" style="width:.95rem;height:.95rem;"></i>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:.25rem;">
+        <i data-lucide="log-in" style="width:.9rem;height:.9rem;"></i>
+        ${isAr ? 'دخول' : 'Login'}
+      </button>
+    </form>
+  `;
+}
+
+function renderRegisterForm(isAr) {
+  return `
+    <form onsubmit="submitRegister(event)">
+      <div class="form-group" style="margin-bottom:.75rem;">
+        <label class="form-label">${isAr ? 'الاسم بالكامل' : 'Full Name'}</label>
+        <input class="form-input" id="regName" type="text"
+          placeholder="${isAr ? 'مثال: أحمد علي' : 'e.g. Ahmed Ali'}" autocomplete="name" required />
+      </div>
+      <div class="form-group" style="margin-bottom:.75rem;">
+        <label class="form-label">${isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+        <input class="form-input" id="regEmail" type="email" placeholder="name@mail.com" autocomplete="email" required />
+      </div>
+      <div class="form-group" style="margin-bottom:.75rem;">
+        <label class="form-label">${isAr ? 'كلمة المرور' : 'Password'}</label>
+        <div style="position:relative;">
+          <input class="form-input" id="regPassword" type="password"
+            placeholder="${isAr ? '8 أحرف على الأقل' : 'At least 8 characters'}" autocomplete="new-password" required
+            style="padding-${state.direction === 'rtl' ? 'left' : 'right'}:2.5rem;" />
+          <button type="button" onclick="toggleAuthPwd('regPassword',this)"
+            style="position:absolute;top:50%;${state.direction === 'rtl' ? 'left' : 'right'}:.7rem;transform:translateY(-50%);
+              background:none;border:none;cursor:pointer;color:var(--text-faint);padding:0;">
+            <i data-lucide="eye" style="width:.95rem;height:.95rem;"></i>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:.25rem;">
+        <i data-lucide="user-plus" style="width:.9rem;height:.9rem;"></i>
+        ${isAr ? 'إنشاء الحساب' : 'Create Account'}
+      </button>
+    </form>
+  `;
+}
+
+// ── Auth actions ──
+window.setAuthMode = function setAuthMode(mode) {
+  state._authMode = mode;
+  renderApp();
+};
+
+window.toggleAuthPwd = function toggleAuthPwd(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  btn.innerHTML = `<i data-lucide="${isHidden ? 'eye-off' : 'eye'}" style="width:.95rem;height:.95rem;"></i>`;
+  if (window.lucide) lucide.createIcons();
+};
+
+window.submitLogin = function submitLogin(e) {
+  e.preventDefault();
+  const email    = document.getElementById('authEmail')?.value?.trim();
+  const password = document.getElementById('authPassword')?.value;
+  if (!email || !password) return;
+
+  // Simulate auth — replace with real API call when backend is ready
+  const stored = StorageAPI.get('trackup_user_' + email, null);
+  if (!stored) {
+    showToast(state.language === 'ar' ? 'البريد غير مسجل.' : 'Email not registered.', '#dc2626');
+    return;
+  }
+  if (stored.password !== btoa(password)) {
+    showToast(state.language === 'ar' ? 'كلمة المرور غلط.' : 'Wrong password.', '#dc2626');
+    return;
+  }
+  // Restore user data
+  state.auth = { email, name: stored.name, isGuest: false };
+  if (stored.profile) state.profile = stored.profile;
+  showToast((state.language === 'ar' ? 'أهلاً ' : 'Welcome ') + stored.name, '#16a34a');
+  navigateTo('home');
+};
+
+window.submitRegister = function submitRegister(e) {
+  e.preventDefault();
+  const name     = document.getElementById('regName')?.value?.trim();
+  const email    = document.getElementById('regEmail')?.value?.trim();
+  const password = document.getElementById('regPassword')?.value;
+  if (!name || !email || !password) return;
+  if (password.length < 8) {
+    showToast(state.language === 'ar' ? 'كلمة المرور أقل من 8 أحرف.' : 'Password must be 8+ chars.', '#dc2626');
+    return;
+  }
+  const existing = StorageAPI.get('trackup_user_' + email, null);
+  if (existing) {
+    showToast(state.language === 'ar' ? 'البريد ده مسجل قبل كده.' : 'Email already registered.', '#f59e0b');
+    return;
+  }
+  // Save new user
+  StorageAPI.set('trackup_user_' + email, { name, password: btoa(password), profile: state.profile });
+  state.auth = { email, name, isGuest: false };
+  state.profile = { ...state.profile, fullName: name, email };
+  persistState();
+  showToast((state.language === 'ar' ? 'تم إنشاء حسابك! أهلاً ' : 'Account created! Welcome ') + name, '#16a34a');
+  navigateTo('profile');
+};
+
+window.continueAsGuest = function continueAsGuest() {
+  state.auth = { isGuest: true, name: state.language === 'ar' ? 'ضيف' : 'Guest' };
+  showToast(state.language === 'ar' ? 'متابعة كـ ضيف — بياناتك محلية فقط.' : 'Continuing as guest — data is local only.', '#2563eb');
+  navigateTo('home');
+};
+
+window.logOut = function logOut() {
+  state.auth = null;
+  state._authMode = 'login';
+  showToast(state.language === 'ar' ? 'تم تسجيل الخروج.' : 'Logged out.', '#64748b');
+  navigateTo('auth');
+};
+
+window.isLoggedIn = function isLoggedIn() {
+  return state.auth && !state.auth.isGuest;
+};
+
+window.isGuest = function isGuest() {
+  return state.auth && state.auth.isGuest;
+};

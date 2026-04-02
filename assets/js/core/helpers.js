@@ -35,6 +35,8 @@ window.getOrderedNav = function getOrderedNav() {
     { id: 'progress',         label: t('progress'),   icon: 'target' },
     { id: 'mentors',          label: t('mentors'),    icon: 'users-round' },
     { id: 'session-booking',  label: t('sessions'),   icon: 'calendar-days' },
+    { id: 'about',            label: t('about'),      icon: 'info' },
+    { id: 'contact',          label: t('contact'),    icon: 'mail' },
   ];
 };
 
@@ -182,6 +184,7 @@ window.resetDemo = function resetDemo() {
       state.currentQuestionIndex = 0;
       state.startedCourseIds = [];
       state.roadmapProgress = {};
+      state.auth = null;
       persistState();
       renderApp();
     }
