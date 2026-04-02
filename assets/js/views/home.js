@@ -5,6 +5,17 @@ window.renderHomeView = function renderHomeView() {
     { name: t('testimonial2Name'), role: t('testimonial2Role'), text: t('testimonial2Text'), stars: 5 },
     { name: t('testimonial3Name'), role: t('testimonial3Role'), text: t('testimonial3Text'), stars: 5 }
   ];
+
+  /* —— 8 noise wave paths at different vertical offsets —— */
+  const noiseOffsets = [80, 100, 115, 130, 165, 178, 192, 210];
+  const noiseWaves = noiseOffsets.map((y, i) => {
+    const a = 18 + (i % 3) * 8;   /* amplitude */
+    const half = 150;
+    return `<path class="wave-noise wave-noise-${i + 1}"
+      d="M0,${y} C60,${y - a} 120,${y + a} 180,${y} S260,${y - a} 300,${y}"
+    />`;
+  }).join('');
+
   return `
     <!-- HERO -->
     <section class="home-hero" data-aos="fade-up">
@@ -19,44 +30,35 @@ window.renderHomeView = function renderHomeView() {
         </div>
       </div>
 
-      <!-- 3D Concept: Confusion → Clarity -->
+      <!-- Signal Detection Visual -->
       <div class="home-hero-visual" aria-hidden="true">
-        <div class="clarity-scene">
+        <div class="signal-scene">
+          <!-- oscilloscope grid -->
+          <div class="signal-grid"></div>
+          <!-- scan sweep line -->
+          <div class="signal-scan"></div>
 
-          <!-- ripple rings expanding from center -->
-          <div class="clarity-ripple"></div>
-          <div class="clarity-ripple"></div>
-          <div class="clarity-ripple"></div>
+          <svg class="signal-svg" viewBox="0 0 300 300" preserveAspectRatio="none">
+            <!-- noise waves -->
+            ${noiseWaves}
 
-          <!-- scattered question marks = confusion state -->
-          <div class="chaos-node">?</div>
-          <div class="chaos-node">?</div>
-          <div class="chaos-node">?</div>
-          <div class="chaos-node">?</div>
-          <div class="chaos-node">?</div>
-          <div class="chaos-node">?</div>
-          <div class="chaos-node">?</div>
-          <div class="chaos-node">?</div>
+            <!-- the ONE clear signal emerging -->
+            <path class="wave-signal"
+              d="M0,150 C60,90 120,210 180,150 S260,90 300,150"
+            />
 
-          <!-- converging path lines pointing inward -->
-          <div class="clarity-paths">
-            <div class="path-line"></div>
-            <div class="path-line"></div>
-            <div class="path-line"></div>
-            <div class="path-line"></div>
-            <div class="path-line"></div>
-            <div class="path-line"></div>
-          </div>
+            <!-- path line that forms after signal clears -->
+            <path class="wave-path"
+              d="M0,150 L300,150"
+            />
+          </svg>
 
-          <!-- central clarity core with checkmark -->
-          <div class="clarity-core">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);">
-              <path d="M20 6 9 17l-5-5"/>
-            </svg>
-          </div>
+          <!-- endpoint glow dot -->
+          <div class="signal-endpoint"></div>
 
-          <span class="clarity-label-chaos">confusion</span>
-          <span class="clarity-label-clear">clarity</span>
+          <!-- labels -->
+          <span class="signal-label-noise">noise</span>
+          <span class="signal-label-clear">clear signal</span>
         </div>
       </div>
     </section>

@@ -1,4 +1,4 @@
-/* ── Hero ── */
+/* ── Hero layout ── */
 .home-hero {
   display: grid;
   gap: 2rem;
@@ -24,11 +24,10 @@
   letter-spacing: .04em;
 }
 
-/* ════════════════════════════════════════
-   DECISION CLARITY — 3D Hero Visual
-   Concept: scattered question marks (chaos/confusion)
-   converging into a single glowing checkmark (clarity/decision)
-   ════════════════════════════════════════ */
+/* ═══════════════════════════════════
+   SIGNAL DETECTION — 3D Hero Visual
+   Noise waves → one clear signal → path forward
+═══════════════════════════════════ */
 .home-hero-visual {
   display: flex;
   align-items: center;
@@ -36,138 +35,151 @@
   min-height: 340px;
 }
 
-.clarity-scene {
+.signal-scene {
   position: relative;
   width: 300px;
   height: 300px;
-  perspective: 900px;
-  transform-style: preserve-3d;
+  overflow: hidden;
+  border-radius: 24px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(59,130,246,.06) 0%, transparent 70%);
+  border: 1px solid rgba(59,130,246,.08);
 }
 
-/* ── Central decision core ── */
-.clarity-core {
-  position: absolute;
-  inset: 50%;
-  transform: translate(-50%, -50%);
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 38%, rgba(59,130,246,.22), transparent 70%), var(--surface);
-  border: 1.5px solid rgba(59,130,246,.45);
-  box-shadow: 0 0 40px rgba(59,130,246,.22), 0 0 0 12px rgba(59,130,246,.06), 0 0 0 24px rgba(59,130,246,.03);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  animation: coreGlow 3.5s ease-in-out infinite;
-}
-@keyframes coreGlow {
-  0%,100% { box-shadow: 0 0 30px rgba(59,130,246,.2), 0 0 0 10px rgba(59,130,246,.05); }
-  50%      { box-shadow: 0 0 60px rgba(59,130,246,.4), 0 0 0 20px rgba(59,130,246,.09); }
-}
-
-/* ── Ripple rings from center ── */
-.clarity-ripple {
-  position: absolute;
-  inset: 50%;
-  border-radius: 50%;
-  border: 1px solid rgba(59,130,246,.18);
-  transform: translate(-50%,-50%) scale(1);
-  animation: rippleOut 3.5s ease-out infinite;
-  pointer-events: none;
-}
-.clarity-ripple:nth-child(2) { animation-delay: 1.1s; }
-.clarity-ripple:nth-child(3) { animation-delay: 2.2s; }
-@keyframes rippleOut {
-  0%   { width: 80px; height: 80px; opacity: .6; }
-  100% { width: 280px; height: 280px; opacity: 0; }
-}
-
-/* ── Floating question marks (chaos nodes) ── */
-.chaos-node {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  font-size: 1.1rem;
-  font-weight: 900;
-  color: var(--text-muted);
-  animation: chaosFloat linear infinite;
-  box-shadow: var(--shadow-sm);
-  transition: all .4s ease;
-}
-/* positions — scattered around the scene */
-.chaos-node:nth-child(4)  { top: 6%;  left: 10%; animation-duration: 6s;  animation-delay: 0s;    color: rgba(148,163,184,.5); }
-.chaos-node:nth-child(5)  { top: 4%;  left: 60%; animation-duration: 7.5s; animation-delay: -.8s;  color: rgba(148,163,184,.4); }
-.chaos-node:nth-child(6)  { top: 26%; left: 2%;  animation-duration: 5s;  animation-delay: -1.5s; color: rgba(148,163,184,.45); }
-.chaos-node:nth-child(7)  { top: 26%; right: 2%; animation-duration: 8s;  animation-delay: -.4s;  color: rgba(148,163,184,.4); }
-.chaos-node:nth-child(8)  { bottom: 22%; left: 4%;  animation-duration: 6.5s; animation-delay: -2s; color: rgba(148,163,184,.45); }
-.chaos-node:nth-child(9)  { bottom: 22%; right: 4%; animation-duration: 7s;  animation-delay: -1s;  color: rgba(148,163,184,.4); }
-.chaos-node:nth-child(10) { bottom: 4%; left: 30%; animation-duration: 5.5s; animation-delay: -.6s; color: rgba(148,163,184,.45); }
-.chaos-node:nth-child(11) { bottom: 4%; right: 20%; animation-duration: 9s;  animation-delay: -3s;  color: rgba(148,163,184,.35); }
-
-@keyframes chaosFloat {
-  0%,100% { transform: translateY(0px) rotate(-4deg); }
-  25%      { transform: translateY(-9px) rotate(3deg); }
-  50%      { transform: translateY(-4px) rotate(-2deg); }
-  75%      { transform: translateY(-12px) rotate(5deg); }
-}
-
-/* ── Converging path lines (SVG drawn via CSS) ── */
-.clarity-paths {
+/* ── SVG canvas for all wave lines ── */
+.signal-svg {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ── Noise waves — many chaotic oscillating lines ── */
+.wave-noise {
+  fill: none;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  animation: waveNoise linear infinite;
+}
+.wave-noise-1  { stroke: rgba(148,163,184,.18); animation-duration: 2.1s; animation-delay: 0s; }
+.wave-noise-2  { stroke: rgba(148,163,184,.13); animation-duration: 1.7s; animation-delay: -.3s; }
+.wave-noise-3  { stroke: rgba(148,163,184,.16); animation-duration: 2.4s; animation-delay: -.6s; }
+.wave-noise-4  { stroke: rgba(148,163,184,.10); animation-duration: 1.9s; animation-delay: -.9s; }
+.wave-noise-5  { stroke: rgba(148,163,184,.14); animation-duration: 2.6s; animation-delay: -.4s; }
+.wave-noise-6  { stroke: rgba(148,163,184,.09); animation-duration: 1.5s; animation-delay: -.7s; }
+.wave-noise-7  { stroke: rgba(148,163,184,.12); animation-duration: 2.8s; animation-delay: -.2s; }
+.wave-noise-8  { stroke: rgba(148,163,184,.08); animation-duration: 2.0s; animation-delay: -1.1s; }
+
+/* Each noise wave oscillates vertically around its own Y center */
+@keyframes waveNoise {
+  0%   { d: path("M0,150 C40,120 80,180 120,140 S200,100 240,150 S270,180 300,150"); }
+  25%  { d: path("M0,150 C40,180 80,110 120,160 S200,130 240,120 S270,140 300,150"); }
+  50%  { d: path("M0,150 C40,130 80,170 120,130 S200,170 240,160 S270,120 300,150"); }
+  75%  { d: path("M0,150 C40,160 80,140 120,170 S200,120 240,140 S270,160 300,150"); }
+  100% { d: path("M0,150 C40,120 80,180 120,140 S200,100 240,150 S270,180 300,150"); }
+}
+
+/* ── The ONE clear signal line ── */
+.wave-signal {
+  fill: none;
+  stroke: rgba(59,130,246,.9);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(59,130,246,.55));
+  animation: waveSignal 3.2s ease-in-out infinite;
+}
+@keyframes waveSignal {
+  0%,100% { d: path("M0,150 C60,90 120,210 180,150 S260,90 300,150"); opacity:.9; }
+  40%     { d: path("M0,150 C60,110 120,190 180,150 S260,110 300,150"); opacity:1; }
+  70%     { d: path("M0,150 C60,150 120,150 180,150 S260,150 300,150");  opacity:1; filter: drop-shadow(0 0 14px rgba(59,130,246,.8)); }
+  85%     { d: path("M0,150 C60,150 120,150 180,150 S260,150 300,150");  opacity:1; }
+}
+
+/* ── The PATH that emerges from the signal ── */
+.wave-path {
+  fill: none;
+  stroke: rgba(59,130,246,.7);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  filter: drop-shadow(0 0 4px rgba(59,130,246,.4));
+  animation: pathReveal 3.2s ease-in-out infinite;
+}
+@keyframes pathReveal {
+  0%,65%  { stroke-dashoffset: 300; opacity: 0; }
+  80%,100%{ stroke-dashoffset: 0;   opacity: .8; }
+}
+
+/* ── Endpoint glow dot ── */
+.signal-endpoint {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.18), 0 0 18px rgba(59,130,246,.5);
+  animation: endpointAppear 3.2s ease-in-out infinite;
+}
+@keyframes endpointAppear {
+  0%,70%  { opacity: 0; transform: translateY(-50%) scale(.4); }
+  85%,100%{ opacity: 1; transform: translateY(-50%) scale(1); }
+}
+
+/* ── Scan-line grid (oscilloscope feel) ── */
+.signal-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,.04) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+  border-radius: 24px;
+}
+
+/* ── Scanline sweep ── */
+.signal-scan {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, rgba(59,130,246,.35), transparent);
+  animation: scanSweep 3.2s linear infinite;
   pointer-events: none;
 }
-
-/* ── Arrow / path from chaos to center ── */
-.path-line {
-  position: absolute;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(59,130,246,.18));
-  transform-origin: right center;
-  animation: pathPulse 3s ease-in-out infinite;
-}
-.path-line:nth-child(1) { width: 90px; top: 25%;  left: 14%;  transform: rotate(-28deg); animation-delay: 0s; }
-.path-line:nth-child(2) { width: 80px; top: 14%;  left: 62%;  transform: rotate(38deg);  animation-delay: .5s; }
-.path-line:nth-child(3) { width: 70px; top: 33%;  left: 5%;   transform: rotate(-8deg);  animation-delay: 1s; }
-.path-line:nth-child(4) { width: 70px; top: 33%;  right: 5%;  transform: rotate(8deg);   animation-delay: 1.5s; }
-.path-line:nth-child(5) { width: 80px; bottom: 30%; left: 8%;  transform: rotate(20deg);  animation-delay: .7s; }
-.path-line:nth-child(6) { width: 80px; bottom: 30%; right: 8%; transform: rotate(-20deg); animation-delay: 1.2s; }
-@keyframes pathPulse {
-  0%,100% { opacity: .3; }
-  50%      { opacity: .8; }
+@keyframes scanSweep {
+  from { left: 0; opacity: .7; }
+  to   { left: 100%; opacity: .2; }
 }
 
-/* ── Stage label above/below ── */
-.clarity-label-chaos {
+/* ── Labels ── */
+.signal-label-noise {
   position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: .68rem;
+  top: 10px;
+  left: 14px;
+  font-size: .62rem;
   font-weight: 700;
   letter-spacing: .12em;
-  color: rgba(148,163,184,.45);
   text-transform: uppercase;
-  white-space: nowrap;
+  color: rgba(148,163,184,.3);
 }
-.clarity-label-clear {
+.signal-label-clear {
   position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: .7rem;
-  font-weight: 800;
+  bottom: 10px;
+  right: 14px;
+  font-size: .62rem;
+  font-weight: 700;
   letter-spacing: .12em;
-  color: rgba(59,130,246,.65);
   text-transform: uppercase;
-  white-space: nowrap;
+  color: rgba(59,130,246,.55);
+  animation: labelAppear 3.2s ease-in-out infinite;
+}
+@keyframes labelAppear {
+  0%,65%  { opacity: 0; }
+  80%,100%{ opacity: 1; }
 }
 
 /* ── Buttons ── */
@@ -176,9 +188,7 @@
   color: var(--accent);
   border: 1.5px solid var(--accent);
 }
-.btn-accent-outline:hover {
-  background: var(--accent-soft);
-}
+.btn-accent-outline:hover { background: var(--accent-soft); }
 
 /* ── Testimonials ── */
 .testimonials-grid {
@@ -193,36 +203,15 @@
   flex-direction: column;
   gap: .85rem;
 }
-.testimonial-stars {
-  color: #f59e0b;
-  font-size: 1rem;
-  letter-spacing: .1em;
-}
-.testimonial-text {
-  color: var(--text-muted);
-  font-size: .9rem;
-  line-height: 1.75;
-  flex: 1;
-}
-.testimonial-author {
-  display: flex;
-  align-items: center;
-  gap: .65rem;
-  margin-top: auto;
-}
+.testimonial-stars { color: #f59e0b; font-size: 1rem; letter-spacing: .1em; }
+.testimonial-text  { color: var(--text-muted); font-size: .9rem; line-height: 1.75; flex: 1; }
+.testimonial-author { display: flex; align-items: center; gap: .65rem; margin-top: auto; }
 .testimonial-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   background: var(--accent-soft);
   border: 1px solid rgba(59,130,246,.22);
-  color: var(--accent);
-  font-weight: 800;
-  font-size: .9rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  color: var(--accent); font-weight: 800; font-size: .9rem;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 
 /* ── Footer ── */
@@ -233,8 +222,7 @@
   margin-top: 2rem;
 }
 .footer-grid {
-  display: grid;
-  gap: 2rem;
+  display: grid; gap: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
 }
@@ -242,19 +230,12 @@
   .footer-grid { grid-template-columns: 1.6fr 1fr 1fr; }
 }
 .footer-link {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: .85rem;
-  cursor: pointer;
-  text-align: start;
-  padding: 0;
+  background: none; border: none; color: var(--text-muted);
+  font-size: .85rem; cursor: pointer; text-align: start; padding: 0;
   transition: color .15s;
 }
 .footer-link:hover { color: var(--accent); }
 .footer-bottom {
   padding-top: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
 }
