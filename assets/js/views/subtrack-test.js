@@ -1,11 +1,9 @@
-// ─────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────
 // subtrack-test.js — TrackUp Deep Sub-track Test (20 Q)
-// Runs AFTER mentor session. Uses same shell as test.js.
-// ─────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────
 
 const ST_LETTERS = ['A', 'B', 'C', 'D'];
 
-// ── Resolve which question-set to use ─────────────────────
 function _stFieldKey() {
   const fieldMap = {
     power: 'electrical', embedded: 'electrical', communications: 'electrical',
@@ -15,21 +13,17 @@ function _stFieldKey() {
   };
   const topTrack = state.rankedTracks?.[0]?.id || '';
   const key = fieldMap[topTrack] || state.subtestField || 'electrical';
-  // persist so results can re-use after reset
   if (state.subtestField !== key) { state.subtestField = key; persistState(); }
   return key;
 }
 
-// ── Safe questions getter ──────────────────────────────────
 function _stQuestions() {
   const key = _stFieldKey();
-  const qs = (window.SUBTRACK_QUESTIONS && SUBTRACK_QUESTIONS[key])
-           || (window.SUBTRACK_QUESTIONS && SUBTRACK_QUESTIONS['electrical'])
-           || [];
-  return qs;
+  return (window.SUBTRACK_QUESTIONS && SUBTRACK_QUESTIONS[key])
+      || (window.SUBTRACK_QUESTIONS && SUBTRACK_QUESTIONS['electrical'])
+      || [];
 }
 
-// ── Dot progress strip ─────────────────────────────────────
 function _stRefreshDots(questions) {
   const wrap = document.getElementById('st-step-dots');
   if (!wrap) return;
@@ -44,7 +38,6 @@ function _stRefreshDots(questions) {
   }).join('');
 }
 
-// ── Refresh counter + nav buttons ─────────────────────────
 function _stRefreshMeta(questions) {
   const idx     = state.subtestIndex || 0;
   const total   = questions.length;
@@ -84,7 +77,6 @@ function _stRefreshMeta(questions) {
   });
 }
 
-// ── Build single question HTML ─────────────────────────────
 function _stBuildQ(questions) {
   const idx  = state.subtestIndex || 0;
   const q    = questions[idx];
@@ -119,10 +111,9 @@ function _stBuildQ(questions) {
   `;
 }
 
-// ── Slide animation (mirrors swapQuestion in test.js) ───────
 function _stSwap(dir, questions) {
   const wrapper = document.getElementById('st-question-wrapper');
-  if (!wrapper) { renderApp(); return; }
+  if (!wrapper) { renderMainOnly(); return; }
 
   const rtl  = state.direction === 'rtl';
   const outX = dir === 'next' ? (rtl ? '24px' : '-24px') : (rtl ? '-24px' : '24px');
@@ -154,14 +145,13 @@ function _stSwap(dir, questions) {
   }, 180);
 }
 
-// ── DOM-only answer select (no full re-render) ─────────────
 window.selectSubtestAnswer = function selectSubtestAnswer(qId, optKey) {
   if (!state.subtestAnswers) state.subtestAnswers = {};
   state.subtestAnswers[qId] = optKey;
   persistState();
 
   const container = document.getElementById('st-answer-options-' + qId);
-  if (!container) { renderApp(); return; }
+  if (!container) { renderMainOnly(); return; }
 
   container.querySelectorAll('.answer-option').forEach(btn => {
     const sel = btn.dataset.optkey === optKey;
@@ -177,7 +167,6 @@ window.selectSubtestAnswer = function selectSubtestAnswer(qId, optKey) {
   _stRefreshMeta(questions);
 };
 
-// ── Nav controllers ────────────────────────────────────────
 window.subtestBack = function subtestBack() {
   _stSwap('prev', _stQuestions());
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -192,7 +181,7 @@ window.subtestNext = function subtestNext() {
 window.submitSubtest = function submitSubtest() {
   state.subtestComplete = true;
   persistState();
-  renderApp();
+  renderMainOnly();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 window.resetSubtest = function resetSubtest() {
@@ -200,16 +189,15 @@ window.resetSubtest = function resetSubtest() {
   state.subtestIndex    = 0;
   state.subtestComplete = false;
   persistState();
-  renderApp();
+  renderMainOnly();
 };
 
-// ── Results screen ─────────────────────────────────────────
+// ── Results screen ───────────────────────────────────────────────
 window.renderSubtrackResults = function renderSubtrackResults() {
-  const isAr     = state.language === 'ar';
+  const isAr      = state.language === 'ar';
   const questions = _stQuestions();
   const answers   = state.subtestAnswers || {};
 
-  // Guard: questions must exist
   if (!questions || questions.length === 0) {
     return `<div class="surface-panel section-pad" style="text-align:center;">
       <p class="text-muted">${isAr ? 'حدث خطأ في تحميل الأسئلة.' : 'Could not load questions.'}</p>
@@ -236,11 +224,22 @@ window.renderSubtrackResults = function renderSubtrackResults() {
     .sort((a, b) => b[1] - a[1])
     .filter(([, pts]) => pts > 0);
 
+  // Guard: no scoreable answers at all
+  if (!ranked || ranked.length === 0) {
+    return `<div class="surface-panel section-pad" style="text-align:center;">
+      <p class="text-muted" style="margin-bottom:1rem;">
+        ${isAr ? 'لم تجب على أي سؤال بعد. أجب على الأسئلة أولاً ثم اضغط شوف نتيجتي.' : 'No answers recorded yet. Please answer the questions first, then submit.'}
+      </p>
+      <button class="btn btn-secondary" onclick="resetSubtest()">
+        ${isAr ? 'ابدأ من جديد' : 'Start Over'}
+      </button>
+    </div>`;
+  }
+
   const topKey   = ranked[0]?.[0];
   const maxPts   = ranked[0]?.[1] || 1;
   const platform = (topKey && window.SUBTRACK_PLATFORMS) ? SUBTRACK_PLATFORMS[topKey] : null;
 
-  // Save result to state
   if (topKey) { state.subTrackResult = topKey; persistState(); }
 
   return `
@@ -271,7 +270,7 @@ window.renderSubtrackResults = function renderSubtrackResults() {
       <div class="eyebrow" style="margin-bottom:.85rem;">${isAr ? 'جميع نتائجك' : 'Full Breakdown'}</div>
       <div style="display:grid;gap:.65rem;">
         ${ranked.map(([key, pts], i) => {
-          const pf = window.SUBTRACK_PLATFORMS ? SUBTRACK_PLATFORMS[key] : null;
+          const pf  = window.SUBTRACK_PLATFORMS ? SUBTRACK_PLATFORMS[key] : null;
           if (!pf) return '';
           const pct = Math.round((pts / maxPts) * 100);
           return `
@@ -292,7 +291,7 @@ window.renderSubtrackResults = function renderSubtrackResults() {
       <div class="surface-panel section-pad" data-aos="fade-up">
         <div class="eyebrow" style="margin-bottom:.85rem;">${isAr ? 'منصات موصى بيها' : 'Recommended Platforms'}</div>
         <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
-          ${platform.platforms.map(p => `
+          ${(platform.platforms || []).map(p => `
             <span class="mentor-tag" style="font-size:.82rem;padding:.3rem .8rem;">
               ${p}
               <span style="font-size:.68rem;color:#16a34a;margin-${isAr ? 'right' : 'left'}:.3rem;font-weight:700;">PROMO</span>
@@ -315,17 +314,13 @@ window.renderSubtrackResults = function renderSubtrackResults() {
   `;
 };
 
-// ── Main render ────────────────────────────────────────────
+// ── Main render ───────────────────────────────────────────────
 window.renderSubtrackTestView = function renderSubtrackTestView() {
-  const isAr     = state.language === 'ar';
+  const isAr      = state.language === 'ar';
   const questions = _stQuestions();
 
-  // -- Completed: show results --
-  if (state.subtestComplete) {
-    return renderSubtrackResults();
-  }
+  if (state.subtestComplete) return renderSubtrackResults();
 
-  // -- Gate: require session booked --
   if (!state.completedMilestones?.sessionBooked) {
     return `
       <div class="surface-panel section-pad" style="text-align:center;max-width:520px;margin:0 auto;" data-aos="fade-up">
@@ -347,11 +342,10 @@ window.renderSubtrackTestView = function renderSubtrackTestView() {
       </div>`;
   }
 
-  // -- Guard: no questions loaded --
   if (!questions || questions.length === 0) {
     return `<div class="surface-panel section-pad" style="text-align:center;">
-      <p class="text-muted">${isAr ? 'تعذّر تحميل الأسئلة، يرجى المحاولة مجدداً.' : 'Could not load questions, please try again.'}</p>
-      <button class="btn btn-secondary" style="margin-top:1rem;" onclick="renderApp()">${isAr ? 'إعادة المحاولة' : 'Retry'}</button>
+      <p class="text-muted">${isAr ? 'تعذّر تحميل الأسئلة، يرجى المحاولة مجددًا.' : 'Could not load questions, please try again.'}</p>
+      <button class="btn btn-secondary" style="margin-top:1rem;" onclick="renderMainOnly()">${isAr ? 'إعادة المحاولة' : 'Retry'}</button>
     </div>`;
   }
 
@@ -373,7 +367,6 @@ window.renderSubtrackTestView = function renderSubtrackTestView() {
   return `
   <div class="test-shell">
 
-    <!-- ── Question panel (LEFT on desktop) ── -->
     <div class="test-question-panel">
       <div class="progress-bar" style="margin-bottom:1.6rem;">
         <span id="st-progress-fill" style="width:${pct}%"></span>
@@ -381,7 +374,6 @@ window.renderSubtrackTestView = function renderSubtrackTestView() {
 
       <div id="st-question-wrapper">${_stBuildQ(questions)}</div>
 
-      <!-- mobile nav -->
       <div class="test-nav-mobile">
         <button id="st-back-btn-m" class="btn btn-secondary" onclick="subtestBack()" ${backDisabled}>
           <i data-lucide="chevron-${lang === 'ar' ? 'right' : 'left'}" style="width:.95rem;height:.95rem;"></i>
@@ -394,7 +386,6 @@ window.renderSubtrackTestView = function renderSubtrackTestView() {
       </div>
     </div>
 
-    <!-- ── Meta panel (RIGHT on desktop) ── -->
     <aside class="test-meta">
       <div class="eyebrow" style="margin-bottom:.5rem;">${isAr ? 'اختبار التخصص الدقيق' : 'Sub-track Test'}</div>
       <p style="font-size:1.2rem;font-weight:800;line-height:1.25;letter-spacing:-.025em;color:var(--text);">
@@ -418,7 +409,6 @@ window.renderSubtrackTestView = function renderSubtrackTestView() {
         ${answered}/${total} ${lang === 'ar' ? 'مكتمل' : 'answered'}
       </span>
 
-      <!-- desktop nav -->
       <div class="test-nav-desktop">
         <button id="st-back-btn" class="btn btn-secondary" onclick="subtestBack()" ${backDisabled}>
           <i data-lucide="chevron-${lang === 'ar' ? 'right' : 'left'}" style="width:.95rem;height:.95rem;"></i>
