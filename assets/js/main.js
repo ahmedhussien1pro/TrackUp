@@ -1,43 +1,6 @@
-window.toggleMobileMenu = function toggleMobileMenu() {
-  state.mobileMenuOpen = !state.mobileMenuOpen;
-  renderApp();
-};
-window.closeMobileMenu = function closeMobileMenu(event) {
-  if (event) event.stopPropagation();
-  state.mobileMenuOpen = false;
-  renderApp();
-};
-window.toggleJourneyMenu = function toggleJourneyMenu() {
-  state.journeyOpen = !state.journeyOpen;
-  state.accountOpen = false;
-  renderApp();
-  if (state.journeyOpen) {
-    setTimeout(() => {
-      function outsideHandler(e) {
-        const dropdown = document.querySelector('.journey-dropdown');
-        const trigger  = document.querySelector('[data-journey]');
-        if (dropdown && !dropdown.contains(e.target) && trigger && !trigger.contains(e.target)) {
-          state.journeyOpen = false;
-          renderApp();
-          document.removeEventListener('click', outsideHandler, true);
-          window.removeEventListener('scroll', scrollHandler, true);
-        }
-      }
-      function scrollHandler() {
-        state.journeyOpen = false;
-        renderApp();
-        document.removeEventListener('click', outsideHandler, true);
-        window.removeEventListener('scroll', scrollHandler, true);
-      }
-      document.addEventListener('click', outsideHandler, true);
-      window.addEventListener('scroll', scrollHandler, { passive: true, capture: true });
-    }, 0);
-  }
-};
-window.guardedNavigate = function guardedNavigate(view) {
-  if (!guardView(view)) return;
-  navigateTo(view);
-};
+// toggleMobileMenu, closeMobileMenu, toggleJourneyMenu, guardedNavigate
+// are defined in shell.js — do NOT redefine here
+
 window.submitAssessment = function submitAssessment() {
   const missing = QUESTIONS.find(q => !state.testAnswers[q.id]);
   if (missing) return showToast(t('answerNeeded'), '#dc2626');
@@ -47,6 +10,7 @@ window.submitAssessment = function submitAssessment() {
   showToast(t('assessmentDone'), '#16a34a');
   navigateTo('results');
 };
+
 window.openTrack = function openTrack(trackId) {
   state.selectedTrack = trackId;
   updateProgress('detailsOpened', true);
@@ -54,6 +18,7 @@ window.openTrack = function openTrack(trackId) {
   showToast(t('detailsOpenedToast'), '#2563eb');
   navigateTo('track-details', { selectedTrack: trackId });
 };
+
 window.openRoadmapFor = function openRoadmapFor(trackId) {
   state.selectedTrack = trackId;
   updateProgress('roadmapStarted', true);
@@ -61,23 +26,27 @@ window.openRoadmapFor = function openRoadmapFor(trackId) {
   showToast(t('roadmapStartedToast'), '#2563eb');
   navigateTo('roadmap', { selectedTrack: trackId });
 };
+
 window.completeRoadmapStep = function completeRoadmapStep(trackId, step) {
   state.roadmapProgress[`${trackId}_${step}`] = true;
   updateProgress('roadmapStarted', true);
   persistState();
   showToast(t('roadmapStartedToast'), '#16a34a');
-  renderApp();
+  renderMainOnly();
 };
+
 window.startCourse = function startCourse(courseId) {
   if (!state.startedCourseIds.includes(courseId)) {
     state.startedCourseIds.push(courseId);
     updateProgress('courseStarted', true);
     persistState();
     showToast(t('learningStarted'), '#16a34a');
-    renderApp();
+    renderMainOnly();
   }
 };
+
 // activatePlan is defined in pricing.js — do not duplicate here
+
 window.renderMainContent = function renderMainContent() {
   const views = {
     home:                renderHomeView,
@@ -102,6 +71,7 @@ window.renderMainContent = function renderMainContent() {
   };
   return (views[state.currentView] || renderHomeView)();
 };
+
 window.bindForms = function bindForms() {
   const profileForm = document.getElementById('profileForm');
   if (profileForm) {
@@ -159,6 +129,7 @@ window.bindForms = function bindForms() {
     });
   }
 };
+
 window.renderApp = function renderApp() {
   applyDocumentState();
   const app = document.getElementById('app');
@@ -172,6 +143,7 @@ window.renderApp = function renderApp() {
     });
   }
 };
+
 state.direction  = state.language === 'ar' ? 'rtl' : 'ltr';
 if (!state.auth)        state.auth        = null;
 if (!state.accountOpen) state.accountOpen = false;
