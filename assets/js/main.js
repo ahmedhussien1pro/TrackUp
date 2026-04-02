@@ -10,6 +10,21 @@ window.closeMobileMenu = function closeMobileMenu(event) {
 window.toggleJourneyMenu = function toggleJourneyMenu() {
   state.journeyOpen = !state.journeyOpen;
   renderApp();
+  if (state.journeyOpen) {
+    // close on next outside click
+    setTimeout(() => {
+      function outsideHandler(e) {
+        const dropdown = document.querySelector('.journey-dropdown');
+        const trigger = document.querySelector('.nav-link[data-journey]');
+        if (dropdown && !dropdown.contains(e.target) && trigger && !trigger.contains(e.target)) {
+          state.journeyOpen = false;
+          renderApp();
+          document.removeEventListener('click', outsideHandler, true);
+        }
+      }
+      document.addEventListener('click', outsideHandler, true);
+    }, 0);
+  }
 };
 window.guardedNavigate = function guardedNavigate(view) {
   if (!guardView(view)) return;

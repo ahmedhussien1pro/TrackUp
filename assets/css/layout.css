@@ -39,10 +39,7 @@ html[data-theme="light"] .app-header { background: rgba(250,250,250,.82); }
   font-weight: 800;
   font-size: 1.05rem;
   letter-spacing: -.03em;
-  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent);
 }
 
 /* ── Desktop Nav ── */
@@ -70,7 +67,7 @@ html[data-theme="light"] .app-header { background: rgba(250,250,250,.82); }
 }
 .nav-link:hover { color: var(--text); }
 .nav-link.is-active {
-  color: var(--text);
+  color: var(--accent);
   border-bottom-color: var(--accent);
 }
 
