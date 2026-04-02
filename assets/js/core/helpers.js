@@ -7,12 +7,12 @@ window.escapeHtml = function escapeHtml(str = '') {
 };
 
 window.applyDocumentState = function applyDocumentState() {
-  document.documentElement.lang         = state.language;
-  document.documentElement.dir          = state.direction;
+  document.documentElement.lang          = state.language;
+  document.documentElement.dir           = state.direction;
   document.documentElement.dataset.theme = state.theme;
 };
 
-window.showToast = function showToast(text, color = '#2563eb') {
+window.showToast = function showToast(text, color = '#2563eb', icon = null) {
   Toastify({
     text,
     duration: 2200,
@@ -22,32 +22,59 @@ window.showToast = function showToast(text, color = '#2563eb') {
   }).showToast();
 };
 
-// ── Surgical patch helpers ───────────────────────────────────
+// ── Demo Account Seed ─────────────────────────────────────────
+// Ensures demo@trackup.io / trackup123 always exists in localStorage
+const DEMO_EMAIL    = 'demo@trackup.io';
+const DEMO_PASSWORD = 'trackup123';
+const DEMO_NAME     = 'Ahmed';
+
+window.seedDemoAccount = function seedDemoAccount() {
+  const existing = StorageAPI.get('trackup_user_' + DEMO_EMAIL, null);
+  if (!existing) {
+    StorageAPI.set('trackup_user_' + DEMO_EMAIL, {
+      name:     DEMO_NAME,
+      password: btoa(DEMO_PASSWORD),
+      profile:  { fullName: DEMO_NAME, college: 'electrical', year: '3', email: DEMO_EMAIL }
+    });
+  }
+};
+
+window.loginDemo = function loginDemo() {
+  seedDemoAccount();
+  const stored = StorageAPI.get('trackup_user_' + DEMO_EMAIL, null);
+  state.auth = { email: DEMO_EMAIL, name: stored.name, isGuest: false };
+  if (stored.profile) state.profile = stored.profile;
+  showToast(
+    (state.language === 'ar' ? 'أهلاً ' : 'Welcome back, ') + stored.name + ' 👋',
+    '#16a34a'
+  );
+  navigateTo('onboarding');
+};
+
+// ── Surgical patch helpers ────────────────────────────────────
 
 /** Re-render ONLY the <main> content — no header/footer flash */
 window.renderMainOnly = function renderMainOnly() {
   const main = document.querySelector('.main-grid');
   if (!main) { renderApp(); return; }
   applyDocumentState();
-  main.innerHTML =
-    (state.currentView !== 'home' ? renderProgressStrip() : '') +
-    renderMainContent();
+  const showStrip = (typeof JOURNEY_VIEWS !== 'undefined') && JOURNEY_VIEWS.has(state.currentView);
+  main.innerHTML = (showStrip ? renderProgressStrip() : '') + renderMainContent();
   bindForms();
   if (window.lucide) lucide.createIcons();
-  if (window.AOS)    { AOS.init({ duration: 550, once: true, offset: 14, easing: 'ease-out-cubic' }); AOS.refreshHard(); }
+  if (window.AOS) { AOS.init({ duration: 550, once: true, offset: 14, easing: 'ease-out-cubic' }); AOS.refreshHard(); }
   if (state.currentView === 'home') {
     requestAnimationFrame(() => { if (window.initPartnersScroll) window.initPartnersScroll(); });
   }
 };
 
-/** Patch ONLY the header — used by dropdown toggles */
+/** Patch ONLY the header */
 window.patchHeader = function patchHeader() {
   const header = document.querySelector('.app-header');
   if (!header) { renderApp(); return; }
   const tmp = document.createElement('div');
   tmp.innerHTML = renderHeader();
-  const newHeader = tmp.firstElementChild;
-  header.replaceWith(newHeader);
+  header.replaceWith(tmp.firstElementChild);
   if (window.lucide) lucide.createIcons();
 };
 
@@ -57,12 +84,11 @@ window.patchMobilePanel = function patchMobilePanel() {
   if (!panel) { renderApp(); return; }
   const tmp = document.createElement('div');
   tmp.innerHTML = renderMobilePanel();
-  const newPanel = tmp.firstElementChild;
-  panel.replaceWith(newPanel);
+  panel.replaceWith(tmp.firstElementChild);
   if (window.lucide) lucide.createIcons();
 };
 
-// ── Nav helpers ──────────────────────────────────────────────
+// ── Nav helpers ───────────────────────────────────────────────
 
 window.getOrderedNav = function getOrderedNav() {
   const isPremium   = state.premiumUnlocked;
@@ -197,8 +223,8 @@ window.openPremiumLock = function openPremiumLock(from) {
   }).then(r => { if (r.isConfirmed) navigateTo('pricing'); });
 };
 
-// ── URL Router ───────────────────────────────────────────────
-const PRIVATE_VIEWS = ['auth'];
+// ── URL Router ────────────────────────────────────────────────
+const PRIVATE_VIEWS = ['auth', 'onboarding'];
 
 window.navigateTo = function navigateTo(view, extras = {}) {
   if (extras.selectedTrack) state.selectedTrack = extras.selectedTrack;
@@ -215,7 +241,6 @@ window.navigateTo = function navigateTo(view, extras = {}) {
     if (extras.selectedTrack) params.set('track', extras.selectedTrack);
     history.pushState({ view, ...extras }, '', '?' + params.toString());
   }
-  // Surgical: update header active states + main content only — no full page flash
   patchHeader();
   renderMainOnly();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -248,7 +273,6 @@ window.initRouter = function initRouter() {
   }
 };
 
-// Language switch needs full render (direction + all text changes)
 window.switchLanguage = function switchLanguage() {
   state.language  = state.language === 'en' ? 'ar' : 'en';
   state.direction = state.language === 'ar' ? 'rtl' : 'ltr';
@@ -256,7 +280,6 @@ window.switchLanguage = function switchLanguage() {
   renderApp();
 };
 
-// Theme switch: only update data-theme attribute — zero DOM rebuild
 window.switchTheme = function switchTheme() {
   state.theme = state.theme === 'dark' ? 'light' : 'dark';
   persistState();
@@ -313,7 +336,6 @@ window.resetDemo = function resetDemo() {
   });
 };
 
-// Dropdown toggles — patch header only, never rebuild full page
 window.toggleAccountMenu = function toggleAccountMenu() {
   state.accountOpen = !state.accountOpen;
   state.journeyOpen = false;
