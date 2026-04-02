@@ -79,6 +79,17 @@ window.startCourse = function startCourse(courseId) {
 window.activatePlan = function activatePlan(planId) {
   if (planId === 'free') return navigateTo('profile');
   if (planId === 'session') return guardedNavigate('session-booking');
+  if (planId === 'bundle') {
+    state.premiumUnlocked = true;
+    updateProgress('premiumUnlocked', true);
+    persistState();
+    showToast(
+      state.language === 'ar' ? 'تم تفعيل الباقة المتكاملة' : 'Bundle activated — Premium + Session unlocked',
+      '#2563eb'
+    );
+    navigateTo('session-booking');
+    return;
+  }
   if (planId === 'pro' || planId === 'premium') {
     state.premiumUnlocked = true;
     updateProgress('premiumUnlocked', true);
@@ -89,22 +100,25 @@ window.activatePlan = function activatePlan(planId) {
 };
 window.renderMainContent = function renderMainContent() {
   const views = {
-    home:              renderHomeView,
-    profile:           renderProfileView,
-    test:              renderTestView,
-    results:           renderResultsView,
-    'track-details':   renderTrackDetailsView,
-    roadmap:           renderRoadmapView,
-    courses:           renderCoursesView,
-    platforms:         renderPlatformsView,
-    pricing:           renderPricingView,
-    progress:          renderProgressView,
-    'session-booking': renderSessionBookingView,
-    mentors:           renderMentorsView,
-    'subtrack-test':   renderSubtrackTestView,
-    about:             renderAboutView,
-    contact:           renderContactView,
-    auth:              renderAuthView,
+    home:                renderHomeView,
+    profile:             renderProfileView,
+    test:                renderTestView,
+    results:             renderResultsView,
+    'track-details':     renderTrackDetailsView,
+    roadmap:             renderRoadmapView,
+    courses:             renderCoursesView,
+    platforms:           renderPlatformsView,
+    pricing:             renderPricingView,
+    progress:            renderProgressView,
+    'session-booking':   renderSessionBookingView,
+    mentors:             renderMentorsView,
+    'subtrack-test':     renderSubtrackTestView,
+    'recorded-library':  renderRecordedLibraryView,
+    'chat':              renderChatView,
+    'sub-track-result':  renderSubTrackResultView,
+    about:               renderAboutView,
+    contact:             renderContactView,
+    auth:                renderAuthView,
   };
   return (views[state.currentView] || renderHomeView)();
 };
