@@ -17,17 +17,19 @@ window.renderResultsView = function renderResultsView() {
     ? `${topTrack.title[lang]} — ${t('topMatch')}`
     : `${safeProfileName()}, ${topTrack.title[lang]} is your strongest fit.`;
 
-  // Premium status label shown once unlocked
   const premiumBadge = isPremium
     ? `<span class="badge badge-accent" style="display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="shield-check" style="width:.75rem;height:.75rem;"></i>${lang === 'ar' ? 'مفعّل' : 'Premium active'}</span>`
     : '';
 
-  // Top result CTAs — upgrade button removed if premium is active
   const topCTAs = isPremium
     ? `
         <button class="btn btn-primary" onclick="openTrack('${top.id}')">${t('viewDetails')}</button>
         <button class="btn btn-secondary" onclick="openRoadmapFor('${top.id}')">${t('viewRoadmap')}</button>
-        <button class="btn btn-secondary" onclick="navigateTo('session-booking')">${t('bookSession')}</button>
+        <button class="btn btn-secondary" onclick="navigateTo('platforms')">
+          <i data-lucide="layout-grid" style="width:.9rem;height:.9rem;"></i>
+          ${t('explorePlatformsBtn')}
+        </button>
+        <button class="btn btn-ghost" onclick="navigateTo('session-booking')">${t('bookSession')}</button>
       `
     : `
         <button class="btn btn-primary" onclick="openTrack('${top.id}')">${t('viewDetails')}</button>
@@ -35,7 +37,6 @@ window.renderResultsView = function renderResultsView() {
         <button class="btn btn-ghost" onclick="openPremiumLock('pricing')">${t('unlockFullAnalysis')}</button>
       `;
 
-  // Side rail premium card — shows confirmation if active, upgrade CTA if not
   const premiumRailCard = isPremium
     ? `
         <div class="fit-rail-card" style="border-color:rgba(21,150,242,.3);" data-aos="fade-up" data-aos-delay="120">
@@ -44,7 +45,10 @@ window.renderResultsView = function renderResultsView() {
             <span style="font-weight:700;font-size:.9rem;">${lang === 'ar' ? 'التحليل المدفوع مفعّل' : 'Premium analysis active'}</span>
           </div>
           <p class="text-muted" style="font-size:.85rem;line-height:1.7;">${lang === 'ar' ? 'كل محتوى التحليل المتقدم متاح لك الآن.' : 'All advanced analysis content is now available to you.'}</p>
-          <button class="btn btn-secondary" style="margin-top:.9rem;width:100%;" onclick="navigateTo('session-booking')">${t('bookSession')}</button>
+          <button class="btn btn-secondary" style="margin-top:.9rem;width:100%;" onclick="navigateTo('platforms')">
+            <i data-lucide="layout-grid" style="width:.85rem;height:.85rem;"></i>
+            ${t('explorePlatformsBtn')}
+          </button>
         </div>
       `
     : `
@@ -100,7 +104,6 @@ window.renderResultsView = function renderResultsView() {
       <div class="page-grid-3">
         ${[second, third].filter(Boolean).map((item, idx) => {
           const tr = TRACKS[item.id];
-          // Secondary cards: if premium active, show deeper reason + no upgrade button
           const secondaryCTA = isPremium
             ? `
                 <button class="btn btn-secondary" onclick="openTrack('${item.id}')">${t('viewDetails')}</button>

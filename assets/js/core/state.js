@@ -7,10 +7,10 @@ window.state = {
   journeyOpen: false,
   mentorFilter: 'all',
   selectedMentor: null,
-  subtestField: null,
-  subtestIndex: 0,
-  subtestAnswers: {},
-  subtestComplete: false,
+  subtestField: StorageAPI.get('trackup_subtestField', null),
+  subtestIndex: StorageAPI.get('trackup_subtestIndex', 0),
+  subtestAnswers: StorageAPI.get('trackup_subtestAnswers', {}),
+  subtestComplete: StorageAPI.get('trackup_subtestComplete', false),
   profile: StorageAPI.get('trackup_profile', { fullName: '', college: '', year: '', email: '' }),
   testAnswers: StorageAPI.get('trackup_answers', {}),
   scores: StorageAPI.get('trackup_scores', {}),
@@ -47,4 +47,8 @@ window.persistState = function persistState() {
   StorageAPI.set('trackup_session', state.sessionRequested);
   StorageAPI.set('trackup_startedCourses', state.startedCourseIds);
   StorageAPI.set('trackup_roadmapProgress', state.roadmapProgress);
+  StorageAPI.set('trackup_subtestField', state.subtestField);
+  StorageAPI.set('trackup_subtestIndex', state.subtestIndex);
+  StorageAPI.set('trackup_subtestAnswers', state.subtestAnswers);
+  StorageAPI.set('trackup_subtestComplete', state.subtestComplete);
 };

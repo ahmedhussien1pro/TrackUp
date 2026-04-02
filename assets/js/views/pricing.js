@@ -36,7 +36,7 @@ window.renderPricingView = function renderPricingView() {
 
     let btnLabel, btnAction, btnDisabled = false;
     if (isActive) {
-      btnLabel = isAr ? 'مفعّل ✓' : 'Active ✓';
+      btnLabel = isAr ? 'مفعّل' : 'Active';
       btnAction = `onclick="navigateTo('progress')"`;  
       btnDisabled = true;
     } else if (plan.id === 'free') {
@@ -98,6 +98,7 @@ window.renderPricingView = function renderPricingView() {
           style="width:100%;${btnDisabled ? 'opacity:.65;cursor:default;' : ''}"
           ${btnAction}
           ${btnDisabled ? 'disabled' : ''}>
+          ${isActive ? `<i data-lucide="shield-check" style="width:.9rem;height:.9rem;"></i>` : ''}
           ${btnLabel}
         </button>
       </div>
@@ -114,20 +115,18 @@ window.renderPricingView = function renderPricingView() {
       ${isPremium ? `
         <div class="surface-soft section-pad" style="border:1px solid rgba(59,130,246,.3);max-width:260px;">
           <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.3rem;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span style="font-weight:700;font-size:.9rem;">${isAr ? 'عضو مدفوع 👑' : 'Premium Active 👑'}</span>
+            <i data-lucide="shield-check" style="width:.9rem;height:.9rem;color:var(--accent);"></i>
+            <span style="font-weight:700;font-size:.9rem;">${isAr ? 'عضو مدفوع' : 'Premium Active'}</span>
           </div>
           <p class="text-muted" style="font-size:.8rem;">${isAr ? 'جميع المراحل مفتوحة لك.' : 'All stages are unlocked.'}</p>
         </div>
       ` : ''}
     </div>
 
-    <!-- Pricing Cards -->
     <div class="pricing-grid" style="margin-top:1rem;">
       ${cards}
     </div>
 
-    <!-- Business Model Section -->
     <div class="surface-panel section-pad" style="margin-top:1.5rem;" data-aos="fade-up">
       <div class="eyebrow" style="margin-bottom:1rem;">${isAr ? 'كيف تربح المنصة' : 'How TrackUp makes money'}</div>
       <div style="display:grid;gap:1rem;">
@@ -145,7 +144,6 @@ window.renderPricingView = function renderPricingView() {
       </div>
     </div>
 
-    <!-- Comparison hint -->
     <div class="page-grid-2" style="margin-top:1rem;">
       <div class="surface-soft section-pad" data-aos="fade-up">
         <div class="eyebrow">${t('freePaid')}</div>
