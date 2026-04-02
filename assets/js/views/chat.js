@@ -1,7 +1,6 @@
 window.renderChatView = function renderChatView() {
   const isAr = state.language === 'ar';
 
-  // Gate: Premium only
   if (!state.premiumUnlocked) {
     return `
       <div class="surface-panel section-pad" style="text-align:center;max-width:520px;margin:0 auto;" data-aos="fade-up">
@@ -23,7 +22,6 @@ window.renderChatView = function renderChatView() {
     `;
   }
 
-  // Determine resident mentor based on top track
   const trackToMentor = {
     power: 'mentor-1', embedded: 'mentor-1', communications: 'mentor-1'
   };
@@ -31,12 +29,11 @@ window.renderChatView = function renderChatView() {
   const residentId = trackToMentor[topTrack] || 'mentor-1';
   const mentor = MENTORS.find(m => m.id === residentId) || MENTORS[0];
 
-  // Chat messages stored in state
   if (!state.chatMessages) state.chatMessages = [
     {
       role: 'mentor',
       text: isAr
-        ? `أهلاً! أنا ${mentor.nameAr}. اسألني أي سؤال عن مسارك أو تخصصك وهرد عليك في أقرب وقت.`
+        ? `أهلًا! أنا ${mentor.nameAr}. اسألني أي سؤال عن مسارك أو تخصصك وهرد عليك في أقرب وقت.`
         : `Hi! I'm ${mentor.nameEn}. Ask me anything about your track or specialization — I'll reply as soon as I can.`,
       time: '10:00 AM'
     }
@@ -52,7 +49,7 @@ window.renderChatView = function renderChatView() {
           max-width:75%;
           padding:.65rem 1rem;
           border-radius:${isUser ? '12px 12px ' + (isAr ? '12px 3px' : '3px 12px') : '12px 12px ' + (isAr ? '3px 12px' : '12px 3px')};
-          background:${isUser ? 'var(--accent)' : 'var(--surface-2,var(--surface))'  };
+          background:${isUser ? 'var(--accent)' : 'var(--surface-2,var(--surface))'};
           color:${isUser ? '#fff' : 'inherit'};
           font-size:.9rem;
           line-height:1.6;
@@ -64,10 +61,10 @@ window.renderChatView = function renderChatView() {
   }).join('');
 
   const suggestedQs = [
-    { en: 'Which sub-track should I focus on first?',     ar: 'أيه التخصص الدقيق اللي أبدأ بيه؟' },
-    { en: 'What courses do you recommend to start?',      ar: 'أيه الكورسات اللي تنصح بيها للبداية؟' },
-    { en: 'How long does it take to get job-ready?',      ar: 'بياخد قد إيه حتى أكون جاهز للسوق؟' },
-    { en: 'What tools should I learn first?',            ar: 'أيه الأدوات اللي أتعلمها الأول؟' }
+    { en: 'Which sub-track should I focus on first?',  ar: 'أيه التخصص الدقيق اللي أبدأ بيه؟' },
+    { en: 'What courses do you recommend to start?',   ar: 'أيه الكورسات اللي تنصح بيها للبداية؟' },
+    { en: 'How long does it take to get job-ready?',   ar: 'بياخد قد إيه حتى أكون جاهز للسوق؟' },
+    { en: 'What tools should I learn first?',          ar: 'أيه الأدوات اللي أتعلمها الأول؟' }
   ];
 
   return `
@@ -83,7 +80,6 @@ window.renderChatView = function renderChatView() {
       </div>
     </div>
 
-    <!-- Mentor info strip -->
     <div class="surface-soft section-pad" style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;" data-aos="fade-up">
       <div style="width:3rem;height:3rem;border-radius:50%;background:${mentor.color};display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex-shrink:0;">${mentor.avatar}</div>
       <div style="flex:1;">
@@ -96,7 +92,6 @@ window.renderChatView = function renderChatView() {
       </div>
     </div>
 
-    <!-- Chat window -->
     <div
       id="chat-window"
       class="surface-panel"
@@ -105,7 +100,6 @@ window.renderChatView = function renderChatView() {
       ${bubbles}
     </div>
 
-    <!-- Suggested questions -->
     <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;" data-aos="fade-up">
       ${suggestedQs.map(q => `
         <button
@@ -117,7 +111,6 @@ window.renderChatView = function renderChatView() {
       `).join('')}
     </div>
 
-    <!-- Input -->
     <div class="surface-panel" style="display:flex;gap:.75rem;align-items:center;padding:.75rem 1rem;" data-aos="fade-up">
       <input
         id="chat-input"
@@ -132,7 +125,6 @@ window.renderChatView = function renderChatView() {
       </button>
     </div>
 
-    <!-- Async disclaimer -->
     <p class="text-muted" style="font-size:.75rem;text-align:center;margin-top:.75rem;" data-aos="fade-up">
       <i data-lucide="clock" style="width:.7rem;height:.7rem;vertical-align:middle;"></i>
       ${isAr
@@ -142,7 +134,6 @@ window.renderChatView = function renderChatView() {
   `;
 };
 
-// ── Controllers ──────────────────────────────────────────
 window.sendChatMessage = function sendChatMessage() {
   const input = document.getElementById('chat-input');
   if (!input) return;
@@ -160,12 +151,12 @@ window.sendSuggestedMessage = function sendSuggestedMessage(text) {
 
 function _pushChatMessage(role, text) {
   const isAr = state.language === 'ar';
-  const now = new Date();
+  const now  = new Date();
   const time = now.toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
   if (!state.chatMessages) state.chatMessages = [];
   state.chatMessages.push({ role, text, time });
   persistState();
-  renderApp();
+  renderMainOnly();
   setTimeout(() => {
     const win = document.getElementById('chat-window');
     if (win) win.scrollTop = win.scrollHeight;
@@ -177,9 +168,9 @@ function _simulateMentorReply(question) {
   const replies = isAr
     ? [
         'سؤال ممتاز! سأرد عليك بتفصيل خلال اليوم.',
-        'شكراً على سؤالك، خد راحتك وأنا هراجع وأرد.',
-        'هذا سؤال مهم، سأرسل لك رد مفصّل قريباً.',
-        'جيد جداً إنك سألت عن ده — متابعني وهرد قريباً.'
+        'شكرًا على سؤالك، خد راحتك وأنا هراجع وأرد.',
+        'هذا سؤال مهم، سأرسل لك رد مفصّل قريبًا.',
+        'جيد جدًا إنك سألت عن ده — متابعني وهرد قريبًا.'
       ]
     : [
         'Great question! I will reply with full details later today.',
