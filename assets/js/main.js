@@ -37,8 +37,6 @@ window.guardedNavigate = function guardedNavigate(view) {
   if (!guardView(view)) return;
   navigateTo(view);
 };
-// NOTE: selectAnswer, prevQuestion, nextQuestion are defined in test.js
-// Do NOT redefine them here — main.js loads after test.js and would override.
 window.submitAssessment = function submitAssessment() {
   const missing = QUESTIONS.find(q => !state.testAnswers[q.id]);
   if (missing) return showToast(t('answerNeeded'), '#dc2626');
@@ -91,16 +89,18 @@ window.activatePlan = function activatePlan(planId) {
 };
 window.renderMainContent = function renderMainContent() {
   const views = {
-    home: renderHomeView,
-    profile: renderProfileView,
-    test: renderTestView,
-    results: renderResultsView,
-    'track-details': renderTrackDetailsView,
-    roadmap: renderRoadmapView,
-    courses: renderCoursesView,
-    pricing: renderPricingView,
-    progress: renderProgressView,
-    'session-booking': renderSessionBookingView
+    home:              renderHomeView,
+    profile:           renderProfileView,
+    test:              renderTestView,
+    results:           renderResultsView,
+    'track-details':   renderTrackDetailsView,
+    roadmap:           renderRoadmapView,
+    courses:           renderCoursesView,
+    pricing:           renderPricingView,
+    progress:          renderProgressView,
+    'session-booking': renderSessionBookingView,
+    mentors:           renderMentorsView,
+    'subtrack-test':   renderSubtrackTestView
   };
   return (views[state.currentView] || renderHomeView)();
 };
@@ -156,7 +156,7 @@ window.bindForms = function bindForms() {
         color: state.theme === 'dark' ? '#fafafa' : '#09090b'
       }).then(() => {
         showToast(t('saved'), '#16a34a');
-        navigateTo('progress');
+        navigateTo('subtrack-test');
       });
     });
   }
