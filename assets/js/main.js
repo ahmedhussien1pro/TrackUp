@@ -169,6 +169,12 @@ window.renderApp = function renderApp() {
   bindForms();
   if (window.lucide) lucide.createIcons();
   if (window.AOS) { AOS.init({ duration: 550, once: true, offset: 14, easing: 'ease-out-cubic' }); AOS.refreshHard(); }
+  // Partners scroll — init after DOM is ready
+  if (state.currentView === 'home') {
+    requestAnimationFrame(() => {
+      if (window.initPartnersScroll) window.initPartnersScroll();
+    });
+  }
 };
 state.direction = state.language === 'ar' ? 'rtl' : 'ltr';
 renderApp();
