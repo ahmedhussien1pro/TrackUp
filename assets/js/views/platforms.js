@@ -13,6 +13,12 @@ window.renderPlatformsView = function renderPlatformsView() {
   const topIds = userSubtrack ? (SUBTRACK_TOP_PLATFORMS[userSubtrack] || []) : [];
   const topPlatforms = topIds.map(id => ALL_PLATFORMS.find(p => p.id === id)).filter(Boolean);
 
+  // Read filter from URL hash: #platforms-free / #platforms-paid / #platforms-freemium / #platforms-all
+  // Fallback to window._platformFilter for backwards compat
+  const hashFilter = (location.hash.match(/^#platforms-(.+)$/) || [])[1];
+  if (hashFilter && ['all','free','paid','freemium'].includes(hashFilter)) {
+    window._platformFilter = hashFilter;
+  }
   if (window._platformFilter === undefined) window._platformFilter = 'all';
   const filter = window._platformFilter;
 
@@ -22,6 +28,13 @@ window.renderPlatformsView = function renderPlatformsView() {
 
   const typeLabel = { free: isAr ? 'مجاني' : 'Free', paid: isAr ? 'مدفوع' : 'Paid', freemium: 'Freemium' };
   const typeColor = { free: '#16a34a', paid: '#2563eb', freemium: '#d97706' };
+
+  const tabItems = [
+    { key: 'all',      labelEn: 'All',      labelAr: 'الكل' },
+    { key: 'free',     labelEn: 'Free',     labelAr: 'مجاني' },
+    { key: 'freemium', labelEn: 'Freemium', labelAr: 'Freemium' },
+    { key: 'paid',     labelEn: 'Paid',     labelAr: 'مدفوع' },
+  ];
 
   function platformCard(p, highlight = false) {
     const showPromo = p.promoCode && isPremium;
@@ -141,25 +154,25 @@ window.renderPlatformsView = function renderPlatformsView() {
         </div>
       `}
 
-      <!-- Browse All -->
+      <!-- Browse All with full-width tabs + URL hash -->
       <div class="surface-panel section-pad" data-aos="fade-up">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;">
-          <div>
-            <div class="eyebrow">${isAr ? 'جميع المنصات' : 'Browse All Platforms'}</div>
-            <div style="font-size:.83rem;color:var(--text-muted);margin-top:.2rem;">${filtered.length} ${isAr ? 'منصة' : 'platforms'}</div>
-          </div>
-          <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
-            ${['all','free','freemium','paid'].map(f => `
-              <button
-                onclick="setPlatformFilter('${f}')"
-                class="btn ${filter === f ? 'btn-primary' : 'btn-secondary'}"
-                style="font-size:.78rem;padding:.3rem .8rem;">
-                ${f === 'all' ? (isAr ? 'الكل' : 'All') : f === 'free' ? (isAr ? 'مجاني' : 'Free') : f === 'freemium' ? 'Freemium' : (isAr ? 'مدفوع' : 'Paid')}
-              </button>
-            `).join('')}
-          </div>
+        <div style="margin-bottom:1rem;">
+          <div class="eyebrow">${isAr ? 'جميع المنصات' : 'Browse All Platforms'}</div>
+          <div style="font-size:.83rem;color:var(--text-muted);margin-top:.2rem;">${filtered.length} ${isAr ? 'منصة' : 'platforms'}</div>
         </div>
-        <div style="display:grid;gap:.75rem;">
+        <!-- Full-width tab bar -->
+        <div class="tab-bar" role="tablist">
+          ${tabItems.map(tab => `
+            <button
+              role="tab"
+              aria-selected="${filter === tab.key}"
+              class="tab-btn ${filter === tab.key ? 'tab-btn--active' : ''}"
+              onclick="setPlatformFilter('${tab.key}')">
+              ${isAr ? tab.labelAr : tab.labelEn}
+            </button>
+          `).join('')}
+        </div>
+        <div style="display:grid;gap:.75rem;margin-top:1rem;">
           ${filtered.map(p => platformCard(p, false)).join('')}
         </div>
       </div>
@@ -170,6 +183,8 @@ window.renderPlatformsView = function renderPlatformsView() {
 
 window.setPlatformFilter = function setPlatformFilter(f) {
   window._platformFilter = f;
+  // Update URL hash as indicator without page reload
+  history.replaceState(null, '', '#platforms-' + f);
   renderApp();
 };
 

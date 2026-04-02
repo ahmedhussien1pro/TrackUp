@@ -1,0 +1,41 @@
+/* ── Full-width Tab Bar ──
+   Used in: Platforms filter, Pricing, Subtrack test
+   Add class="tab-bar" to the wrapper and "tab-btn" to each button
+*/
+.tab-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  width: 100%;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 3px;
+}
+.tab-btn {
+  width: 100%;
+  padding: .45rem .5rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s, color .15s, box-shadow .15s;
+  white-space: nowrap;
+}
+.tab-btn:hover:not(.tab-btn--active) {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.tab-btn--active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 6px rgba(37,99,235,.25);
+}
+[aria-selected="true"].tab-btn {
+  background: var(--accent);
+  color: #fff;
+}
