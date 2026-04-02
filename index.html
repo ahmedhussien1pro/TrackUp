@@ -1,63 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" dir="ltr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TrackUp MVP</title>
-  <meta name="description" content="TrackUp helps engineering students and graduates choose between Power, Embedded, and Communications through a guided decision flow." />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class'
-    }
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
-  <link rel="stylesheet" href="./assets/css/tokens.css">
-  <link rel="stylesheet" href="./assets/css/base.css">
-  <link rel="stylesheet" href="./assets/css/layout.css">
-  <link rel="stylesheet" href="./assets/css/components.css">
-  <link rel="stylesheet" href="./assets/css/animations.css">
-</head>
-<body>
-  <div id="app"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TrackUp MVP</title>
+    <meta
+      name="description"
+      content="TrackUp helps engineering students and graduates choose between Power, Embedded, and Communications through a guided decision flow." />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
+    <link rel="stylesheet" href="./assets/css/tokens.css" />
+    <link rel="stylesheet" href="./assets/css/base.css" />
+    <link rel="stylesheet" href="./assets/css/layout.css" />
+    <link rel="stylesheet" href="./assets/css/components.css" />
+    <link rel="stylesheet" href="./assets/css/animations.css" />
+  </head>
+  <body>
+    <div id="app"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
-  <script src="./assets/js/data/translations.js"></script>
-  <script src="./assets/js/data/tracks.js"></script>
-  <script src="./assets/js/data/questions.js"></script>
-  <script src="./assets/js/data/pricing.js"></script>
-  <script src="./assets/js/data/roadmap.js"></script>
-  <script src="./assets/js/data/courses.js"></script>
+    <script src="./assets/js/data/translations.js"></script>
+    <script src="./assets/js/data/tracks.js"></script>
+    <script src="./assets/js/data/questions.js"></script>
+    <script src="./assets/js/data/pricing.js"></script>
+    <script src="./assets/js/data/roadmap.js"></script>
+    <script src="./assets/js/data/courses.js"></script>
 
-  <script src="./assets/js/core/storage.js"></script>
-  <script src="./assets/js/core/state.js"></script>
-  <script src="./assets/js/core/helpers.js"></script>
-  <script src="./assets/js/core/scoring.js"></script>
+    <script src="./assets/js/core/storage.js"></script>
+    <script src="./assets/js/core/state.js"></script>
+    <script src="./assets/js/core/helpers.js"></script>
+    <script src="./assets/js/core/scoring.js"></script>
 
-  <script src="./assets/js/components/shell.js"></script>
-  <script src="./assets/js/components/cards.js"></script>
-  <script src="./assets/js/components/forms.js"></script>
-  <script src="./assets/js/components/modals.js"></script>
+    <script src="./assets/js/components/shell.js"></script>
+    <script src="./assets/js/components/cards.js"></script>
+    <script src="./assets/js/components/forms.js"></script>
+    <script src="./assets/js/components/modals.js"></script>
 
-  <script src="./assets/js/views/home.js"></script>
-  <script src="./assets/js/views/profile.js"></script>
-  <script src="./assets/js/views/test.js"></script>
-  <script src="./assets/js/views/results.js"></script>
-  <script src="./assets/js/views/track-details.js"></script>
-  <script src="./assets/js/views/roadmap.js"></script>
-  <script src="./assets/js/views/courses.js"></script>
-  <script src="./assets/js/views/pricing.js"></script>
-  <script src="./assets/js/views/progress.js"></script>
-  <script src="./assets/js/views/session-booking.js"></script>
+    <script src="./assets/js/views/home.js"></script>
+    <script src="./assets/js/views/profile.js"></script>
+    <script src="./assets/js/views/test.js"></script>
+    <script src="./assets/js/views/results.js"></script>
+    <script src="./assets/js/views/track-details.js"></script>
+    <script src="./assets/js/views/roadmap.js"></script>
+    <script src="./assets/js/views/courses.js"></script>
+    <script src="./assets/js/views/pricing.js"></script>
+    <script src="./assets/js/views/progress.js"></script>
+    <script src="./assets/js/views/session-booking.js"></script>
 
-  <script src="./assets/js/main.js"></script>
-</body>
+    <script src="./assets/js/main.js"></script>
+  </body>
 </html>
