@@ -11,7 +11,6 @@ window.toggleJourneyMenu = function toggleJourneyMenu() {
   state.journeyOpen = !state.journeyOpen;
   renderApp();
   if (state.journeyOpen) {
-    // close on next outside click
     setTimeout(() => {
       function outsideHandler(e) {
         const dropdown = document.querySelector('.journey-dropdown');
@@ -134,7 +133,7 @@ window.bindForms = function bindForms() {
 window.renderApp = function renderApp() {
   applyDocumentState();
   const app = document.getElementById('app');
-  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderMobilePanel()}<main class="container-shell main-grid">${state.currentView !== 'home' ? renderProgressStrip() : ''}${renderMainContent()}</main>${renderBottomNav()}</div>`;
+  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderMobilePanel()}<main class="container-shell main-grid">${state.currentView !== 'home' ? renderProgressStrip() : ''}${renderMainContent()}</main>${renderFooter()}${renderBottomNav()}</div>`;
   bindForms();
   if (window.lucide) lucide.createIcons();
   if (window.AOS) { AOS.init({ duration: 550, once: true, offset: 14, easing: 'ease-out-cubic' }); AOS.refreshHard(); }
