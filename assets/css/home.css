@@ -131,25 +131,36 @@
 }
 .partners-track-wrap {
   overflow: hidden;
-  /* fade edges */
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
   mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
 }
+
+/* LTR: يتحرك من اليمين لليسار */
 .partners-track {
   display: flex;
   gap: 1rem;
   width: max-content;
-  animation: partnersScroll 28s linear infinite;
+  animation: partnersScrollLTR 28s linear infinite;
 }
 .partners-track:hover { animation-play-state: paused; }
-@keyframes partnersScroll {
+
+@keyframes partnersScrollLTR {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
-/* -50% because we duplicated the items for seamless loop */
 }
+
+/* RTL: keyframe منفصل يتحرك من اليسار لليمين */
 [dir="rtl"] .partners-track {
-  animation-direction: reverse;
+  animation-name: partnersScrollRTL;
+  /* نبدأ من -50% ونرجع لـ 0 — نفس المسافة بس معكوسة فعلياً */
+  animation-direction: normal;
 }
+
+@keyframes partnersScrollRTL {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
 .partner-chip {
   flex-shrink: 0;
   display: flex;
