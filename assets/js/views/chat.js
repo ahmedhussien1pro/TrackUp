@@ -29,15 +29,22 @@ window.renderChatView = function renderChatView() {
   const residentId = trackToMentor[topTrack] || 'mentor-1';
   const mentor = MENTORS.find(m => m.id === residentId) || MENTORS[0];
 
-  if (!state.chatMessages) state.chatMessages = [
-    {
-      role: 'mentor',
-      text: isAr
-        ? `أهلًا! أنا ${mentor.nameAr}. اسألني أي سؤال عن مسارك أو تخصصك وهرد عليك في أقرب وقت.`
-        : `Hi! I'm ${mentor.nameEn}. Ask me anything about your track or specialization — I'll reply as soon as I can.`,
-      time: '10:00 AM'
-    }
-  ];
+  // Track + subtrack context for smarter replies
+  const trackLabel = state.selectedTrack || topTrack;
+  const subLabel   = state.subTrackResult || null;
+
+  if (!state.chatMessages || !state.chatMessages.length) {
+    state.chatMessages = [
+      {
+        role: 'mentor',
+        text: isAr
+          ? `أهلًا! أنا ${mentor.nameAr}. اسألني أي سؤال عن مسار ${trackLabel}${subLabel ? ' / ' + subLabel : ''} وهرد عليك في أقرب وقت.`
+          : `Hi! I'm ${mentor.nameEn}. Ask me anything about the ${trackLabel}${subLabel ? ' / ' + subLabel : ''} track — I'll reply as soon as I can.`,
+        time: _chatTime()
+      }
+    ];
+    persistState();
+  }
 
   const messages = state.chatMessages;
 
@@ -60,12 +67,8 @@ window.renderChatView = function renderChatView() {
     `;
   }).join('');
 
-  const suggestedQs = [
-    { en: 'Which sub-track should I focus on first?',  ar: 'أيه التخصص الدقيق اللي أبدأ بيه؟' },
-    { en: 'What courses do you recommend to start?',   ar: 'أيه الكورسات اللي تنصح بيها للبداية؟' },
-    { en: 'How long does it take to get job-ready?',   ar: 'بياخد قد إيه حتى أكون جاهز للسوق؟' },
-    { en: 'What tools should I learn first?',          ar: 'أيه الأدوات اللي أتعلمها الأول؟' }
-  ];
+  // Suggested questions derived from user's current state
+  const suggestedQs = _buildSuggestedQs(isAr, trackLabel, subLabel);
 
   return `
     <div class="page-header" data-aos="fade-up">
@@ -105,8 +108,8 @@ window.renderChatView = function renderChatView() {
         <button
           class="btn btn-secondary"
           style="font-size:.78rem;padding:.3rem .8rem;"
-          onclick="sendSuggestedMessage(\`${isAr ? q.ar : q.en}\`)">
-          ${isAr ? q.ar : q.en}
+          onclick="sendSuggestedMessage(\`${q}\`)">
+          ${q}
         </button>
       `).join('')}
     </div>
@@ -134,6 +137,39 @@ window.renderChatView = function renderChatView() {
   `;
 };
 
+function _chatTime() {
+  const isAr = state.language === 'ar';
+  return new Date().toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
+function _buildSuggestedQs(isAr, track, sub) {
+  const byTrack = {
+    embedded: {
+      en: ['Best way to learn RTOS as a beginner?', 'Which sub-track should I focus on first?', 'What tools do I need for Embedded?'],
+      ar: ['أفضل طريقة أتعلم RTOS من الصفر؟', 'أيه التخصص الدقيق اللي أبدأ بيه؟', 'أيه الأدوات اللازمة لـ Embedded؟']
+    },
+    power: {
+      en: ['What certifications matter most in Power Systems?', 'How long to be job-ready in Power?', 'SCADA or protection engineering — which to start?'],
+      ar: ['أيه الشهادات الأهم في هندسة القوى؟', 'بياخد قد إيه أكون جاهز لسوق العمل؟', 'SCADA ولا حماية — أيهما أبدأ بيه؟']
+    },
+    communications: {
+      en: ['4G vs 5G — which has more demand now?', 'Best path to become an RF engineer?', 'What simulation tools are used in Telecom?'],
+      ar: ['4G ولا 5G — أيهما أكثر طلباً الآن؟', 'أفضل مسار أبقى مهندس RF؟', 'أيه أدوات المحاكاة المستخدمة في Telecom؟']
+    }
+  };
+  const generic = {
+    en: ['Which sub-track should I focus on first?', 'What courses do you recommend to start?', 'How long does it take to get job-ready?'],
+    ar: ['أيه التخصص الدقيق اللي أبدأ بيه؟', 'أيه الكورسات اللي تنصح بيها للبداية؟', 'بياخد قد إيه حتى أكون جاهز للسوق؟']
+  };
+  const pool = (byTrack[track] || generic)[isAr ? 'ar' : 'en'];
+  // If sub-track known, prepend a sub-track specific question
+  if (sub) {
+    const subQ = isAr ? `ما أول خطوة في مسار ${sub}؟` : `What's the first step in the ${sub} path?`;
+    return [subQ, ...pool.slice(0, 2)];
+  }
+  return pool.slice(0, 3);
+}
+
 window.sendChatMessage = function sendChatMessage() {
   const input = document.getElementById('chat-input');
   if (!input) return;
@@ -151,10 +187,8 @@ window.sendSuggestedMessage = function sendSuggestedMessage(text) {
 
 function _pushChatMessage(role, text) {
   const isAr = state.language === 'ar';
-  const now  = new Date();
-  const time = now.toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
   if (!state.chatMessages) state.chatMessages = [];
-  state.chatMessages.push({ role, text, time });
+  state.chatMessages.push({ role, text, time: _chatTime() });
   persistState();
   renderMainOnly();
   setTimeout(() => {
@@ -164,8 +198,49 @@ function _pushChatMessage(role, text) {
 }
 
 function _simulateMentorReply(question) {
-  const isAr = state.language === 'ar';
-  const replies = isAr
+  const isAr  = state.language === 'ar';
+  const track = state.selectedTrack || 'embedded';
+  const sub   = state.subTrackResult || null;
+  const q     = question.toLowerCase();
+
+  // Context-aware replies
+  const reply = _pickReply(isAr, q, track, sub);
+  _pushChatMessage('mentor', reply);
+}
+
+function _pickReply(isAr, q, track, sub) {
+  // keyword → smart reply
+  const rules = [
+    { keys: ['rtos','firmware','embedded firmware'],
+      en: 'For RTOS, start with FreeRTOS on an STM32 board. It covers tasks, queues, and semaphores — the core of any embedded firmware role.',
+      ar: 'لـ RTOS، ابدأ بـ FreeRTOS على لوحة STM32. تغطي Tasks, Queues, و Semaphores — أساس أي وظيفة Embedded Firmware.' },
+    { keys: ['salary','راتب','رواتب','money'],
+      en: `In the ${track} track, junior engineers typically earn EGP 12,000–20,000/month in Egypt. Senior roles can reach EGP 40,000+.`,
+      ar: `في مسار ${track}، المهندس الجونيور يكسب عادةً 12,000–20,000 جنيه/شهر في مصر. الأدوار السينيور تصل لـ 40,000+.` },
+    { keys: ['course','كورس','learn','تعلم','start','أبدأ'],
+      en: `For ${track}, I recommend starting with the free courses first to build your foundation, then moving to the premium resources. Udemy and YouTube are your best friends early on.`,
+      ar: `لمسار ${track}، أنصح بالبدء بالكورسات المجانية لبناء الأساس، ثم الانتقال للمصادر المدفوعة. Udemy و YouTube هما صديقك الأول.` },
+    { keys: ['job','وظيفة','ready','جاهز','market','سوق'],
+      en: `Realistically, 8–12 focused months will get you job-ready in ${track}. Consistency matters more than speed.`,
+      ar: `بشكل واقعي، 8–12 شهر من التركيز ستجعلك جاهزاً لسوق العمل في مسار ${track}. الاستمرارية أهم من السرعة.` },
+    { keys: ['sub','تخصص','speciali'],
+      en: sub
+        ? `You're already in the ${sub} path — great choice! Focus on the core tools and build 2–3 portfolio projects before applying.`
+        : `Take the Sub-track Test after your session — it will pinpoint your exact specialization so you don't waste time on the wrong path.`,
+      ar: sub
+        ? `أنت بالفعل في مسار ${sub} — اختيار ممتاز! ركز على الأدوات الأساسية وابنِ 2–3 مشاريع للبورتفوليو قبل التقديم.`
+        : `خذ اختبار التخصص الدقيق بعد جلستك — سيحدد تخصصك بدقة حتى لا تضيع وقتك في المسار الخطأ.` },
+    { keys: ['tool','أداة','أدوات','software','hardware'],
+      en: `For ${track}, essential tools vary by sub-track. ${sub ? `Since you're in ${sub}, focus on its specific toolchain first.` : 'Completing your Sub-track Test will give you a precise tool list.'}`,
+      ar: `في مسار ${track}، الأدوات الأساسية تختلف حسب التخصص. ${sub ? `بما أنك في ${sub}، ركز على الـ toolchain الخاص به أولاً.` : 'إكمال اختبار التخصص سيعطيك قائمة أدوات دقيقة.'}` },
+  ];
+
+  for (const rule of rules) {
+    if (rule.keys.some(k => q.includes(k))) return isAr ? rule.ar : rule.en;
+  }
+
+  // Generic fallback pool
+  const fallback = isAr
     ? [
         'سؤال ممتاز! سأرد عليك بتفصيل خلال اليوم.',
         'شكرًا على سؤالك، خد راحتك وأنا هراجع وأرد.',
@@ -178,6 +253,5 @@ function _simulateMentorReply(question) {
         'That is an important point, I will send you a detailed reply shortly.',
         'Good that you asked — stay tuned, I will reply soon.'
       ];
-  const text = replies[Math.floor(Math.random() * replies.length)];
-  _pushChatMessage('mentor', text);
+  return fallback[Math.floor(Math.random() * fallback.length)];
 }

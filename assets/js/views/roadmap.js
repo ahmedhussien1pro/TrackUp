@@ -5,14 +5,21 @@ window.renderRoadmapView = function renderRoadmapView() {
   const lang      = state.language;
   const isAr      = lang === 'ar';
   const isPremium = state.premiumUnlocked;
+  const hasSubtrack = !!(state.subtestComplete && state.subTrackResult);
 
   const totalSteps = steps.length;
   const doneSteps  = steps.filter(s => !!state.roadmapProgress[`${state.selectedTrack}_${s.step}`]).length;
   const pct        = totalSteps ? Math.round((doneSteps / totalSteps) * 100) : 0;
 
-  // tier colors per track
   const trackColors = { power: '#2563eb', embedded: '#7c3aed', communications: '#059669' };
   const accentColor = trackColors[state.selectedTrack] || 'var(--accent)';
+
+  // Subtrack label for header
+  let subtrackLabel = '';
+  if (hasSubtrack && window.SUBTRACK_PLATFORMS) {
+    const pf = window.SUBTRACK_PLATFORMS[state.subTrackResult];
+    if (pf) subtrackLabel = isAr ? pf.nameAr : pf.nameEn;
+  }
 
   return `
     <div style="display:grid;gap:1.25rem;">
@@ -22,9 +29,14 @@ window.renderRoadmapView = function renderRoadmapView() {
         <div class="page-header">
           <div>
             <div class="eyebrow">${isAr ? 'مسار التطور' : 'Roadmap'}</div>
-            <h2 class="section-title" style="margin-top:.5rem;">
-              ${track.title[lang]}
-            </h2>
+            <h2 class="section-title" style="margin-top:.5rem;">${track.title[lang]}</h2>
+            ${hasSubtrack && subtrackLabel ? `
+              <div style="display:inline-flex;align-items:center;gap:.4rem;margin-top:.45rem;
+                padding:.28rem .7rem;border-radius:99px;
+                background:${accentColor}18;border:1px solid ${accentColor}44;">
+                <i data-lucide="target" style="width:.7rem;height:.7rem;color:${accentColor};"></i>
+                <span style="font-size:.78rem;font-weight:700;color:${accentColor};">${isAr ? 'تخصصك: ' : 'Sub-track: '}${subtrackLabel}</span>
+              </div>` : ''}
             <p class="text-muted" style="margin-top:.5rem;font-size:.88rem;line-height:1.7;">
               ${isPremium
                 ? (isAr ? 'جميع الخطوات مفتوحة — تابع تقدمك خطوة بخطوة.' : 'All steps unlocked — work through them one by one.')
@@ -48,6 +60,20 @@ window.renderRoadmapView = function renderRoadmapView() {
             }
           </div>
         </div>
+
+        <!-- Subtrack recommendation banner -->
+        ${!hasSubtrack && isPremium ? `
+          <div style="margin-top:1rem;display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;
+            background:${accentColor}0d;border:1px solid ${accentColor}33;border-radius:10px;flex-wrap:wrap;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <i data-lucide="flask-conical" style="width:.9rem;height:.9rem;color:${accentColor};"></i>
+              <span style="font-size:.84rem;font-weight:600;">${isAr ? 'حدد تخصصك الدقيق لمسار أكثر دقة' : 'Take the sub-track test for a more focused roadmap'}</span>
+            </div>
+            <button class="btn btn-secondary" style="font-size:.8rem;" onclick="navigateTo('subtrack-test')">
+              ${isAr ? 'ابدأ الاختبار' : 'Start Test'}
+            </button>
+          </div>
+        ` : ''}
 
         <!-- Progress bar -->
         <div style="margin-top:1.2rem;">
@@ -93,17 +119,13 @@ window.renderRoadmapView = function renderRoadmapView() {
               style="overflow:hidden;${locked ? 'opacity:.55;' : ''}border-${isAr ? 'right' : 'left'}:3px solid ${done ? '#22c55e' : locked ? 'var(--border)' : accentColor};"
               data-aos="fade-up"
               data-aos-delay="${idx * 60}">
-
               <div class="section-pad" style="padding-bottom:.75rem;">
-                <!-- Step num + badge -->
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;">
                   <span style="font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:${accentColor};">
                     ${isAr ? `الخطوة ${step.step}` : `Step ${step.step}`}
                   </span>
                   ${statusBadge}
                 </div>
-
-                <!-- Title -->
                 <div style="font-size:1rem;font-weight:800;line-height:1.45;margin-bottom:.55rem;">
                   ${locked
                     ? `<span style="display:inline-flex;align-items:center;gap:.4rem;">
@@ -113,12 +135,8 @@ window.renderRoadmapView = function renderRoadmapView() {
                     : step.title[lang]
                   }
                 </div>
-
-                <!-- Description -->
                 ${!locked ? `<p class="text-muted" style="font-size:.85rem;line-height:1.7;">${step.note[lang]}</p>` : `<p class="text-muted" style="font-size:.85rem;">${isAr ? 'فعّل Premium لرؤية هذه الخطوة.' : 'Upgrade to Premium to unlock this step.'}</p>`}
               </div>
-
-              <!-- Actions -->
               <div style="padding:.75rem 1rem;border-top:1px solid var(--border);display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
                 ${locked
                   ? `<button class="btn btn-primary" style="font-size:.82rem;" onclick="openPremiumLock('roadmap')">

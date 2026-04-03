@@ -24,6 +24,43 @@ window.renderProgressView = function renderProgressView() {
   ).length;
   const pct = Math.round((doneMilestones / totalMilestones) * 100);
 
+  // Last activity (simulated from milestone state)
+  function buildLastActivity() {
+    const items = [];
+    if (state.subTrackResult)                         items.push({ icon: 'target',        textEn: 'Sub-track result saved',          textAr: 'تم حفظ نتيجة التخصص الدقيق' });
+    if (subtrackDone && !state.subTrackResult)        items.push({ icon: 'flask-conical', textEn: 'Sub-track test completed',        textAr: 'أتممت اختبار التخصص' });
+    if (sessionDone)                                  items.push({ icon: 'calendar-days', textEn: 'Mentor session booked',           textAr: 'تم حجز جلسة مرشد' });
+    if (state.completedMilestones.courseStarted)      items.push({ icon: 'layout-grid',   textEn: 'Started a learning platform',     textAr: 'بدأت إحدى منصات التعلم' });
+    if (state.completedMilestones.roadmapStarted)     items.push({ icon: 'route',         textEn: 'Made progress on roadmap',        textAr: 'تقدمت في خارطة الطريق' });
+    if (premiumDone)                                  items.push({ icon: 'shield-check',  textEn: 'Upgraded to Premium',             textAr: 'فعّلت الباقة المدفوعة' });
+    if (state.completedMilestones.detailsOpened)      items.push({ icon: 'layers-3',      textEn: 'Viewed track details',            textAr: 'شاهدت تفاصيل المسار' });
+    if (state.completedMilestones.resultsViewed)      items.push({ icon: 'bar-chart-3',   textEn: 'Checked assessment results',      textAr: 'راجعت نتائج التقييم' });
+    if (state.completedMilestones.testCompleted)      items.push({ icon: 'clipboard-list',textEn: 'Completed the pre-test',          textAr: 'أتممت التقييم الأساسي' });
+    if (state.completedMilestones.profileCompleted)   items.push({ icon: 'user-round',    textEn: 'Profile set up',                  textAr: 'أكملت إعداد ملفك الشخصي' });
+    return items.slice(0, 5);
+  }
+
+  // Simulated notifications
+  function buildNotifications() {
+    const notifs = [];
+    if (!premiumDone)
+      notifs.push({ icon: 'crown',         color: 'var(--accent)',  textEn: 'Upgrade to unlock your full roadmap and career insights.', textAr: 'فعّل بريميوم لفتح مسارك كاملاً وتفاصيل المستقبل المهني.' });
+    if (premiumDone && !sessionDone)
+      notifs.push({ icon: 'calendar-days', color: '#f59e0b',        textEn: 'Book a mentor session — it unlocks the Sub-track Test.', textAr: 'احجز جلسة مع مرشد — ستفتح اختبار التخصص الدقيق.' });
+    if (sessionDone && !subtrackDone)
+      notifs.push({ icon: 'flask-conical', color: '#8b5cf6',        textEn: 'Your Sub-track Test is ready — take it now!', textAr: 'اختبار التخصص الدقيق جاهز — ابدأ الآن!' });
+    if (subtrackDone && state.subTrackResult)
+      notifs.push({ icon: 'target',        color: '#16a34a',        textEn: `Sub-track confirmed: ${state.subTrackResult}. Start your focused roadmap.`, textAr: `تخصصك الدقيق: ${state.subTrackResult}. ابدأ مسارك الآن.` });
+    if (doneMilestones >= 7)
+      notifs.push({ icon: 'trophy',        color: '#f59e0b',        textEn: 'Almost there! Complete all milestones to finish your journey.', textAr: 'على وشك الإنتهاء! أكمل كل الخطوات لإنهاء رحلتك.' });
+    if (!notifs.length)
+      notifs.push({ icon: 'check-circle',  color: '#16a34a',        textEn: 'All good! Keep progressing through your roadmap.', textAr: 'كل شيء تمام! واصل التقدم في مسارك.' });
+    return notifs.slice(0, 3);
+  }
+
+  const lastActivity    = buildLastActivity();
+  const notifications   = buildNotifications();
+
   const quickLinks = [
     { id:'roadmap',          icon:'route',          labelEn:'Roadmap',           labelAr:'خارطة التطور' },
     { id:'platforms',        icon:'layout-grid',    labelEn:'Platforms',         labelAr:'منصات التعلم' },
@@ -37,6 +74,7 @@ window.renderProgressView = function renderProgressView() {
     <section style="display:grid;gap:1.25rem;">
       ${renderProgressStrip()}
 
+      <!-- Top 2 cols -->
       <div class="page-grid-2">
         <div class="surface-panel section-pad" data-aos="fade-up">
           <div class="page-header">
@@ -65,10 +103,38 @@ window.renderProgressView = function renderProgressView() {
                </div>`
             : `<div class="text-muted" style="margin-top:.85rem;font-size:.85rem;">${isAr ? 'خطة مجانية' : 'Free plan'}</div>`
           }
+          ${state.subTrackResult ? `
+            <div style="display:inline-flex;align-items:center;gap:.4rem;margin-top:.6rem;padding:.3rem .7rem;
+              background:var(--accent-soft,rgba(37,99,235,.08));border:1px solid rgba(37,99,235,.2);border-radius:8px;">
+              <i data-lucide="target" style="width:.8rem;height:.8rem;color:var(--accent);"></i>
+              <span style="font-size:.8rem;font-weight:700;color:var(--accent);">${state.subTrackResult}</span>
+            </div>` : ''}
           <div class="text-muted" style="margin-top:.85rem;">${isAr ? 'المرحلة الحالية' : 'Current stage'}: <strong>${next.label}</strong></div>
         </div>
       </div>
 
+      <!-- Notifications -->
+      <div class="surface-panel section-pad" data-aos="fade-up">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.9rem;">
+          <i data-lucide="bell" style="width:.9rem;height:.9rem;color:var(--accent);"></i>
+          <span style="font-weight:700;">${isAr ? 'إشعارات' : 'Notifications'}</span>
+          <span style="font-size:.72rem;background:var(--accent);color:#fff;padding:.15rem .5rem;border-radius:99px;font-weight:700;">${notifications.length}</span>
+        </div>
+        <div style="display:grid;gap:.6rem;">
+          ${notifications.map(n => `
+            <div style="display:flex;align-items:flex-start;gap:.65rem;padding:.7rem .85rem;
+              background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
+              <div style="width:1.8rem;height:1.8rem;border-radius:8px;background:${n.color}18;
+                border:1px solid ${n.color}33;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.05rem;">
+                <i data-lucide="${n.icon}" style="width:.8rem;height:.8rem;color:${n.color};"></i>
+              </div>
+              <span style="font-size:.84rem;line-height:1.6;">${isAr ? n.textAr : n.textEn}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Session + Subtrack CTAs -->
       ${sessionDone && !subtrackDone ? `
         <div class="surface-panel section-pad" style="border:1.5px solid var(--accent);" data-aos="fade-up">
           <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;justify-content:space-between;">
@@ -95,6 +161,27 @@ window.renderProgressView = function renderProgressView() {
         </div>
       ` : ''}
 
+      <!-- Last Activity -->
+      ${lastActivity.length ? `
+        <div class="surface-panel section-pad" data-aos="fade-up">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.9rem;">
+            <i data-lucide="clock" style="width:.9rem;height:.9rem;color:var(--text-muted);"></i>
+            <span style="font-weight:700;">${isAr ? 'آخر النشاطات' : 'Last Activity'}</span>
+          </div>
+          <div style="display:grid;gap:.5rem;">
+            ${lastActivity.map((a, i) => `
+              <div style="display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;
+                background:var(--surface-2);border-radius:9px;opacity:${1 - i * 0.12};">
+                <i data-lucide="${a.icon}" style="width:.85rem;height:.85rem;color:var(--text-muted);flex-shrink:0;"></i>
+                <span style="font-size:.84rem;">${isAr ? a.textAr : a.textEn}</span>
+                <span style="font-size:.72rem;color:var(--text-muted);margin-${isAr ? 'right' : 'left'}:auto;white-space:nowrap;">${isAr ? `منذ ${i + 1} ${i === 0 ? 'دقيقة' : 'دقائق'}` : `${i + 1}m ago`}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Milestones checklist -->
       <div class="surface-panel section-pad">
         <div class="page-header" data-aos="fade-up">
           <div>
@@ -112,7 +199,7 @@ window.renderProgressView = function renderProgressView() {
                   <i data-lucide="${done ? 'check' : m.icon}" style="width:.85rem;height:.85rem;color:${done ? '#22c55e' : 'var(--text-muted)'};"></i>
                 </div>
                 <span style="font-size:.88rem;font-weight:${done ? '700' : '400'};color:${done ? 'var(--text-primary)' : 'var(--text-muted)'};">${isAr ? m.labelAr : m.labelEn}</span>
-                ${done ? `<i data-lucide="check-circle" style="width:.85rem;height:.85rem;color:#22c55e;margin-inline-start:auto;flex-shrink:0;"></i>` : ''}
+                ${done ? `<i data-lucide="check-circle" style="width:.85rem;height:.85rem;color:#22c55e;margin-${isAr ? 'right' : 'left'}:auto;flex-shrink:0;"></i>` : ''}
               </div>`;
           }).join('')}
         </div>
