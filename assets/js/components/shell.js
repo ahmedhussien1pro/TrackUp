@@ -71,7 +71,7 @@ function getJourneyItems() {
     { id: 'profile',  icon: 'user-round',     labelEn: 'Profile',     labelAr: 'ملفي' },
     { id: 'test',     icon: 'clipboard-list', labelEn: 'Assessment',  labelAr: 'الاختبار' },
     { id: 'results',  icon: 'bar-chart-3',    labelEn: 'Results',     labelAr: 'النتائج' },
-    { id: 'roadmap',  icon: 'route',          labelEn: 'Roadmap',     labelAr: 'مسار التطور' },
+    { id: 'roadmap',  icon: 'route',          labelEn: 'Roadmap',     labelAr: 'خارطة الطريق' },
     { id: 'progress', icon: 'target',         labelEn: 'Progress',    labelAr: 'تقدمي' },
   ];
 }
@@ -79,11 +79,11 @@ function getJourneyItems() {
 function getExploreItems(isPro) {
   const sessionDone = state.completedMilestones?.sessionBooked;
   return [
-    { id: 'track-details',    icon: 'layers-3',       labelEn: 'Tracks',           labelAr: 'التخصصات',         lock: false },
-    { id: 'platforms',        icon: 'layout-grid',    labelEn: 'Platforms',        labelAr: 'منصات التعلم',     lock: false },
-    { id: 'mentors',          icon: 'users-round',    labelEn: 'Mentors',          labelAr: 'المرشدون',         lock: false },
-    { id: 'recorded-library', icon: 'library',        labelEn: 'Recorded Library', labelAr: 'مكتبة الجلسات',   lock: !isPro },
-    { id: 'subtrack-test',    icon: 'flask-conical',  labelEn: 'Specialization',   labelAr: 'اكتشف تخصصك',     lock: !sessionDone },
+    { id: 'track-details',    icon: 'layers-3',       labelEn: 'Tracks',           labelAr: 'التخصصات',              lock: false },
+    { id: 'platforms',        icon: 'layout-grid',    labelEn: 'Platforms',        labelAr: 'منصات التعلم',          lock: false },
+    { id: 'mentors',          icon: 'users-round',    labelEn: 'Mentors',          labelAr: 'المرشدون',              lock: false },
+    { id: 'recorded-library', icon: 'library',        labelEn: 'Recorded Library', labelAr: 'الجلسات المسجّلة',     lock: !isPro },
+    { id: 'subtrack-test',    icon: 'flask-conical',  labelEn: 'Specialization',   labelAr: 'اكتشف تخصصك',          lock: !sessionDone },
   ];
 }
 
@@ -135,7 +135,7 @@ window.renderHeader = function renderHeader() {
             <span class="brand-name">TrackUp</span>
           </button>
 
-          <!-- Desktop Nav -->
+          <!-- Desktop Nav: Home | Journey | Explore | Pricing (NO Sessions, NO Reset) -->
           <nav class="desktop-nav">
 
             <button class="nav-link ${state.currentView === 'home' ? 'is-active' : ''}" onclick="navigateTo('home')">
@@ -170,13 +170,9 @@ window.renderHeader = function renderHeader() {
               ${isAr ? 'الباقات' : 'Pricing'}
             </button>
 
-            <button class="nav-link ${state.currentView === 'session-booking' ? 'is-active' : ''}" onclick="guardedNavigate('session-booking')">
-              ${isAr ? 'احجز جلسة' : 'Sessions'}
-            </button>
-
           </nav>
 
-          <!-- Actions -->
+          <!-- Actions: Language + Theme + Account (NO Reset button here) -->
           <div class="header-actions">
 
             <!-- Language -->
@@ -192,11 +188,6 @@ window.renderHeader = function renderHeader() {
                 ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`
                 : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`
               }
-            </button>
-
-            <!-- Reset -->
-            <button class="btn-icon" onclick="resetDemo()" title="${isAr ? 'إعادة ضبط' : 'Reset'}">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             </button>
 
             <!-- Account dropdown -->
@@ -238,7 +229,7 @@ window.renderHeader = function renderHeader() {
                       <div style="border-top:1px solid var(--border);margin:.25rem 0;"></div>
                       <button class="nav-dd-item ${state.currentView === 'recorded-library' ? 'is-active' : ''}" onclick="navigateTo('recorded-library')">
                         <i data-lucide="library" style="width:14px;height:14px;color:var(--accent);"></i>
-                        <span>${isAr ? 'مكتبة الجلسات' : 'Recorded Library'}</span>
+                        <span>${isAr ? 'الجلسات المسجّلة' : 'Recorded Library'}</span>
                       </button>
                       <button class="nav-dd-item ${state.currentView === 'chat' ? 'is-active' : ''}" onclick="navigateTo('chat')">
                         <i data-lucide="message-square" style="width:14px;height:14px;color:var(--accent);"></i>
@@ -294,18 +285,18 @@ window.renderMobilePanel = function renderMobilePanel() {
     { id: 'home',      icon: 'house',          labelEn: 'Home',         labelAr: 'الرئيسية' },
     { id: 'test',      icon: 'clipboard-list', labelEn: 'Assessment',   labelAr: 'الاختبار' },
     { id: 'results',   icon: 'bar-chart-3',    labelEn: 'Results',      labelAr: 'النتائج' },
-    { id: 'roadmap',   icon: 'route',          labelEn: 'Roadmap',      labelAr: 'مسار التطور' },
+    { id: 'roadmap',   icon: 'route',          labelEn: 'Roadmap',      labelAr: 'خارطة الطريق' },
     { id: 'progress',  icon: 'target',         labelEn: 'Progress',     labelAr: 'متابعة تقدمي' },
     { id: 'mentors',   icon: 'users-round',    labelEn: 'Mentors',      labelAr: 'المرشدون' },
     { id: 'pricing',   icon: 'credit-card',    labelEn: 'Pricing',      labelAr: 'الباقات' },
   ];
 
   const premiumItems = [
-    { id: 'session-booking',  icon: 'calendar-days',  labelEn: 'Book a Session',   labelAr: 'احجز جلسة',          lock: !isPro },
-    { id: 'recorded-library', icon: 'library',         labelEn: 'Recorded Library', labelAr: 'مكتبة الجلسات',      lock: !isPro },
-    { id: 'chat',             icon: 'message-square',  labelEn: 'Mentor Chat',      labelAr: 'تواصل مع مرشدك',    lock: !isPro },
-    { id: 'subtrack-test',    icon: 'flask-conical',   labelEn: 'Specialization',   labelAr: 'اكتشف تخصصك',       lock: !sessionDone },
-    { id: 'sub-track-result', icon: 'crosshair',       labelEn: 'Sub-track Result', labelAr: 'تخصصك الدقيق',      lock: !sessionDone },
+    { id: 'session-booking',  icon: 'calendar-days',  labelEn: 'Book a Session',   labelAr: 'احجز جلسة',             lock: !isPro },
+    { id: 'recorded-library', icon: 'library',         labelEn: 'Recorded Library', labelAr: 'الجلسات المسجّلة',     lock: !isPro },
+    { id: 'chat',             icon: 'message-square',  labelEn: 'Mentor Chat',      labelAr: 'تواصل مع مرشدك',        lock: !isPro },
+    { id: 'subtrack-test',    icon: 'flask-conical',   labelEn: 'Specialization',   labelAr: 'اكتشف تخصصك',          lock: !sessionDone },
+    { id: 'sub-track-result', icon: 'crosshair',       labelEn: 'Sub-track Result', labelAr: 'تخصصك الدقيق',         lock: !sessionDone },
   ];
 
   function renderItem(item) {
