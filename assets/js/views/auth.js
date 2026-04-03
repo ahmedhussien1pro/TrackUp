@@ -3,8 +3,8 @@
 // ============================================================
 
 window.renderAuthView = function renderAuthView() {
-  const isAr   = state.language === 'ar';
-  const mode   = state._authMode || 'login';
+  const isAr = state.language === 'ar';
+  const mode = state._authMode || 'login';
 
   return `
     <div style="display:flex;align-items:center;justify-content:center;min-height:60vh;padding:2rem 0;">
@@ -23,6 +23,62 @@ window.renderAuthView = function renderAuthView() {
           <p class="text-muted" style="font-size:.85rem;">
             ${isAr ? 'ابدأ مسارك الهندسي الصح' : 'Start your engineering journey'}
           </p>
+        </div>
+
+        <!-- Demo Banner -->
+        <div style="
+          background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(124,58,237,.08));
+          border:1px solid rgba(37,99,235,.25);
+          border-radius:14px;
+          padding:1rem 1.1rem;
+          margin-bottom:1.1rem;
+        ">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.55rem;">
+            <i data-lucide="zap" style="width:.95rem;height:.95rem;color:#2563eb;flex-shrink:0;"></i>
+            <span style="font-weight:800;font-size:.88rem;color:var(--text);">
+              ${isAr ? 'جرّب الديمو فوراً' : 'Try the Demo instantly'}
+            </span>
+          </div>
+
+          <!-- Credentials row -->
+          <div style="display:grid;gap:.4rem;margin-bottom:.7rem;">
+
+            <!-- Email row -->
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:.38rem .65rem;">
+              <div style="display:flex;align-items:center;gap:.4rem;min-width:0;">
+                <i data-lucide="at-sign" style="width:.78rem;height:.78rem;color:var(--text-muted);flex-shrink:0;"></i>
+                <code style="font-size:.8rem;color:var(--text);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">demo@trackup.io</code>
+              </div>
+              <button
+                type="button"
+                title="${isAr ? 'نسخ البريد' : 'Copy email'}"
+                onclick="copyDemoCred('demo@trackup.io', this)"
+                style="background:none;border:none;cursor:pointer;padding:.2rem .3rem;border-radius:5px;color:var(--text-muted);flex-shrink:0;display:flex;align-items:center;transition:color .15s;">
+                <i data-lucide="copy" style="width:.82rem;height:.82rem;pointer-events:none;"></i>
+              </button>
+            </div>
+
+            <!-- Password row -->
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:.38rem .65rem;">
+              <div style="display:flex;align-items:center;gap:.4rem;min-width:0;">
+                <i data-lucide="key-round" style="width:.78rem;height:.78rem;color:var(--text-muted);flex-shrink:0;"></i>
+                <code style="font-size:.8rem;color:var(--text);letter-spacing:.04em;white-space:nowrap;">trackup123</code>
+              </div>
+              <button
+                type="button"
+                title="${isAr ? 'نسخ كلمة المرور' : 'Copy password'}"
+                onclick="copyDemoCred('trackup123', this)"
+                style="background:none;border:none;cursor:pointer;padding:.2rem .3rem;border-radius:5px;color:var(--text-muted);flex-shrink:0;display:flex;align-items:center;transition:color .15s;">
+                <i data-lucide="copy" style="width:.82rem;height:.82rem;pointer-events:none;"></i>
+              </button>
+            </div>
+
+          </div>
+
+          <button class="btn btn-primary" style="width:100%;font-size:.85rem;" onclick="loginDemo()">
+            <i data-lucide="play-circle" style="width:.9rem;height:.9rem;"></i>
+            ${isAr ? 'دخول مباشر بحساب الديمو' : 'Login with Demo Account'}
+          </button>
         </div>
 
         <!-- Card -->
@@ -125,7 +181,8 @@ function renderRegisterForm(isAr) {
   `;
 }
 
-// ── Auth actions ──
+// ── Auth actions ──────────────────────────────────────────────
+
 window.setAuthMode = function setAuthMode(mode) {
   state._authMode = mode;
   renderMainOnly();
@@ -203,4 +260,26 @@ window.isLoggedIn = function isLoggedIn() {
 
 window.isGuest = function isGuest() {
   return state.auth && state.auth.isGuest;
+};
+
+// ── Copy demo credentials ─────────────────────────────────────
+window.copyDemoCred = function copyDemoCred(text, btn) {
+  navigator.clipboard?.writeText(text).then(() => {
+    // swap icon to check-circle briefly
+    const icon = btn.querySelector('i[data-lucide]');
+    if (icon) {
+      icon.setAttribute('data-lucide', 'check-circle');
+      btn.style.color = '#16a34a';
+      if (window.lucide) lucide.createIcons();
+      setTimeout(() => {
+        icon.setAttribute('data-lucide', 'copy');
+        btn.style.color = '';
+        if (window.lucide) lucide.createIcons();
+      }, 1800);
+    }
+    showToast(
+      (state.language === 'ar' ? 'تم النسخ: ' : 'Copied: ') + text,
+      '#16a34a'
+    );
+  });
 };
