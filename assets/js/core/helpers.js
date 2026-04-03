@@ -23,7 +23,6 @@ window.showToast = function showToast(text, color = '#2563eb', icon = null) {
 };
 
 // ── Demo Account Seed ─────────────────────────────────────────
-// Ensures demo@trackup.io / trackup123 always exists in localStorage
 const DEMO_EMAIL    = 'demo@trackup.io';
 const DEMO_PASSWORD = 'trackup123';
 const DEMO_NAME     = 'Ahmed';
@@ -45,7 +44,7 @@ window.loginDemo = function loginDemo() {
   state.auth = { email: DEMO_EMAIL, name: stored.name, isGuest: false };
   if (stored.profile) state.profile = stored.profile;
   showToast(
-    (state.language === 'ar' ? 'أهلاً ' : 'Welcome back, ') + stored.name + ' 👋',
+    (state.language === 'ar' ? 'أهلاً ' : 'Welcome back, ') + stored.name,
     '#16a34a'
   );
   navigateTo('onboarding');
@@ -110,10 +109,10 @@ window.getOrderedNav = function getOrderedNav() {
     { id: 'progress',         label: t('progress'),                                                    icon: 'target',         group: 'journey' },
     { id: 'mentors',          label: t('mentors'),                                                     icon: 'users-round',    group: 'journey' },
     { id: 'session-booking',  label: t('sessions'),                                                    icon: 'calendar-days',  group: 'journey' },
-    { id: 'subtrack-test',    label: isAr ? 'اختبار التخصص الدقيق' : 'Sub-track Test',                 icon: 'flask-conical',  group: 'journey', lock: !sessionDone },
-    { id: 'sub-track-result', label: isAr ? 'تخصصك الدقيق'         : 'Sub-track Result',               icon: 'crosshair',      group: 'journey', lock: !sessionDone },
-    { id: 'recorded-library', label: isAr ? 'مكتبة الجلسات'        : 'Recorded Library',               icon: 'library',        group: 'journey', lock: !isPremium },
-    { id: 'chat',             label: isAr ? 'تواصل مع مرشدك'       : 'Mentor Chat',                    icon: 'message-square', group: 'journey', lock: !isPremium },
+    { id: 'subtrack-test',    label: isAr ? 'اكتشف تخصصك' : 'Sub-track Test',                         icon: 'flask-conical',  group: 'journey', lock: !sessionDone },
+    { id: 'sub-track-result', label: isAr ? 'تخصصك الدقيق' : 'Sub-track Result',                      icon: 'crosshair',      group: 'journey', lock: !sessionDone },
+    { id: 'recorded-library', label: isAr ? 'مكتبة الجلسات' : 'Recorded Library',                     icon: 'library',        group: 'journey', lock: !isPremium },
+    { id: 'chat',             label: isAr ? 'تواصل مع مرشدك' : 'Mentor Chat',                         icon: 'message-square', group: 'journey', lock: !isPremium },
 
     { id: 'profile',          label: t('profile'),    icon: 'user-round',     group: 'account' },
     { id: 'auth',             label: isAr ? 'الحساب' : 'Account', icon: 'log-in', group: 'account' },
@@ -162,7 +161,7 @@ window.nextRecommendedStep = function nextRecommendedStep() {
   if (!m.courseStarted)       return { view: 'platforms',        label: t('platforms') };
   if (!m.premiumUnlocked)     return { view: 'pricing',          label: t('upgradeNow') };
   if (!m.sessionBooked)       return { view: 'mentors',          label: t('meetMentors') };
-  if (!state.subtestComplete) return { view: 'subtrack-test',    label: isAr ? 'اختبار التخصص الدقيق' : 'Sub-track Test' };
+  if (!state.subtestComplete) return { view: 'subtrack-test',    label: isAr ? 'اكتشف تخصصك' : 'Sub-track Test' };
   if (!state.subTrackResult)  return { view: 'sub-track-result', label: isAr ? 'تخصصك الدقيق' : 'Your Sub-track' };
   return { view: 'progress',  label: isAr ? 'الرحلة مكتملة' : 'Journey complete' };
 };
@@ -208,20 +207,7 @@ window.guardView = function guardView(view) {
   return true;
 };
 
-window.openPremiumLock = function openPremiumLock(from) {
-  const isAr = state.language === 'ar';
-  Swal.fire({
-    title: isAr ? 'هذه الميزة للأعضاء المدفوعين' : 'Premium required',
-    text:  isAr ? 'فعّل Premium للوصول لهذه الخدمة.' : 'Upgrade to Premium to access this feature.',
-    icon:  'lock',
-    confirmButtonText: isAr ? 'ترقية الآن' : 'Upgrade Now',
-    showCancelButton: true,
-    cancelButtonText: isAr ? 'لاحقاً' : 'Later',
-    confirmButtonColor: '#2563eb',
-    background: state.theme === 'dark' ? '#0a0a0a' : '#ffffff',
-    color:      state.theme === 'dark' ? '#fafafa' : '#09090b'
-  }).then(r => { if (r.isConfirmed) navigateTo('pricing'); });
-};
+// openPremiumLock is defined in modals.js — do NOT duplicate here
 
 // ── URL Router ────────────────────────────────────────────────
 const PRIVATE_VIEWS = ['auth', 'onboarding'];
