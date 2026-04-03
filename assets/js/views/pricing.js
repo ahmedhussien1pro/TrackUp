@@ -2,30 +2,29 @@ window.renderPricingView = function renderPricingView() {
   const isPremium = state.premiumUnlocked;
   const isAr = state.language === 'ar';
 
-  const cards = PRICING.map((plan, idx) => {
+  // Show only 3 core plans: free | premium | bundle
+  const CORE_PLAN_IDS = ['free', 'premium', 'bundle'];
+  const plans = (PRICING || []).filter(p => CORE_PLAN_IDS.includes(p.id));
+
+  const cards = plans.map((plan, idx) => {
     const isActive      = plan.id === 'premium' && isPremium;
+    const isBundleActive = plan.id === 'bundle' && isPremium;
     const isHighlight   = plan.id === 'bundle';
     const isRecommended = plan.id === 'premium' || plan.id === 'bundle';
 
     let btnLabel, btnAction, btnDisabled = false;
 
-    if (isActive) {
-      btnLabel    = isAr ? 'مفعّل' : 'Active';
+    if (isActive || isBundleActive) {
+      btnLabel    = isAr ? 'مُفعَّل ✓' : 'Active ✓';
       btnAction   = `onclick="navigateTo('progress')"`;
       btnDisabled = true;
     } else if (plan.id === 'free') {
-      btnLabel    = isPremium ? (isAr ? 'الخطة الحالية' : 'Current Plan') : (isAr ? plan.cta.ar : plan.cta.en);
+      btnLabel    = isPremium ? (isAr ? 'خطتك الحالية' : 'Your Plan') : (isAr ? plan.cta.ar : plan.cta.en);
       btnAction   = `onclick="activatePlan('free')"`;
       btnDisabled = isPremium;
     } else if (plan.id === 'premium') {
       btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
       btnAction = `onclick="openPremiumLock('progress')"`;
-    } else if (plan.id === 'session') {
-      btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
-      btnAction = isPremium ? `onclick="navigateTo('mentors')"` : `onclick="openPremiumLock('mentors')"`;
-    } else if (plan.id === 'full-session') {
-      btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
-      btnAction = isPremium ? `onclick="navigateTo('session-booking')"` : `onclick="openPremiumLock('session-booking')"`;
     } else if (plan.id === 'bundle') {
       btnLabel  = isAr ? plan.cta.ar : plan.cta.en;
       btnAction = `onclick="activatePlan('bundle')"`;
@@ -38,18 +37,20 @@ window.renderPricingView = function renderPricingView() {
       ? (isAr ? 'مجاني' : 'Free')
       : `${isAr ? plan.price.ar : plan.price.en} <span style="font-size:1rem;font-weight:500;color:var(--text-muted);">${plan.currency ? (isAr ? plan.currency.ar : plan.currency.en) : ''}</span>`;
 
-    const borderStyle = isActive
+    // Use CSS variables only — no hardcoded purple
+    const highlightColor = isHighlight ? 'var(--color-purple,var(--accent))' : 'var(--accent)';
+    const borderStyle = isActive || isBundleActive
       ? 'border:1.5px solid var(--accent);'
-      : isHighlight ? 'border:1.5px solid var(--brand,#7c3aed);' : '';
+      : isHighlight ? 'border:1.5px solid var(--color-purple,var(--accent));' : 'border:1.5px solid var(--border);';
 
     return `
       <div
         class="pricing-card ${isRecommended ? 'is-recommended' : ''}"
-        style="${borderStyle}position:relative;"
-        data-aos="fade-up" data-aos-delay="${idx * 60}">
+        style="${borderStyle}position:relative;display:flex;flex-direction:column;"
+        data-aos="fade-up" data-aos-delay="${idx * 80}">
 
         ${plan.badge ? `
-          <div style="position:absolute;top:-12px;${isAr ? 'right' : 'left'}:50%;transform:translateX(${isAr ? '50%' : '-50%'});background:${isHighlight ? 'var(--brand,#7c3aed)' : 'var(--accent)'};color:#fff;font-size:.72rem;font-weight:800;padding:3px 14px;border-radius:99px;white-space:nowrap;">
+          <div style="position:absolute;top:-12px;${isAr ? 'right' : 'left'}:50%;transform:translateX(${isAr ? '50%' : '-50%'});background:${highlightColor};color:#fff;font-size:.7rem;font-weight:800;padding:3px 14px;border-radius:99px;white-space:nowrap;">
             ${isAr ? plan.badge.ar : plan.badge.en}
           </div>
         ` : ''}
@@ -62,13 +63,13 @@ window.renderPricingView = function renderPricingView() {
         <div style="margin:1rem 0;padding:1rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
           <span style="font-size:2.2rem;font-weight:800;line-height:1;">${priceDisplay}</span>
           <div class="text-muted" style="font-size:.8rem;margin-top:.3rem;">${isAr ? plan.period.ar : plan.period.en}</div>
-          ${plan.note ? `<div style="font-size:.75rem;color:#f59e0b;margin-top:.3rem;font-weight:600;">* ${isAr ? plan.note.ar : plan.note.en}</div>` : ''}
+          ${plan.note ? `<div style="font-size:.75rem;color:var(--color-gold,#f59e0b);margin-top:.3rem;font-weight:600;">* ${isAr ? plan.note.ar : plan.note.en}</div>` : ''}
         </div>
 
         <ul style="list-style:none;padding:0;margin:0 0 1rem;display:grid;gap:.55rem;flex:1;">
           ${(isAr ? plan.features.ar : plan.features.en).map(f => `
             <li style="display:flex;gap:.6rem;align-items:flex-start;font-size:.86rem;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-top:.2rem;flex-shrink:0;"><path d="M20 6 9 17l-5-5"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-success,#22c55e)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-top:.2rem;flex-shrink:0;"><path d="M20 6 9 17l-5-5"/></svg>
               ${f}
             </li>
           `).join('')}
@@ -81,43 +82,89 @@ window.renderPricingView = function renderPricingView() {
         </ul>
 
         <button
-          class="btn ${(isRecommended && !isActive) ? 'btn-primary' : 'btn-secondary'}"
-          style="width:100%;${btnDisabled ? 'opacity:.65;cursor:default;' : ''}"
+          class="btn ${(isRecommended && !isActive && !isBundleActive) ? 'btn-primary' : 'btn-secondary'}"
+          style="width:100%;margin-top:auto;${btnDisabled ? 'opacity:.65;cursor:default;' : ''}"
           ${btnAction}
           ${btnDisabled ? 'disabled' : ''}>
-          ${isActive ? `<i data-lucide="shield-check" style="width:.9rem;height:.9rem;"></i>` : ''}
+          ${(isActive || isBundleActive) ? `<i data-lucide="shield-check" style="width:.9rem;height:.9rem;"></i>` : ''}
           ${btnLabel}
         </button>
       </div>
     `;
   }).join('');
 
+  // Feature comparison rows
+  const compRows = [
+    { featureEn: 'Guidance Assessment',       featureAr: 'اختبار التوجيه',         free: true,  premium: true,  bundle: true  },
+    { featureEn: 'Top 3 Track Results',       featureAr: 'أفضل 3 مسارات',          free: true,  premium: true,  bundle: true  },
+    { featureEn: 'Full Roadmap',              featureAr: 'خارطة الطريق الكاملة',   free: false, premium: true,  bundle: true  },
+    { featureEn: 'Progress Tracker',         featureAr: 'متابعة التقدم',          free: false, premium: true,  bundle: true  },
+    { featureEn: 'Learning Platforms Guide', featureAr: 'دليل منصات التعلم',      free: false, premium: true,  bundle: true  },
+    { featureEn: 'Specialization Test',      featureAr: 'اختبار التخصص الدقيق',   free: false, premium: true,  bundle: true  },
+    { featureEn: 'Book Expert Sessions',     featureAr: 'حجز جلسات مع خبراء',    free: false, premium: false, bundle: true  },
+    { featureEn: 'Recorded Session Library', featureAr: 'مكتبة الجلسات المسجَّلة', free: false, premium: false, bundle: true  },
+    { featureEn: 'Mentor Chat',              featureAr: 'تواصل مع مرشدك',        free: false, premium: true,  bundle: true  },
+  ];
+
+  const checkSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-success,#22c55e)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+  const crossSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
+
+  const compTable = `
+    <div style="overflow-x:auto;margin-top:2rem;" data-aos="fade-up">
+      <div style="margin-bottom:.8rem;">
+        <div class="eyebrow">${isAr ? 'مقارنة الميزات' : 'Feature Comparison'}</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;min-width:420px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:${isAr?'right':'left'};padding:.6rem 1rem .6rem 0;font-size:.8rem;color:var(--text-muted);font-weight:600;">${isAr?'الميزة':'Feature'}</th>
+            <th style="text-align:center;padding:.6rem .5rem;font-size:.8rem;color:var(--text-muted);font-weight:600;">${isAr?'مجاني':'Free'}</th>
+            <th style="text-align:center;padding:.6rem .5rem;font-size:.8rem;color:var(--accent);font-weight:700;">Premium</th>
+            <th style="text-align:center;padding:.6rem .5rem;font-size:.8rem;color:var(--color-purple,var(--accent));font-weight:700;">Bundle</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${compRows.map((row, i) => `
+            <tr style="border-bottom:1px solid var(--border);${i%2===0?'background:var(--surface-2,var(--surface));':''}">
+              <td style="padding:.55rem 1rem .55rem 0;font-size:.86rem;">${isAr?row.featureAr:row.featureEn}</td>
+              <td style="text-align:center;padding:.55rem .5rem;">${row.free ? checkSvg : crossSvg}</td>
+              <td style="text-align:center;padding:.55rem .5rem;">${row.premium ? checkSvg : crossSvg}</td>
+              <td style="text-align:center;padding:.55rem .5rem;">${row.bundle ? checkSvg : crossSvg}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
   return `
     <div class="page-header" data-aos="fade-up">
       <div>
         <div class="eyebrow">${isAr ? 'الباقات' : 'Plans'}</div>
         <h2 class="section-title" style="margin-top:.5rem;">${isAr ? 'ابدأ مجاناً، طوّر نفسك بجدية' : 'Start Free. Grow Seriously.'}</h2>
-        <p class="text-muted" style="margin-top:.6rem;max-width:600px;line-height:1.8;">
+        <p class="text-muted" style="margin-top:.6rem;max-width:560px;line-height:1.8;">
           ${isAr
-            ? 'اختبار التوجيه مجاني دائماً. Premium يفتح لك الخارطة الكاملة والجلسات مع الخبراء.'
-            : 'The assessment is always free. Premium unlocks your full roadmap, expert sessions, and more.'}
+            ? 'اختبار التوجيه مجاني دائماً. Premium يفتح خارطة الطريق الكاملة والجلسات مع الخبراء.'
+            : 'The assessment is always free. Premium unlocks your full roadmap and expert sessions.'}
         </p>
       </div>
       ${isPremium ? `
-        <div class="surface-soft section-pad" style="border:1px solid rgba(59,130,246,.3);max-width:240px;">
+        <div class="surface-soft section-pad" style="border:1px solid color-mix(in oklch,var(--accent) 35%,transparent);max-width:240px;">
           <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.3rem;">
             <i data-lucide="shield-check" style="width:.9rem;height:.9rem;color:var(--accent);"></i>
-            <span style="font-weight:700;font-size:.9rem;">Premium ${isAr ? 'مفعّل' : 'Active'}</span>
+            <span style="font-weight:700;font-size:.9rem;">Premium ${isAr ? 'مُفعَّل' : 'Active'}</span>
           </div>
-          <p class="text-muted" style="font-size:.8rem;">${isAr ? 'كل المراحل مفتوحة.' : 'All stages are unlocked.'}</p>
+          <p class="text-muted" style="font-size:.8rem;">${isAr ? 'كل المراحل مفتوحة.' : 'All stages unlocked.'}</p>
         </div>
       ` : ''}
     </div>
 
-    <!-- Plans grid: max 3 per row -->
-    <div class="pricing-grid" style="margin-top:1rem;">
+    <!-- 3-card grid only -->
+    <div class="pricing-grid" style="margin-top:1.25rem;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));">
       ${cards}
     </div>
+
+    ${compTable}
 
     <!-- Sessions upsell strip -->
     <div class="surface-soft section-pad" style="margin-top:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;border:1px solid var(--border);" data-aos="fade-up">
@@ -126,7 +173,7 @@ window.renderPricingView = function renderPricingView() {
           <i data-lucide="calendar-days" style="width:1rem;height:1rem;color:var(--accent);"></i>
         </div>
         <div>
-          <div style="font-weight:700;font-size:.95rem;">${isAr ? 'جلسة مع خبير — 60 دقيقة' : '1-on-1 Expert Session — 60 min'}</div>
+          <div style="font-weight:700;font-size:.95rem;">${isAr ? 'جلسة 1:1 مع خبير — 60 دقيقة' : '1-on-1 Expert Session — 60 min'}</div>
           <p class="text-muted" style="font-size:.82rem;margin-top:.15rem;">
             ${isAr ? 'احجز جلسة مباشرة مع مرشد متخصص في مسارك.' : 'Book a live session with a mentor specialized in your track.'}
           </p>
@@ -154,20 +201,16 @@ window.renderPricingView = function renderPricingView() {
   `;
 };
 
-// ── activatePlan ──────────────────────────────────────────────
 window.activatePlan = function activatePlan(planId) {
   const isAr = state.language === 'ar';
-
   if (planId === 'free') {
-    showToast(isAr ? 'أنت على الخطة المجانية.' : 'You are on the Free plan.', '#2563eb');
+    showToast(isAr ? 'أنت على الخطة المجانية.' : 'You are on the Free plan.', 'var(--accent)');
     return;
   }
-
   if (planId === 'premium' || planId === 'bundle') {
-    openPremiumLock(planId === 'bundle' ? 'progress' : 'progress');
+    openPremiumLock('progress');
     return;
   }
-
-  showToast(isAr ? 'اختار مرشدك لحجز الجلسة.' : 'Choose a mentor to book your session.', '#7c3aed');
+  showToast(isAr ? 'اختار مرشدك لحجز الجلسة.' : 'Choose a mentor to book your session.', 'var(--accent)');
   navigateTo('mentors');
 };
