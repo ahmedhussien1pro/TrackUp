@@ -1,11 +1,23 @@
-// session-booking.js — uses unified MENTORS from mentors.js
-// PRD §6.7: Featured Session banner at top (expert + next slot + vote)
+// session-booking.js — PRD §6.7 | with skeleton, confirmation screen, premium inline gate
 
 window._sessionUI = {
   selectedType:   null,
   selectedMentor: null,
   selectedSlot:   null,
   voted:          false,
+  booked:         false,
+  bookedData:     null,
+  loading:        true,
+};
+
+// Initialise loading skeleton then render real content
+window._initSessionBooking = function() {
+  window._sessionUI.loading = true;
+  renderMainOnly();
+  setTimeout(() => {
+    window._sessionUI.loading = false;
+    renderMainOnly();
+  }, 600);
 };
 
 window.selectSessionType = function(typeId) {
@@ -26,141 +38,187 @@ window.selectSlot = function(slotId) {
   renderMainOnly();
 };
 
-/** PRD §6.7 — vote for featured session */
-window.voteFeaturedSession = function voteFeaturedSession() {
+/** Vote for featured session */
+window.voteFeaturedSession = function() {
   if (window._sessionUI.voted) return;
   window._sessionUI.voted = true;
   const isAr = state.language === 'ar';
-  showToast(isAr ? 'تم تسجيل تصويتك! سيتم إشعارك بالتفاصيل.' : 'Vote registered! We’ll notify you with details.', '#2563eb');
+  showToast(isAr ? 'تم تسجيل تصويتك! سيتم إشعارك بالتفاصيل.' : "Vote registered! We'll notify you.", 'var(--accent)');
   renderMainOnly();
 };
 
-// ── Featured session data (static demo content) ─────────────────
-// In production this would be fetched from an API
+/** Confirm booking */
+window.confirmBooking = function() {
+  const isAr    = state.language === 'ar';
+  const typeId  = window._sessionUI.selectedType;
+  const mentorId= window._sessionUI.selectedMentor;
+  const slotId  = window._sessionUI.selectedSlot;
+  if (!typeId || !mentorId || !slotId) {
+    showToast(isAr ? 'اختر نوع الجلسة والمرشد والموعد.' : 'Select type, mentor and slot.', '#dc2626');
+    return;
+  }
+  const type   = (window.SESSION_TYPES  || []).find(t => t.id  === typeId);
+  const mentor = (window.MENTORS        || []).find(m => m.id  === mentorId);
+  const slot   = (window.SESSION_SLOTS  || []).find(s => s.id  === slotId);
+  window._sessionUI.booked     = true;
+  window._sessionUI.bookedData = { type, mentor, slot };
+  // Mark milestone
+  if (!state.completedMilestones) state.completedMilestones = {};
+  state.completedMilestones.sessionBooked = true;
+  renderMainOnly();
+};
+
+/** Back to booking form */
+window.resetBooking = function() {
+  window._sessionUI = { selectedType:null, selectedMentor:null, selectedSlot:null, voted:false, booked:false, bookedData:null, loading:false };
+  renderMainOnly();
+};
+
+// ── Featured session data ────────────────────────────────────
 const FEATURED_SESSION = {
   expertName:  { en: 'Dr. Mohamed Saber',  ar: 'د. محمد صابر' },
   expertTitle: { en: 'Senior Embedded Systems Engineer — 10+ yrs', ar: 'مهندس أنظمة مدمجة أول — +10 سنوات' },
-  expertColor: '#2563eb',
-  expertInitials: 'MS',
-  topic:       { en: 'How to Land Your First Embedded Job', ar: 'كيف تحصل على أول وظيفة Embedded' },
-  date:        { en: 'Sat, Apr 12 — 8:00 PM', ar: 'السبت 12 أبريل — 8:00 مساءًا' },
-  seats:       24,
-  seatsLeft:   9,
-  voteCount:   41,
+  expertColor: '#2563eb', expertInitials: 'MS',
+  topic: { en: 'How to Land Your First Embedded Job', ar: 'كيف تحصل على أول وظيفة Embedded' },
+  date:  { en: 'Sat, Apr 12 — 8:00 PM', ar: 'السبت 12 أبريل — 8:00 مساءً' },
+  seats: 24, seatsLeft: 9, voteCount: 41,
 };
 
-function renderFeaturedBanner(isAr) {
-  const fs      = FEATURED_SESSION;
-  const lang    = isAr ? 'ar' : 'en';
-  const voted   = window._sessionUI.voted;
-  const pctFull = Math.round(((fs.seats - fs.seatsLeft) / fs.seats) * 100);
+function renderSkeleton() {
+  const bar = (w) => `<div class="skeleton" style="height:1em;width:${w};border-radius:6px;margin-bottom:.5rem;"></div>`;
+  const block = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.2rem;">
+      ${bar('60%')}${bar('80%')}${bar('40%')}
+    </div>`;
+  return `
+    <style>
+      @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+      .skeleton{background:linear-gradient(90deg,var(--surface-2,#eee) 25%,var(--surface-3,#ddd) 50%,var(--surface-2,#eee) 75%);background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite;}
+    </style>
+    <div style="display:grid;gap:1rem;">${block}${block}${block}</div>`;
+}
+
+function renderPremiumGate(isAr) {
+  return `
+    <div style="text-align:center;padding:3rem 1rem;">
+      <div style="width:3.5rem;height:3.5rem;border-radius:50%;background:var(--accent-soft);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+        <i data-lucide="crown" style="width:1.4rem;height:1.4rem;color:var(--accent);"></i>
+      </div>
+      <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:.5rem;">${isAr ? 'الجلسات متاحة لمشتركي Premium فقط' : 'Sessions Available for Premium Members'}</h3>
+      <p class="text-muted" style="font-size:.88rem;line-height:1.8;max-width:380px;margin:0 auto .5rem;">
+        ${isAr
+          ? 'اشترك في خطة Premium أو Bundle لحجز جلسة مباشرة مع مرشد متخصص في مسارك.'
+          : 'Subscribe to Premium or Bundle to book a live 1-on-1 session with a mentor in your track.'}
+      </p>
+      <button class="btn btn-primary" style="margin-top:.8rem;" onclick="navigateTo('pricing')">
+        <i data-lucide="arrow-up-right" style="width:.9rem;height:.9rem;"></i>
+        ${isAr ? 'عرض الباقات' : 'View Plans'}
+      </button>
+    </div>`;
+}
+
+function renderConfirmation(isAr) {
+  const d = window._sessionUI.bookedData;
+  if (!d) return '';
+  const lang = isAr ? 'ar' : 'en';
+  const typeLabel   = d.type   ? (isAr ? d.type.label.ar   : d.type.label.en)   : '';
+  const mentorName  = d.mentor ? (isAr ? d.mentor.nameAr   : d.mentor.nameEn)   : '';
+  const slotLabel   = d.slot   ? (isAr ? d.slot.labelAr    : d.slot.labelEn)    : '';
 
   return `
-    <div data-aos="fade-up" style="
-      background: linear-gradient(135deg, rgba(37,99,235,.07) 0%, rgba(124,58,237,.07) 100%);
-      border: 1.5px solid rgba(37,99,235,.22);
-      border-radius: 18px;
-      padding: 1.4rem 1.5rem;
-      position: relative;
-      overflow: hidden;
-    ">
+    <div style="text-align:center;padding:2.5rem 1rem;" data-aos="fade-up">
+      <div style="width:4rem;height:4rem;border-radius:50%;background:var(--accent-soft);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+        <i data-lucide="calendar-check-2" style="width:1.8rem;height:1.8rem;color:var(--accent);"></i>
+      </div>
+      <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:.5rem;">${isAr ? 'تم تأكيد الحجز ✔' : 'Booking Confirmed ✔'}</h2>
+      <p class="text-muted" style="font-size:.88rem;line-height:1.8;max-width:400px;margin:0 auto 1.5rem;">
+        ${isAr ? 'سيصلك تأكيد عبر الإيميل مع رابط الجلسة.' : "A confirmation email with the session link will be sent to you."}
+      </p>
+      <div class="surface-panel" style="display:inline-grid;gap:.6rem;text-align:${isAr?'right':'left'};padding:1rem 1.5rem;border-radius:14px;min-width:260px;">
+        <div style="display:flex;gap:.5rem;align-items:center;font-size:.88rem;">
+          <i data-lucide="layers-3" style="width:.9rem;height:.9rem;color:var(--accent);"></i>
+          <span class="text-muted">${isAr?'نوع الجلسة:':'Type:'}</span>
+          <span style="font-weight:700;">${typeLabel}</span>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center;font-size:.88rem;">
+          <i data-lucide="user-round" style="width:.9rem;height:.9rem;color:var(--accent);"></i>
+          <span class="text-muted">${isAr?'المرشد:':'Mentor:'}</span>
+          <span style="font-weight:700;">${mentorName}</span>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center;font-size:.88rem;">
+          <i data-lucide="calendar-clock" style="width:.9rem;height:.9rem;color:var(--accent);"></i>
+          <span class="text-muted">${isAr?'الموعد:':'Slot:'}</span>
+          <span style="font-weight:700;">${slotLabel}</span>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="navigateTo('progress')">
+          <i data-lucide="target" style="width:.9rem;height:.9rem;"></i>
+          ${isAr ? 'متابعة تقدمي' : 'My Progress'}
+        </button>
+        <button class="btn btn-ghost" onclick="resetBooking()">
+          ${isAr ? 'حجز جلسة أخرى' : 'Book Another'}
+        </button>
+      </div>
+    </div>`;
+}
 
-      <!-- glow blob -->
-      <div style="position:absolute;top:-40px;${isAr?'left':'right'}:-40px;width:180px;height:180px;
-        background:radial-gradient(circle,rgba(37,99,235,.12),transparent 70%);
-        pointer-events:none;"></div>
-
-      <!-- header row -->
-      <div style="display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;">
-        <span style="display:inline-flex;align-items:center;gap:.35rem;background:var(--accent);color:#fff;
-          font-size:.72rem;font-weight:800;padding:.28rem .65rem;border-radius:99px;letter-spacing:.03em;">
-          <i data-lucide="star" style="width:.7rem;height:.7rem;"></i>
+function renderFeaturedBanner(isAr) {
+  const fs    = FEATURED_SESSION;
+  const lang  = isAr ? 'ar' : 'en';
+  const voted = window._sessionUI.voted;
+  const pctFull = Math.round(((fs.seats - fs.seatsLeft) / fs.seats) * 100);
+  return `
+    <div style="background:color-mix(in oklch,var(--accent) 6%,var(--surface));border:1.5px solid color-mix(in oklch,var(--accent) 25%,var(--border));border-radius:16px;padding:1.25rem 1.4rem;position:relative;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.9rem;">
+        <span style="display:inline-flex;align-items:center;gap:.3rem;background:var(--accent);color:#fff;font-size:.7rem;font-weight:800;padding:.25rem .6rem;border-radius:99px;">
+          <i data-lucide="star" style="width:.65rem;height:.65rem;"></i>
           ${isAr ? 'جلسة مميزة' : 'Featured Session'}
         </span>
         <span style="font-size:.75rem;color:var(--text-muted);">
-          <i data-lucide="calendar-clock" style="width:.75rem;height:.75rem;vertical-align:-.1em;"></i>
+          <i data-lucide="calendar-clock" style="width:.72rem;height:.72rem;vertical-align:-.1em;"></i>
           ${fs.date[lang]}
         </span>
       </div>
-
-      <!-- expert row -->
-      <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
-        <div style="
-          width:3rem;height:3rem;border-radius:50%;
-          background:${fs.expertColor}22;
-          border:2px solid ${fs.expertColor}55;
-          color:${fs.expertColor};
-          display:flex;align-items:center;justify-content:center;
-          font-weight:900;font-size:.95rem;flex-shrink:0;
-        ">${fs.expertInitials}</div>
-
-        <div style="flex:1;min-width:160px;">
-          <div style="font-weight:800;font-size:1rem;">${fs.expertName[lang]}</div>
-          <div style="font-size:.8rem;color:var(--text-muted);margin-top:.18rem;">${fs.expertTitle[lang]}</div>
-          <div style="
-            margin-top:.55rem;
-            font-size:.92rem;
-            font-weight:700;
-            color:var(--text);
-            line-height:1.5;
-          ">“${fs.topic[lang]}”</div>
+      <div style="display:flex;align-items:flex-start;gap:.9rem;margin-bottom:.9rem;flex-wrap:wrap;">
+        <div style="width:2.8rem;height:2.8rem;border-radius:50%;background:${fs.expertColor}22;border:2px solid ${fs.expertColor}55;color:${fs.expertColor};display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.9rem;flex-shrink:0;">${fs.expertInitials}</div>
+        <div style="flex:1;min-width:140px;">
+          <div style="font-weight:800;">${fs.expertName[lang]}</div>
+          <div style="font-size:.78rem;color:var(--text-muted);margin-top:.1rem;">${fs.expertTitle[lang]}</div>
+          <div style="margin-top:.4rem;font-size:.9rem;font-weight:700;">&ldquo;${fs.topic[lang]}&rdquo;</div>
         </div>
       </div>
-
-      <!-- stats + seat bar -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem;">
-
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;">
-          <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:.2rem;">${isAr?'المقاعد المتبقية':'Seats left'}</div>
-          <div style="font-weight:800;font-size:1.1rem;color:${fs.seatsLeft <= 5 ? '#dc2626' : 'var(--accent)'}">${fs.seatsLeft}</div>
-          <div style="height:4px;background:var(--border);border-radius:99px;margin-top:.35rem;overflow:hidden;">
-            <div style="height:100%;width:${pctFull}%;background:${fs.seatsLeft<=5?'#dc2626':'var(--accent)'};border-radius:99px;"></div>
-          </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.9rem;">
+        <div style="background:var(--surface-2,var(--surface));border:1px solid var(--border);border-radius:10px;padding:.55rem .75rem;">
+          <div style="font-size:.7rem;color:var(--text-muted);">${isAr?'مقاعد متبقية':'Seats left'}</div>
+          <div style="font-weight:800;font-size:1.05rem;color:${fs.seatsLeft<=5?'var(--danger,#dc2626)':'var(--accent)'}">${fs.seatsLeft}</div>
+          <div style="height:3px;background:var(--border);border-radius:99px;margin-top:.3rem;overflow:hidden;"><div style="height:100%;width:${pctFull}%;background:var(--accent);border-radius:99px;"></div></div>
         </div>
-
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;">
-          <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:.2rem;">${isAr?'صوتوا عليها':'Voted for it'}</div>
-          <div style="font-weight:800;font-size:1.1rem;color:var(--accent);">${fs.voteCount + (voted ? 1 : 0)}</div>
-          <div style="font-size:.72rem;color:var(--text-muted);margin-top:.1rem;">${isAr?'طالب هندسة':'engineering students'}</div>
+        <div style="background:var(--surface-2,var(--surface));border:1px solid var(--border);border-radius:10px;padding:.55rem .75rem;">
+          <div style="font-size:.7rem;color:var(--text-muted);">${isAr?'صوتوا عليها':'Voted for it'}</div>
+          <div style="font-weight:800;font-size:1.05rem;color:var(--accent);">${fs.voteCount+(voted?1:0)}</div>
+          <div style="font-size:.7rem;color:var(--text-muted);">${isAr?'طالب هندسة':'students'}</div>
         </div>
-
       </div>
-
-      <!-- CTA row -->
-      <div style="display:flex;gap:.65rem;flex-wrap:wrap;">
-        <button
-          class="btn btn-primary"
-          style="font-size:.84rem;"
-          onclick="${state.premiumUnlocked ? "selectSessionType('group')" : "navigateTo('pricing')"}"
-        >
-          <i data-lucide="calendar-check" style="width:.88rem;height:.88rem;"></i>
-          ${isAr ? 'احجز مقعدك' : 'Book my seat'}
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+        <button class="btn btn-primary" style="font-size:.82rem;" onclick="${state.premiumUnlocked?"selectSessionType('group')":"navigateTo('pricing')"}">
+          <i data-lucide="calendar-check" style="width:.85rem;height:.85rem;"></i>
+          ${isAr?'احجز مقعدك':'Book my seat'}
         </button>
-        <button
-          class="btn btn-secondary"
-          style="font-size:.84rem;${voted?'opacity:.5;cursor:not-allowed;':''}"
-          onclick="voteFeaturedSession()"
-          ${voted ? 'disabled' : ''}
-        >
-          <i data-lucide="${voted?'check-circle':'thumbs-up'}" style="width:.88rem;height:.88rem;"></i>
-          ${voted
-            ? (isAr ? 'سجلت تصويتك' : 'Voted!')
-            : (isAr ? 'أريد أحضرها' : 'I want this session')
-          }
+        <button class="btn btn-secondary" style="font-size:.82rem;${voted?'opacity:.5;cursor:not-allowed;':''}" onclick="voteFeaturedSession()" ${voted?'disabled':''}>
+          <i data-lucide="${voted?'check-circle':'thumbs-up'}" style="width:.85rem;height:.85rem;"></i>
+          ${voted?(isAr?'سجلت تصويتك':'Voted!'):(isAr?'أريد أحضرها':'I want this')}
         </button>
       </div>
-
-    </div>
-  `;
+    </div>`;
 }
 
-// ── Track → fieldKey mapper ────────────────────────────────────
 function trackToField(trackId) {
   const map = {
-    power: 'electrical', embedded: 'electrical', communications: 'electrical',
-    frontend: 'software', backend: 'software', data: 'software', cyber: 'software',
-    'mechanical-design': 'mechanical', 'mechanical-mfg': 'mechanical', 'mechanical-thermal': 'mechanical',
-    'civil-structural': 'civil', 'civil-water': 'civil', 'civil-geo': 'civil',
+    power:'electrical',embedded:'electrical',communications:'electrical',
+    frontend:'software',backend:'software',data:'software',cyber:'software',
+    'mechanical-design':'mechanical','mechanical-mfg':'mechanical','mechanical-thermal':'mechanical',
+    'civil-structural':'civil','civil-water':'civil','civil-geo':'civil',
   };
   return map[trackId] || 'general';
 }
@@ -170,287 +228,164 @@ function renderSessionTypeCards(isAr) {
     const active = window._sessionUI.selectedType === type.id;
     const lang   = isAr ? 'ar' : 'en';
     return `
-      <div class="step-card ${active ? 'step-card--active' : ''}"
-        style="cursor:pointer;border:1.5px solid ${active ? 'var(--accent)' : 'var(--border)'};
-          background:${active ? 'var(--accent-soft)' : 'var(--surface-2)'};
-          transition:border .18s,background .18s;"
-        onclick="selectSessionType('${type.id}')" data-aos="fade-up">
+      <div class="step-card ${active?'step-card--active':''}" style="cursor:pointer;border:1.5px solid ${active?'var(--accent)':'var(--border)'};background:${active?'var(--accent-soft)':'var(--surface-2)'};transition:border .18s,background .18s;" onclick="selectSessionType('${type.id}')">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;">
           <div style="display:flex;align-items:center;gap:.6rem;">
-            <span style="display:flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;
-              border-radius:.6rem;background:var(--surface-3);">
-              <i data-lucide="${type.icon}" style="width:1.1rem;height:1.1rem;color:var(--accent);"></i>
+            <span style="display:flex;align-items:center;justify-content:center;width:2.1rem;height:2.1rem;border-radius:.5rem;background:var(--surface-3,var(--surface));">
+              <i data-lucide="${type.icon}" style="width:1rem;height:1rem;color:var(--accent);"></i>
             </span>
             <div>
-              <div style="font-weight:700;font-size:.95rem;">${type.label[lang]}</div>
-              <div style="font-size:.78rem;color:var(--text-muted);margin-top:.15rem;">${type.duration[lang]}</div>
+              <div style="font-weight:700;font-size:.93rem;">${type.label[lang]}</div>
+              <div style="font-size:.76rem;color:var(--text-muted);margin-top:.12rem;">${type.duration[lang]}</div>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;">
-            <div style="font-weight:800;font-size:.9rem;color:var(--accent);white-space:nowrap;">${type.price[lang]}</div>
-            ${type.badge === 'recommended' ? `<span class="badge badge-accent" style="font-size:.68rem;">${isAr?'مقترح':'Recommended'}</span>` : ''}
+            <div style="font-weight:800;font-size:.88rem;color:var(--accent);white-space:nowrap;">${type.price[lang]}</div>
+            ${type.badge==='recommended'?`<span class="badge badge-accent" style="font-size:.66rem;">${isAr?'مقترح':'Recommended'}</span>`:''}
           </div>
         </div>
-        <p class="text-muted" style="margin-top:.75rem;font-size:.85rem;line-height:1.7;">${type.desc[lang]}</p>
-        ${active ? `<div style="margin-top:.6rem;display:flex;align-items:center;gap:.4rem;color:var(--accent);font-size:.8rem;font-weight:600;"><i data-lucide="check-circle-2" style="width:.9rem;height:.9rem;"></i>${isAr?'تم الاختيار':'Selected'}</div>` : ''}
-      </div>
-    `;
+        <p class="text-muted" style="margin-top:.65rem;font-size:.83rem;line-height:1.7;">${type.desc[lang]}</p>
+        ${active?`<div style="margin-top:.5rem;display:flex;align-items:center;gap:.35rem;color:var(--accent);font-size:.78rem;font-weight:600;"><i data-lucide="check-circle-2" style="width:.85rem;height:.85rem;"></i>${isAr?'تم الاختيار':'Selected'}</div>`:''}
+      </div>`;
   }).join('');
 }
 
 function renderMentorCards(isAr, trackId) {
   const field   = trackToField(trackId);
   const mentors = (window.MENTORS || []).filter(m => m.fieldKey === field || m.fieldKey === 'general');
-  if (!mentors.length) return `<p class="text-muted">${isAr?'لا يوجد مرشدون متاحون لهذا المسار حاليًا.':'No mentors available for this track yet.'}</p>`;
+  if (!mentors.length) return `<p class="text-muted">${isAr?'لا يوجد مرشدون لهذا المسار حاليًا.':'No mentors available for this track yet.'}</p>`;
   return mentors.map(mentor => {
     const active = window._sessionUI.selectedMentor === mentor.id;
     return `
-      <div class="step-card"
-        style="cursor:pointer;border:1.5px solid ${active?'var(--accent)':'var(--border)'};
-          background:${active?'var(--accent-soft)':'var(--surface-2)'};
-          transition:border .18s,background .18s;"
-        onclick="selectMentor('${mentor.id}')">
-        <div style="display:flex;align-items:center;gap:.9rem;">
-          <div class="mentor-avatar" style="background:${mentor.color}22;border-color:${mentor.color}44;color:${mentor.color};width:2.8rem;height:2.8rem;font-size:.9rem;">${mentor.avatar}</div>
+      <div class="step-card" style="cursor:pointer;border:1.5px solid ${active?'var(--accent)':'var(--border)'};background:${active?'var(--accent-soft)':'var(--surface-2)'};transition:border .18s,background .18s;" onclick="selectMentor('${mentor.id}')">
+        <div style="display:flex;align-items:center;gap:.85rem;">
+          <div class="mentor-avatar" style="background:${mentor.color}22;border-color:${mentor.color}44;color:${mentor.color};width:2.7rem;height:2.7rem;font-size:.88rem;">${mentor.avatar}</div>
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:700;font-size:.95rem;">${isAr?mentor.nameAr:mentor.nameEn}</div>
-            <div style="font-size:.8rem;color:var(--text-muted);margin-top:.1rem;">${isAr?mentor.titleAr:mentor.titleEn}</div>
-            <div style="font-size:.78rem;color:var(--text-muted);margin-top:.1rem;">${isAr?mentor.fieldAr:mentor.fieldEn}</div>
+            <div style="font-weight:700;font-size:.93rem;">${isAr?mentor.nameAr:mentor.nameEn}</div>
+            <div style="font-size:.78rem;color:var(--text-muted);margin-top:.1rem;">${isAr?mentor.titleAr:mentor.titleEn}</div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.25rem;flex-shrink:0;">
-            <div style="display:flex;align-items:center;gap:.25rem;font-size:.8rem;font-weight:700;color:#f59e0b;">★ ${mentor.rating}</div>
-            <div style="font-size:.75rem;color:var(--text-muted);">${mentor.sessions} ${isAr?'جلسة':'sessions'}</div>
-            <div style="font-size:.75rem;font-weight:700;color:var(--accent);">${mentor.price} ${isAr?'ج.م':'EGP'}</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:.2rem;font-size:.78rem;font-weight:700;color:#f59e0b;">&#9733; ${mentor.rating}</div>
+            <div style="font-size:.73rem;color:var(--text-muted);">${mentor.sessions} ${isAr?'جلسة':'sessions'}</div>
+            <div style="font-size:.73rem;font-weight:700;color:var(--accent);">${mentor.price} ${isAr?'ج.م':'EGP'}</div>
           </div>
         </div>
-        ${active?`<div style="margin-top:.6rem;display:flex;align-items:center;gap:.4rem;color:var(--accent);font-size:.8rem;font-weight:600;"><i data-lucide="check-circle-2" style="width:.9rem;height:.9rem;"></i>${isAr?'تم الاختيار':'Selected'}</div>`:''}
-      </div>
-    `;
+        ${active?`<div style="margin-top:.5rem;display:flex;align-items:center;gap:.35rem;color:var(--accent);font-size:.78rem;font-weight:600;"><i data-lucide="check-circle-2" style="width:.85rem;height:.85rem;"></i>${isAr?'تم الاختيار':'Selected'}</div>`:''}
+      </div>`;
   }).join('');
 }
 
-function renderSlotGrid(isAr) {
+function renderSlotCards(isAr) {
   return (window.SESSION_SLOTS || []).map(slot => {
-    const active = window._sessionUI.selectedSlot === slot.id;
-    const off    = !slot.available;
+    const active    = window._sessionUI.selectedSlot === slot.id;
+    const lang      = isAr ? 'ar' : 'en';
+    const disabled  = !slot.available;
     return `
-      <button type="button" onclick="selectSlot('${slot.id}')" ${off?'disabled':''}
-        style="padding:.55rem .9rem;border-radius:.6rem;
-          border:1.5px solid ${active?'var(--accent)':'var(--border)'};
-          background:${active?'var(--accent-soft)':off?'var(--surface-3)':'var(--surface-2)'};
-          color:${off?'var(--text-muted)':active?'var(--accent)':'var(--text)'};
-          font-size:.82rem;font-weight:${active?'700':'500'};
-          cursor:${off?'not-allowed':'pointer'};opacity:${off?'.4':'1'};
-          transition:border .15s,background .15s;text-align:center;">
-        <div style="font-weight:700;">${slot.day[isAr?'ar':'en']}</div>
-        <div style="font-size:.76rem;margin-top:.1rem;">${slot.time}</div>
-        ${off?`<div style="font-size:.7rem;margin-top:.1rem;color:var(--text-muted);">${isAr?'محجوز':'Booked'}</div>`:''}
-      </button>
-    `;
-  }).join('');
-}
-
-function buildCollegeSelect(isAr, currentValue) {
-  const opts = (window.COLLEGE_OPTIONS || []).map(opt => {
-    const sel = currentValue === opt.value ? 'selected' : '';
-    return `<option value="${opt.value}" ${sel}>${opt.label[isAr?'ar':'en']}</option>`;
-  }).join('');
-  return `<select name="specialization"><option value="">${isAr?'اختر التخصص':'Select specialization'}</option>${opts}</select>`;
-}
-
-// ── Main view ─────────────────────────────────────────────────
-window.renderSessionBookingView = function renderSessionBookingView() {
-  const isAr    = state.language === 'ar';
-  const track   = getCurrentTrack();
-  const ui      = window._sessionUI;
-  const selType = (window.SESSION_TYPES || []).find(tp => tp.id === ui.selectedType);
-
-  const step1Done = !!ui.selectedType;
-  const step2Done = !!ui.selectedMentor;
-  const step3Done = !!ui.selectedSlot;
-
-  const stepBar = `
-    <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-top:1.2rem;">
-      ${[
-        [isAr?'نوع الجلسة':'Session type', step1Done],
-        [isAr?'المرشد':'Mentor',         step2Done],
-        [isAr?'الموعد':'Time slot',     step3Done],
-        [isAr?'تفاصيل الحجز':'Your details', false],
-      ].map(([label,done],i) => `
-        <div style="display:flex;align-items:center;gap:.3rem;">
-          <div style="width:1.5rem;height:1.5rem;border-radius:50%;
-            background:${done?'var(--accent)':'var(--surface-3)'};
-            border:2px solid ${done?'var(--accent)':'var(--border)'};
-            display:flex;align-items:center;justify-content:center;
-            font-size:.7rem;font-weight:700;color:${done?'#fff':'var(--text-muted)'};"
-          >${done?'✓':i+1}</div>
-          <span style="font-size:.78rem;color:${done?'var(--text)':'var(--text-muted)'};
-            font-weight:${done?'600':'400'};">${label}</span>
-          ${i<3?`<span style="color:var(--border);font-size:.8rem;">${isAr?'‹':'›'}</span>`:''}
+      <div class="step-card" style="cursor:${disabled?'not-allowed':'pointer'};opacity:${disabled?.45:1};border:1.5px solid ${active?'var(--accent)':'var(--border)'};background:${active?'var(--accent-soft)':'var(--surface-2)'};transition:border .18s,background .18s;" ${!disabled?`onclick="selectSlot('${slot.id}')"` : ''}>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;font-size:.92rem;">${slot.labelEn ? (isAr ? slot.labelAr : slot.labelEn) : slot.id}</div>
+            ${disabled?`<div style="font-size:.75rem;color:var(--danger,#dc2626);margin-top:.15rem;">${isAr?'محجوز':'Unavailable'}</div>`:''}
+          </div>
+          ${active?`<i data-lucide="check-circle-2" style="width:1.1rem;height:1.1rem;color:var(--accent);"></i>`:''}
         </div>
-      `).join('')}
-    </div>
-  `;
+      </div>`;
+  }).join('');
+}
+
+window.renderSessionBookingView = function renderSessionBookingView() {
+  const isAr  = state.language === 'ar';
+  const isPro = state.premiumUnlocked;
+  const ui    = window._sessionUI;
+
+  // Skeleton while loading
+  if (ui.loading) {
+    return `
+      <div class="page-header" data-aos="fade-up">
+        <div>
+          <div class="eyebrow">${isAr?'حجز جلسة':'Book a Session'}</div>
+          <h2 class="section-title" style="margin-top:.5rem;">${isAr?'احجز جلسة مع خبير':'Book a Session with an Expert'}</h2>
+        </div>
+      </div>
+      ${renderSkeleton()}`;
+  }
+
+  // Premium gate
+  if (!isPro) {
+    return `
+      <div class="page-header" data-aos="fade-up">
+        <div>
+          <div class="eyebrow">${isAr?'حجز جلسة':'Book a Session'}</div>
+          <h2 class="section-title" style="margin-top:.5rem;">${isAr?'جلسات فردية مع خبراء':'1-on-1 Sessions with Experts'}</h2>
+        </div>
+      </div>
+      ${renderPremiumGate(isAr)}`;
+  }
+
+  // Confirmation screen
+  if (ui.booked) {
+    return `
+      <div class="page-header">
+        <div>
+          <div class="eyebrow">${isAr?'حجز جلسة':'Book a Session'}</div>
+        </div>
+      </div>
+      ${renderConfirmation(isAr)}`;
+  }
+
+  const trackId = state.topTracks?.[0]?.id || '';
+  const hasType   = !!ui.selectedType;
+  const hasMentor = !!ui.selectedMentor;
+  const hasSlot   = !!ui.selectedSlot;
 
   return `
-    <div style="display:grid;gap:1.4rem;">
-
-      <!-- ── PRD §6.7 Featured Session Banner ── -->
-      ${renderFeaturedBanner(isAr)}
-
-      <!-- ── Page header + lock gate ── -->
-      <div class="surface-panel section-pad" data-aos="fade-up">
-        <div class="page-header">
-          <div>
-            <div class="eyebrow">${t('sessionTitle')}</div>
-            <h2 class="section-title" style="margin-top:.5rem;">${t('sessionTitle')}</h2>
-            <p class="text-muted" style="margin-top:.6rem;">${t('sessionDesc')}</p>
-          </div>
-          <div class="surface-soft section-pad" style="max-width:240px;">
-            <div class="eyebrow" style="margin-bottom:.35rem;">${isAr?'المسار المختار':'Selected track'}</div>
-            <div style="font-weight:800;">${track.title[isAr?'ar':'en']}</div>
-          </div>
-        </div>
-        ${!state.premiumUnlocked ? `
-          <div class="fit-rail-card" style="margin-top:1rem;border-color:rgba(59,130,246,.3);">
-            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;">
-              <i data-lucide="lock" style="width:1rem;height:1rem;color:var(--accent);"></i>
-              <span style="font-weight:700;">${t('sessionsPaid')}</span>
-            </div>
-            <p class="text-muted" style="font-size:.88rem;line-height:1.75;margin-bottom:.8rem;">${t('premiumReason')}</p>
-            <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
-              <button class="btn btn-primary" onclick="navigateTo('pricing')">${t('upgradeNow')}</button>
-              <button class="btn btn-secondary" onclick="navigateTo('mentors')">${isAr?'براوز المرشدين':'Browse Mentors'}</button>
-            </div>
-          </div>
-        ` : stepBar}
+    <div class="page-header" data-aos="fade-up">
+      <div>
+        <div class="eyebrow">${isAr?'حجز جلسة':'Book a Session'}</div>
+        <h2 class="section-title" style="margin-top:.5rem;">${isAr?'احجز جلسة مع خبير':'Book a Session with an Expert'}</h2>
+        <p class="text-muted" style="margin-top:.5rem;line-height:1.8;">
+          ${isAr?'اختر نوع الجلسة، ثم المرشد، ثم الموعد.':'Choose the session type, then your mentor, then a time slot.'}
+        </p>
       </div>
+    </div>
 
-      ${state.premiumUnlocked ? `
+    <!-- Featured Banner -->
+    <div style="margin-bottom:1.5rem;">${renderFeaturedBanner(isAr)}</div>
 
-        <div class="surface-panel section-pad" data-aos="fade-up">
-          <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
-            <div style="width:1.6rem;height:1.6rem;border-radius:50%;
-              background:${step1Done?'var(--accent)':'var(--surface-3)'};
-              border:2px solid ${step1Done?'var(--accent)':'var(--border)'};
-              display:flex;align-items:center;justify-content:center;
-              font-size:.75rem;font-weight:700;color:${step1Done?'#fff':'var(--text-muted)'};">
-              1
-            </div>
-            <span style="font-weight:700;">${isAr?'اختر نوع الجلسة':'Choose session type'}</span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.85rem;">
-            ${renderSessionTypeCards(isAr)}
-          </div>
-        </div>
+    <!-- Step 1 -->
+    <div class="section-label" style="margin-bottom:.65rem;">
+      <span class="step-badge">1</span>
+      <span style="font-weight:700;">${isAr?'نوع الجلسة':'Session Type'}</span>
+    </div>
+    <div style="display:grid;gap:.75rem;margin-bottom:1.5rem;">${renderSessionTypeCards(isAr)}</div>
 
-        ${ui.selectedType ? `
-          <div class="surface-panel section-pad" data-aos="fade-up">
-            <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
-              <div style="width:1.6rem;height:1.6rem;border-radius:50%;
-                background:${step2Done?'var(--accent)':'var(--surface-3)'};
-                border:2px solid ${step2Done?'var(--accent)':'var(--border)'};
-                display:flex;align-items:center;justify-content:center;
-                font-size:.75rem;font-weight:700;color:${step2Done?'#fff':'var(--text-muted)'};">2</div>
-              <span style="font-weight:700;">${isAr?'اختر المرشد':'Choose your mentor'}</span>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.85rem;">
-              ${renderMentorCards(isAr, state.selectedTrack)}
-            </div>
-          </div>
-        ` : ''}
+    <!-- Step 2 -->
+    <div class="section-label" style="margin-bottom:.65rem;opacity:${hasType?1:.4};">
+      <span class="step-badge">2</span>
+      <span style="font-weight:700;">${isAr?'اختر مرشدك':'Choose Your Mentor'}</span>
+    </div>
+    <div style="display:grid;gap:.75rem;margin-bottom:1.5rem;opacity:${hasType?1:.4};pointer-events:${hasType?'auto':'none'};"
+      >${renderMentorCards(isAr, trackId)}</div>
 
-        ${ui.selectedMentor ? `
-          <div class="surface-panel section-pad" data-aos="fade-up">
-            <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
-              <div style="width:1.6rem;height:1.6rem;border-radius:50%;
-                background:${step3Done?'var(--accent)':'var(--surface-3)'};
-                border:2px solid ${step3Done?'var(--accent)':'var(--border)'};
-                display:flex;align-items:center;justify-content:center;
-                font-size:.75rem;font-weight:700;color:${step3Done?'#fff':'var(--text-muted)'};">3</div>
-              <span style="font-weight:700;">${isAr?'اختر الموعد':'Select a time slot'}</span>
-            </div>
-            <p class="text-muted" style="font-size:.85rem;margin-bottom:1rem;">${isAr?'المواعيد المتاحة للأسبوع القادم':'Available slots for the upcoming week'}</p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.55rem;">
-              ${renderSlotGrid(isAr)}
-            </div>
-          </div>
-        ` : ''}
+    <!-- Step 3 -->
+    <div class="section-label" style="margin-bottom:.65rem;opacity:${hasMentor?1:.4};">
+      <span class="step-badge">3</span>
+      <span style="font-weight:700;">${isAr?'اختر موعدك':'Choose a Time Slot'}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.65rem;margin-bottom:1.5rem;opacity:${hasMentor?1:.4};pointer-events:${hasMentor?'auto':'none'};"
+      >${renderSlotCards(isAr)}</div>
 
-        ${ui.selectedSlot ? `
-          <div class="surface-panel section-pad" data-aos="fade-up">
-            <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
-              <div style="width:1.6rem;height:1.6rem;border-radius:50%;background:var(--surface-3);
-                border:2px solid var(--border);display:flex;align-items:center;justify-content:center;
-                font-size:.75rem;font-weight:700;color:var(--text-muted);">4</div>
-              <span style="font-weight:700;">${isAr?'تفاصيل الحجز':'Your booking details'}</span>
-            </div>
-
-            <div class="surface-soft section-pad" style="margin-bottom:1.2rem;
-              display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;">
-              ${[[
-                isAr?'نوع الجلسة':'Session type',
-                selType ? selType.label[isAr?'ar':'en'] : '-'
-              ],[
-                isAr?'المسار':'Track',
-                track.title[isAr?'ar':'en']
-              ],[
-                isAr?'الموعد':'Slot',
-                (()=>{ const s=(window.SESSION_SLOTS||[]).find(x=>x.id===ui.selectedSlot); return s?s.day[isAr?'ar':'en']+' '+s.time:'-'; })()
-              ],[
-                isAr?'السعر':'Price',
-                selType ? selType.price[isAr?'ar':'en'] : '-'
-              ]].map(([k,v])=>`
-                <div>
-                  <div style="font-size:.75rem;color:var(--text-muted);">${k}</div>
-                  <div style="font-weight:700;font-size:.88rem;margin-top:.15rem;">${v}</div>
-                </div>
-              `).join('')}
-            </div>
-
-            <form id="sessionForm" style="display:grid;gap:1rem;">
-              <div style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
-                <div>
-                  <label style="display:block;margin-bottom:.5rem;font-weight:600;">${t('fullName')}</label>
-                  <input name="fullName" value="${escapeHtml(state.profile.fullName||'')}" placeholder="${isAr?'الاسم الكامل':'Full name'}">
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:.5rem;font-weight:600;">Email</label>
-                  <input name="email" type="email" value="${escapeHtml(state.profile.email||'')}" placeholder="example@mail.com">
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:.5rem;font-weight:600;">${t('password')}</label>
-                  <input name="password" type="password">
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:.5rem;font-weight:600;">${t('confirmPassword')}</label>
-                  <input name="confirmPassword" type="password">
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:.5rem;font-weight:600;">${t('specialization')}</label>
-                  ${buildCollegeSelect(isAr, state.profile.college||'')}
-                </div>
-                <div>
-                  <label style="display:block;margin-bottom:.5rem;font-weight:600;">${t('topic')}</label>
-                  <select name="topic">
-                    <option value="">${isAr?'اختر الموضوع':'Choose topic'}</option>
-                    ${(window.SESSION_TYPES||[]).map(tp=>`<option value="${tp.id}" ${tp.id===ui.selectedType?'selected':''}>${tp.label[isAr?'ar':'en']}</option>`).join('')}
-                  </select>
-                </div>
-              </div>
-              <input type="hidden" name="sessionType" value="${ui.selectedType||''}">
-              <input type="hidden" name="mentorId"    value="${ui.selectedMentor||''}">
-              <input type="hidden" name="slotId"      value="${ui.selectedSlot||''}">
-              <input type="hidden" name="trackId"     value="${state.selectedTrack}">
-              <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
-                <button class="btn btn-primary" type="submit">${t('submitBooking')}</button>
-                <button class="btn btn-secondary" type="button" onclick="navigateTo('mentors')">${isAr?'رجوع للمرشدين':'Back to Mentors'}</button>
-              </div>
-            </form>
-          </div>
-        ` : ''}
-
-      ` : ''}
+    <!-- Confirm CTA -->
+    <div style="margin-top:1rem;">
+      <button
+        class="btn btn-primary"
+        style="width:100%;font-size:1rem;padding:.85rem;${(!hasType||!hasMentor||!hasSlot)?'opacity:.45;cursor:not-allowed;':''}"
+        onclick="confirmBooking()"
+        ${(!hasType||!hasMentor||!hasSlot)?'disabled':''}>
+        <i data-lucide="calendar-check-2" style="width:1rem;height:1rem;"></i>
+        ${isAr?'تأكيد الحجز':'Confirm Booking'}
+      </button>
+      ${(!hasType||!hasMentor||!hasSlot)?`<p style="text-align:center;font-size:.78rem;color:var(--text-muted);margin-top:.5rem;">${isAr?'أكمل الخطوات الثلاث أعلاه':'Complete all 3 steps above'}</p>`:''}
     </div>
   `;
 };
