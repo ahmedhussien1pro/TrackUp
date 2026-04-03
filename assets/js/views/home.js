@@ -36,7 +36,7 @@ window.renderHomeView = function renderHomeView() {
       titleEn: 'Take the Assessment',
       titleAr: 'ابدأ التقييم',
       descEn:  '5 targeted questions reveal which engineering track fits you best.',
-      descAr:  '٥ أسئلة دقيقة تكشف أنسب مسار هندسي لك.'
+      descAr:  '5 أسئلة دقيقة تكشف أنسب مسار هندسي لك.'
     },
     {
       num: '02',
@@ -44,7 +44,7 @@ window.renderHomeView = function renderHomeView() {
       titleEn: 'See Your Ranked Results',
       titleAr: 'شوف نتائجك مرتّبة',
       descEn:  'Get your top 3 tracks with fit percentages and clear explanations.',
-      descAr:  'أفضل ٣ مسارات بنسب توافق واضحة وأسباب حقيقية.'
+      descAr:  'أفضل 3 مسارات بنسب توافق واضحة وأسباب حقيقية.'
     },
     {
       num: '03',
@@ -59,16 +59,16 @@ window.renderHomeView = function renderHomeView() {
   /* ── Free vs Premium features ────────────────────────── */
   const freeFeatures  = [
     isAr ? 'تقييم سريع (5 أسئلة)' : 'Quick assessment (5 questions)',
-    isAr ? 'أفضل 3 مسارات مرتّبة'       : 'Top 3 ranked tracks',
-    isAr ? 'نظرة عامة على المسار'     : 'Basic track overview',
+    isAr ? 'أفضل 3 مسارات مرتّبة'  : 'Top 3 ranked tracks',
+    isAr ? 'نظرة عامة على المسار'  : 'Basic track overview',
   ];
   const premFeatures  = [
-    isAr ? 'عرض كامل وتحليل عميق'   : 'Full fit analysis & deep insights',
-    isAr ? 'خارطة مسار تفصيلية'       : 'Detailed step-by-step roadmap',
-    isAr ? 'توصيات منصات التعلم'       : 'Platform recommendations',
-    isAr ? 'متابعة تقدمك'               : 'Progress tracking',
-    isAr ? 'جلسات فردية مع خبير'    : '1-on-1 expert sessions',
-    isAr ? 'مكتبة جلسات مسجّلة'      : 'Recorded sessions library',
+    isAr ? 'عرض كامل وتحليل عميق'  : 'Full fit analysis & deep insights',
+    isAr ? 'خارطة مسار تفصيلية'    : 'Detailed step-by-step roadmap',
+    isAr ? 'توصيات منصات التعلم'   : 'Platform recommendations',
+    isAr ? 'متابعة تقدمك'          : 'Progress tracking',
+    isAr ? 'جلسات فردية مع خبير'   : '1-on-1 expert sessions',
+    isAr ? 'مكتبة جلسات مسجّلة'   : 'Recorded sessions library',
   ];
   const check = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
 
@@ -81,10 +81,10 @@ window.renderHomeView = function renderHomeView() {
 
   /* ── Stats strip ───────────────────────────────────────── */
   const stats = [
-    { valEn: '500+',  valAr: '500+',  labelEn: 'Students guided',  labelAr: 'طالب استفاد' },
-    { valEn: '3',     valAr: '3',     labelEn: 'Engineering tracks', labelAr: 'مسار هندسي' },
-    { valEn: '10+',   valAr: '10+',   labelEn: 'Expert mentors',    labelAr: 'مرشد خبير' },
-    { valEn: '98%',   valAr: '98%',   labelEn: 'Satisfaction rate', labelAr: 'نسبة رضا' },
+    { valEn: '500+', valAr: '500+', labelEn: 'Students guided',   labelAr: 'طالب استفاد' },
+    { valEn: '3',    valAr: '3',    labelEn: 'Engineering tracks', labelAr: 'مسار هندسي' },
+    { valEn: '10+',  valAr: '10+',  labelEn: 'Expert mentors',    labelAr: 'مرشد خبير' },
+    { valEn: '98%',  valAr: '98%',  labelEn: 'Satisfaction rate', labelAr: 'نسبة رضا' },
   ];
 
   const noiseOffsets = [80, 100, 115, 130, 165, 178, 192, 210];
@@ -157,9 +157,6 @@ window.renderHomeView = function renderHomeView() {
             </div>
             <div style="font-weight:700;font-size:.97rem;margin-bottom:.4rem;">${isAr ? s.titleAr : s.titleEn}</div>
             <div class="text-muted" style="font-size:.86rem;line-height:1.7;">${isAr ? s.descAr : s.descEn}</div>
-            ${i < steps.length - 1 ? `
-              <div style="position:absolute;top:50%;${isAr ? 'left' : 'right'}:-1px;transform:translateY(-50%);width:2px;height:40%;background:var(--border);border-radius:99px;display:none;" class="step-connector"></div>
-            ` : ''}
           </div>
         `).join('')}
       </div>
@@ -171,7 +168,7 @@ window.renderHomeView = function renderHomeView() {
       <!-- Next step card -->
       <div class="surface-panel section-pad">
         <div class="eyebrow" style="margin-bottom:.75rem;">${isAr ? 'أين أنت الآن' : 'Your next step'}</div>
-        <div class="surface-soft" style="padding:1rem;border-radius:14px;border:1px solid var(--accent);margin-bottom:1rem;">
+        <div class="surface-soft" style="padding:1rem;border-radius:14px;border:1px solid var(--accent);">
           <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.5rem;">
             <div style="width:2rem;height:2rem;border-radius:8px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;">
               <i data-lucide="navigation" style="width:.9rem;height:.9rem;color:var(--accent);"></i>
@@ -183,24 +180,6 @@ window.renderHomeView = function renderHomeView() {
             ${isAr ? 'ابدأ الآن' : "Let's go"}
             <i data-lucide="arrow-${isAr ? 'left' : 'right'}" style="width:.85rem;height:.85rem;"></i>
           </button>
-        </div>
-        <div style="display:grid;gap:.4rem;">
-          ${[
-            { view:'profile',  icon:'user-round',     en:'Profile',      ar:'ملفي' },
-            { view:'test',     icon:'clipboard-list', en:'Assessment',   ar:'التقييم' },
-            { view:'results',  icon:'bar-chart-3',    en:'Results',      ar:'النتائج' },
-            { view:'roadmap',  icon:'route',          en:'Roadmap',      ar:'مسار التطور' },
-            { view:'progress', icon:'target',         en:'My Progress',  ar:'متابعة تقدمي' },
-            { view:'pricing',  icon:'crown',          en:'Plans',        ar:'الباقات' },
-          ].map(item => `
-            <button
-              class="btn btn-ghost"
-              style="justify-content:flex-start;gap:.55rem;font-size:.84rem;padding:.45rem .6rem;"
-              onclick="navigateTo('${item.view}')">
-              <i data-lucide="${item.icon}" style="width:.8rem;height:.8rem;color:var(--text-muted);"></i>
-              ${isAr ? item.ar : item.en}
-            </button>
-          `).join('')}
         </div>
       </div>
 

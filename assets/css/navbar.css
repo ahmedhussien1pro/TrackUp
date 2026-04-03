@@ -1,0 +1,429 @@
+/* ============================================================
+   navbar.css — Dropdown navigation system
+   ============================================================ */
+
+/* ── Wrapper (relative container for dropdown) ── */
+.nav-dd-wrapper {
+  position: relative;
+}
+
+/* ── Base dropdown panel ── */
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  z-index: 300;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.04),
+    0 8px 24px rgba(0,0,0,.28),
+    0 32px 64px rgba(0,0,0,.18);
+  overflow: hidden;
+  animation: ddSlideIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+html[data-theme='light'] .nav-dropdown {
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.04),
+    0 8px 24px rgba(15,23,42,.1),
+    0 32px 64px rgba(15,23,42,.06);
+}
+
+[dir='rtl'] .nav-dropdown {
+  right: auto;
+  left: 0;
+}
+
+.nav-dd--wide {
+  min-width: 260px;
+}
+
+/* ── Dropdown header ── */
+.nav-dd-header {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .75rem 1rem .6rem;
+  border-bottom: 1px solid var(--border);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.nav-dd-header-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Dropdown body ── */
+.nav-dd-body {
+  padding: .4rem;
+  display: grid;
+  gap: .1rem;
+}
+
+/* ── Section label inside dropdown ── */
+.nav-dd-section-label {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .5rem .65rem .25rem;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ── Divider ── */
+.nav-dd-divider {
+  height: 1px;
+  background: var(--border);
+  margin: .3rem .4rem;
+}
+
+/* ── Individual dropdown item ── */
+.nav-dd-item {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  width: 100%;
+  padding: .55rem .65rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: .86rem;
+  font-weight: 500;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background .14s ease,
+    color .14s ease,
+    border-color .14s ease;
+  position: relative;
+}
+
+.nav-dd-item:hover:not(.is-locked) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.nav-dd-item.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: rgba(59,130,246,.15);
+  font-weight: 600;
+}
+
+.nav-dd-item.is-locked {
+  opacity: .5;
+  cursor: default;
+}
+
+/* Upgrade CTA item */
+.nav-dd-item--upgrade {
+  color: var(--accent);
+  font-weight: 600;
+}
+.nav-dd-item--upgrade:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Danger item (reset) */
+.nav-dd-item--danger {
+  color: var(--danger, #ef4444);
+}
+.nav-dd-item--danger:hover {
+  background: rgba(239,68,68,.08);
+  color: var(--danger, #ef4444);
+}
+
+/* ── Item icon slot ── */
+.nav-dd-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 8px;
+  background: var(--surface-2);
+  flex-shrink: 0;
+  transition: background .14s ease;
+}
+
+.nav-dd-item-icon i,
+.nav-dd-item-icon svg {
+  width: 13px;
+  height: 13px;
+  color: var(--text-muted);
+  transition: color .14s ease;
+}
+
+.nav-dd-item.is-active .nav-dd-item-icon {
+  background: var(--accent-soft);
+}
+.nav-dd-item.is-active .nav-dd-item-icon i,
+.nav-dd-item.is-active .nav-dd-item-icon svg {
+  color: var(--accent);
+}
+
+.nav-dd-item--upgrade .nav-dd-item-icon i,
+.nav-dd-item--upgrade .nav-dd-item-icon svg {
+  color: var(--accent);
+}
+
+/* ── Item label ── */
+.nav-dd-item-label {
+  flex: 1;
+  text-align: start;
+  line-height: 1.3;
+}
+
+/* ── Active dot indicator ── */
+.nav-dd-item-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── PRO badge ── */
+.nav-dd-pro-badge {
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid rgba(59,130,246,.2);
+  border-radius: 5px;
+  padding: .1rem .4rem;
+  flex-shrink: 0;
+}
+
+/* ── Lock badge ── */
+.nav-lock-badge {
+  font-size: .6rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: .1rem .35rem;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+
+/* ── Account dropdown: profile header ── */
+.nav-dd-profile {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .85rem 1rem .75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-dd-profile-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 1.5px solid rgba(59,130,246,.35);
+  flex-shrink: 0;
+}
+
+.nav-dd-profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-dd-profile-name {
+  font-weight: 700;
+  font-size: .9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-dd-profile-email {
+  font-size: .75rem;
+  color: var(--text-muted);
+  margin-top: .1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-dd-pro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  margin-top: .35rem;
+  background: var(--accent-soft);
+  border: 1px solid rgba(59,130,246,.2);
+  border-radius: 99px;
+  padding: .15rem .55rem;
+  font-size: .68rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+/* ── Mobile nav items ── */
+.mobile-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.mobile-profile-strip {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem;
+  background: var(--surface-2);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+}
+
+.mobile-profile-name {
+  font-weight: 700;
+  font-size: .9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-profile-plan {
+  font-size: .75rem;
+  color: var(--text-muted);
+  margin-top: .1rem;
+}
+
+.mobile-profile-plan--pro {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.mobile-nav-groups {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.mobile-nav-group {
+  display: grid;
+  gap: .2rem;
+}
+
+.mobile-nav-group-label {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: 0 .5rem .35rem;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  width: 100%;
+  padding: .6rem .75rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: .88rem;
+  font-weight: 500;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background .14s ease,
+    color .14s ease;
+}
+
+.mobile-nav-item:hover:not(.is-locked) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.mobile-nav-item.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: rgba(59,130,246,.15);
+  font-weight: 600;
+}
+
+.mobile-nav-item.is-locked {
+  opacity: .45;
+  cursor: default;
+}
+
+.mobile-nav-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9px;
+  background: var(--surface-2);
+  flex-shrink: 0;
+  transition: background .14s ease;
+}
+
+.mobile-nav-item-icon i,
+.mobile-nav-item-icon svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+}
+
+.mobile-nav-item.is-active .mobile-nav-item-icon {
+  background: var(--accent-soft);
+}
+.mobile-nav-item.is-active .mobile-nav-item-icon i,
+.mobile-nav-item.is-active .mobile-nav-item-icon svg {
+  color: var(--accent);
+}
+
+.mobile-nav-item-label {
+  flex: 1;
+  text-align: start;
+}
+
+.mobile-nav-item-chevron {
+  width: 13px;
+  height: 13px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+/* ── Dropdown animation ── */
+@keyframes ddSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

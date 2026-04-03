@@ -68,23 +68,91 @@ window.guardedNavigate = function guardedNavigate(view) {
 ────────────────────────────────────────────── */
 function getJourneyItems() {
   return [
-    { id: 'profile',  icon: 'user-round',     labelEn: 'Profile',     labelAr: 'ملفي' },
+    { id: 'profile',  icon: 'user-round',     labelEn: 'Profile',     labelAr: 'ملفي الشخصي' },
     { id: 'test',     icon: 'clipboard-list', labelEn: 'Assessment',  labelAr: 'الاختبار' },
-    { id: 'results',  icon: 'bar-chart-3',    labelEn: 'Results',     labelAr: 'النتائج' },
+    { id: 'results',  icon: 'bar-chart-3',    labelEn: 'My Results',  labelAr: 'نتائجي' },
     { id: 'roadmap',  icon: 'route',          labelEn: 'Roadmap',     labelAr: 'مسار التطور' },
-    { id: 'progress', icon: 'target',         labelEn: 'Progress',    labelAr: 'تقدمي' },
+    { id: 'progress', icon: 'target',         labelEn: 'My Progress', labelAr: 'متابعة تقدمي' },
   ];
 }
 
 function getExploreItems(isPro) {
   const sessionDone = state.completedMilestones?.sessionBooked;
   return [
-    { id: 'track-details',    icon: 'layers-3',       labelEn: 'Tracks',           labelAr: 'التخصصات',         lock: false },
-    { id: 'platforms',        icon: 'layout-grid',    labelEn: 'Platforms',        labelAr: 'منصات التعلم',     lock: false },
-    { id: 'mentors',          icon: 'users-round',    labelEn: 'Mentors',          labelAr: 'المرشدون',         lock: false },
-    { id: 'recorded-library', icon: 'library',        labelEn: 'Recorded Library', labelAr: 'مكتبة الجلسات',   lock: !isPro },
-    { id: 'subtrack-test',    icon: 'flask-conical',  labelEn: 'Specialization',   labelAr: 'اكتشف تخصصك',     lock: !sessionDone },
+    { id: 'track-details',    icon: 'layers-3',       labelEn: 'Tracks',           labelAr: 'التخصصات',        lock: false },
+    { id: 'platforms',        icon: 'layout-grid',    labelEn: 'Platforms',        labelAr: 'منصات التعلم',    lock: false },
+    { id: 'mentors',          icon: 'users-round',    labelEn: 'Mentors',          labelAr: 'المرشدون',        lock: false },
+    { id: 'recorded-library', icon: 'library',        labelEn: 'Recorded Library', labelAr: 'مكتبة الجلسات',  lock: !isPro },
+    { id: 'subtrack-test',    icon: 'flask-conical',  labelEn: 'Specialization',   labelAr: 'اكتشف تخصصك',    lock: !sessionDone },
   ];
+}
+
+/* ──────────────────────────────────────────────
+   Dropdown builders
+────────────────────────────────────────────── */
+function buildJourneyDropdown(isAr) {
+  const items = getJourneyItems();
+  return `
+    <div class="nav-dropdown journey-dropdown" role="menu">
+      <div class="nav-dd-header">
+        <i data-lucide="compass" class="nav-dd-header-icon"></i>
+        <span>${isAr ? 'مسيرتي' : 'My Journey'}</span>
+      </div>
+      <div class="nav-dd-body">
+        ${items.map(item => {
+          const isActive = state.currentView === item.id;
+          return `
+            <button class="nav-dd-item ${isActive ? 'is-active' : ''}" role="menuitem"
+              onclick="guardedNavigate('${item.id}')">
+              <span class="nav-dd-item-icon">
+                <i data-lucide="${item.icon}"></i>
+              </span>
+              <span class="nav-dd-item-label">${isAr ? item.labelAr : item.labelEn}</span>
+              ${isActive ? '<span class="nav-dd-item-dot"></span>' : ''}
+            </button>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+function buildExploreDropdown(isAr, isPro) {
+  const items = getExploreItems(isPro);
+  const free   = items.filter(i => !i.lock);
+  const locked = items.filter(i =>  i.lock);
+
+  function item(i) {
+    const isActive = state.currentView === i.id;
+    return `
+      <button class="nav-dd-item ${isActive ? 'is-active' : ''} ${i.lock ? 'is-locked' : ''}" role="menuitem"
+        onclick="${i.lock ? `openPremiumLock('${i.id}')` : `navigateTo('${i.id}')` }">
+        <span class="nav-dd-item-icon">
+          <i data-lucide="${i.lock ? 'lock' : i.icon}"></i>
+        </span>
+        <span class="nav-dd-item-label">${isAr ? i.labelAr : i.labelEn}</span>
+        ${i.lock ? `<span class="nav-dd-pro-badge">PRO</span>` : ''}
+        ${isActive && !i.lock ? '<span class="nav-dd-item-dot"></span>' : ''}
+      </button>`;
+  }
+
+  return `
+    <div class="nav-dropdown explore-dropdown nav-dd--wide" role="menu">
+      <div class="nav-dd-header">
+        <i data-lucide="telescope" class="nav-dd-header-icon"></i>
+        <span>${isAr ? 'استكشف' : 'Explore'}</span>
+      </div>
+      <div class="nav-dd-body">
+        <div class="nav-dd-section-label">${isAr ? 'متاح للجميع' : 'Available for all'}</div>
+        ${free.map(item).join('')}
+        ${locked.length ? `
+          <div class="nav-dd-divider"></div>
+          <div class="nav-dd-section-label">
+            <i data-lucide="crown" style="width:10px;height:10px;color:var(--accent);"></i>
+            ${isAr ? 'حصري Premium' : 'Premium only'}
+          </div>
+          ${locked.map(item).join('')}
+        ` : ''}
+      </div>
+    </div>`;
 }
 
 /* ── renderHeader ── */
@@ -95,30 +163,11 @@ window.renderHeader = function renderHeader() {
   const initials    = getProfileInitials();
   const isPro       = state.premiumUnlocked;
 
-  const journeyIds  = getJourneyItems().map(i => i.id);
-  const exploreIds  = getExploreItems(isPro).map(i => i.id);
+  const journeyIds      = getJourneyItems().map(i => i.id);
+  const exploreIds      = getExploreItems(isPro).map(i => i.id);
   const isJourneyActive = journeyIds.includes(state.currentView);
   const isExploreActive = exploreIds.includes(state.currentView);
   const isAccountActive = state.currentView === 'profile' || state.currentView === 'auth';
-
-  function ddItem(item, guardFn = 'guardedNavigate') {
-    const isActive = state.currentView === item.id;
-    return `
-      <button
-        class="nav-dd-item ${isActive ? 'is-active' : ''} ${item.lock ? 'is-locked' : ''}"
-        onclick="${item.lock ? `openPremiumLock('${item.id}')` : `${guardFn}('${item.id}')`}">
-        <i data-lucide="${item.lock ? 'lock' : item.icon}" style="width:14px;height:14px;flex-shrink:0;color:${item.lock ? 'var(--text-faint)' : 'var(--accent)'};"></i>
-        <span style="flex:1;text-align:start;">${isAr ? item.labelAr : item.labelEn}</span>
-        ${item.lock ? `<span style="font-size:.65rem;font-weight:800;color:var(--accent);background:var(--accent-soft);padding:.1rem .45rem;border-radius:99px;">PRO</span>` : ''}
-      </button>`;
-  }
-
-  function buildDropdown(items, cls, guardFn) {
-    return `<div class="nav-dropdown surface-panel fade-up-soft ${cls}"
-      style="position:absolute;top:calc(100% + 10px);${dir === 'rtl' ? 'left:0;' : 'right:0;'}min-width:210px;z-index:300;padding:.4rem;">
-      ${items.map(i => ddItem(i, guardFn)).join('')}
-    </div>`;
-  }
 
   return `
     <header class="app-header">
@@ -126,9 +175,9 @@ window.renderHeader = function renderHeader() {
         <div class="header-row">
 
           <!-- Brand -->
-          <button class="brand-block" onclick="navigateTo('home')">
+          <button class="brand-block" onclick="navigateTo('home')" aria-label="TrackUp home">
             <span class="brand-mark">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)" aria-hidden="true">
                 <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
               </svg>
             </span>
@@ -136,34 +185,38 @@ window.renderHeader = function renderHeader() {
           </button>
 
           <!-- Desktop Nav -->
-          <nav class="desktop-nav">
+          <nav class="desktop-nav" aria-label="Main navigation">
 
             <button class="nav-link ${state.currentView === 'home' ? 'is-active' : ''}" onclick="navigateTo('home')">
               ${isAr ? 'الرئيسية' : 'Home'}
             </button>
 
             <!-- Journey dropdown -->
-            <div style="position:relative;">
-              <button class="nav-link ${isJourneyActive ? 'is-active' : ''}" data-journey="true" onclick="toggleJourneyMenu()">
+            <div class="nav-dd-wrapper">
+              <button class="nav-link ${isJourneyActive ? 'is-active' : ''}" data-journey="true"
+                onclick="toggleJourneyMenu()" aria-haspopup="true" aria-expanded="${state.journeyOpen}">
                 <span>${isAr ? 'رحلتي' : 'Journey'}</span>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
                   style="transition:transform .2s;transform:${state.journeyOpen ? 'rotate(180deg)' : 'rotate(0)'}">
                   <path d="m6 9 6 6 6-6"/>
                 </svg>
               </button>
-              ${state.journeyOpen ? buildDropdown(getJourneyItems(), 'journey-dropdown', 'guardedNavigate') : ''}
+              ${state.journeyOpen ? buildJourneyDropdown(isAr) : ''}
             </div>
 
             <!-- Explore dropdown -->
-            <div style="position:relative;">
-              <button class="nav-link ${isExploreActive ? 'is-active' : ''}" data-explore="true" onclick="toggleExploreMenu()">
+            <div class="nav-dd-wrapper">
+              <button class="nav-link ${isExploreActive ? 'is-active' : ''}" data-explore="true"
+                onclick="toggleExploreMenu()" aria-haspopup="true" aria-expanded="${state.exploreOpen}">
                 <span>${isAr ? 'استكشف' : 'Explore'}</span>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
                   style="transition:transform .2s;transform:${state.exploreOpen ? 'rotate(180deg)' : 'rotate(0)'}">
                   <path d="m6 9 6 6 6-6"/>
                 </svg>
               </button>
-              ${state.exploreOpen ? buildDropdown(getExploreItems(isPro), 'explore-dropdown', 'navigateTo') : ''}
+              ${state.exploreOpen ? buildExploreDropdown(isAr, isPro) : ''}
             </div>
 
             <button class="nav-link ${state.currentView === 'pricing' ? 'is-active' : ''}" onclick="navigateTo('pricing')">
@@ -180,99 +233,115 @@ window.renderHeader = function renderHeader() {
           <div class="header-actions">
 
             <!-- Language -->
-            <button class="btn-icon" onclick="switchLanguage()" title="${state.language === 'en' ? 'العربية' : 'English'}">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button class="btn-icon" onclick="switchLanguage()" title="${state.language === 'en' ? 'العربية' : 'English'}" aria-label="Switch language">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>
               </svg>
             </button>
 
             <!-- Theme -->
-            <button class="btn-icon" onclick="switchTheme()" title="${state.theme === 'dark' ? (isAr ? 'فاتح' : 'Light') : (isAr ? 'داكن' : 'Dark')}">
+            <button class="btn-icon" onclick="switchTheme()" title="${state.theme === 'dark' ? (isAr ? 'فاتح' : 'Light') : (isAr ? 'داكن' : 'Dark')}" aria-label="Toggle theme">
               ${state.theme === 'dark'
-                ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`
-                : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`
+                ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`
+                : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`
               }
             </button>
 
             <!-- Reset -->
-            <button class="btn-icon" onclick="resetDemo()" title="${isAr ? 'إعادة ضبط' : 'Reset'}">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <button class="btn-icon" onclick="resetDemo()" title="${isAr ? 'إعادة ضبط' : 'Reset'}" aria-label="Reset demo">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             </button>
 
             <!-- Account dropdown -->
-            <div style="position:relative;">
+            <div class="nav-dd-wrapper" style="position:relative;">
               <button
                 class="nav-avatar ${isPro ? 'nav-avatar--pro' : ''} ${isAccountActive ? 'is-active' : ''}"
                 data-account="true"
                 onclick="toggleAccountMenu()"
-                title="${hasProfile ? state.profile.fullName : (isAr ? 'الحساب' : 'Account')}">
+                aria-haspopup="true"
+                aria-expanded="${state.accountOpen}"
+                aria-label="${hasProfile ? state.profile.fullName : (isAr ? 'الحساب' : 'Account')}">
                 ${hasProfile
                   ? `<span class="nav-avatar-initials">${initials}</span>${isPro ? `<span class="nav-avatar-badge">PRO</span>` : ''}`
-                  : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`
+                  : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`
                 }
               </button>
 
               ${state.accountOpen ? `
-                <div class="nav-dropdown account-dropdown surface-panel fade-up-soft"
-                  style="position:absolute;top:calc(100% + 10px);${dir === 'rtl' ? 'left:0;' : 'right:0;'}min-width:230px;z-index:300;">
+                <div class="nav-dropdown account-dropdown" role="menu"
+                  style="${dir === 'rtl' ? 'left:0;' : 'right:0;'}">
 
                   ${hasProfile ? `
-                    <div style="padding:.8rem 1rem .65rem;border-bottom:1px solid var(--border);">
-                      <div style="font-weight:700;font-size:.9rem;">${state.profile.fullName}</div>
-                      ${state.profile.email ? `<div class="text-muted" style="font-size:.78rem;margin-top:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${state.profile.email}</div>` : ''}
-                      ${isPro ? `<div style="display:inline-flex;align-items:center;gap:.3rem;margin-top:.4rem;background:var(--accent-soft);border-radius:99px;padding:.15rem .6rem;"><i data-lucide="crown" style="width:.65rem;height:.65rem;color:var(--accent);"></i><span style="font-size:.68rem;font-weight:800;color:var(--accent);">Premium</span></div>` : ''}
+                    <div class="nav-dd-profile">
+                      <div class="nav-dd-profile-avatar ${isPro ? 'nav-avatar--pro' : ''}">
+                        <span class="nav-avatar-initials" style="font-size:.82rem;">${initials}</span>
+                        ${isPro ? `<span class="nav-avatar-badge">PRO</span>` : ''}
+                      </div>
+                      <div class="nav-dd-profile-info">
+                        <div class="nav-dd-profile-name">${state.profile.fullName}</div>
+                        ${state.profile.email ? `<div class="nav-dd-profile-email">${state.profile.email}</div>` : ''}
+                        ${isPro ? `<div class="nav-dd-pro-chip"><i data-lucide="crown" style="width:.6rem;height:.6rem;"></i>Premium</div>` : ''}
+                      </div>
                     </div>
                   ` : ''}
 
-                  <div style="padding:.5rem;display:grid;gap:.15rem;">
-                    <button class="nav-dd-item ${state.currentView === 'profile' ? 'is-active' : ''}" onclick="navigateTo('profile')">
-                      <i data-lucide="user-round" style="width:14px;height:14px;color:var(--accent);"></i>
-                      <span>${isAr ? 'ملفي الشخصي' : 'My Profile'}</span>
+                  <div class="nav-dd-body">
+
+                    <div class="nav-dd-section-label">${isAr ? 'حسابي' : 'Account'}</div>
+                    <button class="nav-dd-item ${state.currentView === 'profile' ? 'is-active' : ''}" onclick="navigateTo('profile')" role="menuitem">
+                      <span class="nav-dd-item-icon"><i data-lucide="user-round"></i></span>
+                      <span class="nav-dd-item-label">${isAr ? 'ملفي الشخصي' : 'My Profile'}</span>
                     </button>
-                    <button class="nav-dd-item ${state.currentView === 'progress' ? 'is-active' : ''}" onclick="navigateTo('progress')">
-                      <i data-lucide="target" style="width:14px;height:14px;color:var(--accent);"></i>
-                      <span>${isAr ? 'متابعة تقدمي' : 'My Progress'}</span>
+                    <button class="nav-dd-item ${state.currentView === 'progress' ? 'is-active' : ''}" onclick="navigateTo('progress')" role="menuitem">
+                      <span class="nav-dd-item-icon"><i data-lucide="target"></i></span>
+                      <span class="nav-dd-item-label">${isAr ? 'متابعة تقدمي' : 'My Progress'}</span>
                     </button>
 
                     ${isPro ? `
-                      <div style="border-top:1px solid var(--border);margin:.25rem 0;"></div>
-                      <button class="nav-dd-item ${state.currentView === 'recorded-library' ? 'is-active' : ''}" onclick="navigateTo('recorded-library')">
-                        <i data-lucide="library" style="width:14px;height:14px;color:var(--accent);"></i>
-                        <span>${isAr ? 'مكتبة الجلسات' : 'Recorded Library'}</span>
+                      <div class="nav-dd-divider"></div>
+                      <div class="nav-dd-section-label">
+                        <i data-lucide="crown" style="width:10px;height:10px;color:var(--accent);"></i>
+                        ${isAr ? 'مميزات Premium' : 'Premium'}
+                      </div>
+                      <button class="nav-dd-item ${state.currentView === 'recorded-library' ? 'is-active' : ''}" onclick="navigateTo('recorded-library')" role="menuitem">
+                        <span class="nav-dd-item-icon"><i data-lucide="library"></i></span>
+                        <span class="nav-dd-item-label">${isAr ? 'مكتبة الجلسات' : 'Recorded Library'}</span>
                       </button>
-                      <button class="nav-dd-item ${state.currentView === 'chat' ? 'is-active' : ''}" onclick="navigateTo('chat')">
-                        <i data-lucide="message-square" style="width:14px;height:14px;color:var(--accent);"></i>
-                        <span>${isAr ? 'تواصل مع مرشدك' : 'Mentor Chat'}</span>
+                      <button class="nav-dd-item ${state.currentView === 'chat' ? 'is-active' : ''}" onclick="navigateTo('chat')" role="menuitem">
+                        <span class="nav-dd-item-icon"><i data-lucide="message-square"></i></span>
+                        <span class="nav-dd-item-label">${isAr ? 'تواصل مع مرشدك' : 'Mentor Chat'}</span>
                       </button>
-                      <button class="nav-dd-item ${state.currentView === 'session-booking' ? 'is-active' : ''}" onclick="guardedNavigate('session-booking')">
-                        <i data-lucide="calendar-days" style="width:14px;height:14px;color:var(--accent);"></i>
-                        <span>${isAr ? 'احجز جلسة' : 'Book a Session'}</span>
+                      <button class="nav-dd-item ${state.currentView === 'session-booking' ? 'is-active' : ''}" onclick="guardedNavigate('session-booking')" role="menuitem">
+                        <span class="nav-dd-item-icon"><i data-lucide="calendar-days"></i></span>
+                        <span class="nav-dd-item-label">${isAr ? 'احجز جلسة' : 'Book a Session'}</span>
                       </button>
                     ` : `
-                      <div style="border-top:1px solid var(--border);margin:.25rem 0;"></div>
-                      <button class="nav-dd-item" onclick="navigateTo('pricing')" style="color:var(--accent);">
-                        <i data-lucide="crown" style="width:14px;height:14px;color:var(--accent);"></i>
-                        <span>${isAr ? 'ترقية لـ Premium' : 'Upgrade to Premium'}</span>
+                      <div class="nav-dd-divider"></div>
+                      <button class="nav-dd-item nav-dd-item--upgrade" onclick="navigateTo('pricing')" role="menuitem">
+                        <span class="nav-dd-item-icon"><i data-lucide="crown"></i></span>
+                        <span class="nav-dd-item-label">${isAr ? 'ترقية لـ Premium' : 'Upgrade to Premium'}</span>
+                        <i data-lucide="arrow-${isAr ? 'left' : 'right'}" style="width:12px;height:12px;flex-shrink:0;"></i>
                       </button>
                     `}
 
-                    <div style="border-top:1px solid var(--border);margin:.25rem 0;"></div>
-                    <button class="nav-dd-item" onclick="navigateTo('auth')">
-                      <i data-lucide="log-in" style="width:14px;height:14px;color:var(--text-muted);"></i>
-                      <span>${isAr ? 'تسجيل / دخول' : 'Sign In / Up'}</span>
+                    <div class="nav-dd-divider"></div>
+                    <button class="nav-dd-item" onclick="navigateTo('auth')" role="menuitem">
+                      <span class="nav-dd-item-icon"><i data-lucide="log-in"></i></span>
+                      <span class="nav-dd-item-label">${isAr ? 'تسجيل / دخول' : 'Sign In / Up'}</span>
                     </button>
-                    <button class="nav-dd-item" onclick="resetDemo()" style="color:var(--danger,#dc2626);">
-                      <i data-lucide="rotate-ccw" style="width:14px;height:14px;color:var(--danger,#dc2626);"></i>
-                      <span>${isAr ? 'إعادة ضبط' : 'Reset Demo'}</span>
+                    <button class="nav-dd-item nav-dd-item--danger" onclick="resetDemo()" role="menuitem">
+                      <span class="nav-dd-item-icon"><i data-lucide="rotate-ccw"></i></span>
+                      <span class="nav-dd-item-label">${isAr ? 'إعادة ضبط' : 'Reset Demo'}</span>
                     </button>
+
                   </div>
                 </div>
               ` : ''}
             </div>
 
             <!-- Mobile hamburger -->
-            <button class="btn-icon mobile-toggle" onclick="toggleMobileMenu()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            <button class="btn-icon mobile-toggle" onclick="toggleMobileMenu()" aria-label="Open menu">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
             </button>
 
           </div>
@@ -290,22 +359,27 @@ window.renderMobilePanel = function renderMobilePanel() {
   const hasProfile = state.profile?.fullName?.trim();
   const sessionDone = state.completedMilestones?.sessionBooked;
 
-  const primaryItems = [
-    { id: 'home',      icon: 'house',          labelEn: 'Home',         labelAr: 'الرئيسية' },
-    { id: 'test',      icon: 'clipboard-list', labelEn: 'Assessment',   labelAr: 'الاختبار' },
-    { id: 'results',   icon: 'bar-chart-3',    labelEn: 'Results',      labelAr: 'النتائج' },
-    { id: 'roadmap',   icon: 'route',          labelEn: 'Roadmap',      labelAr: 'مسار التطور' },
-    { id: 'progress',  icon: 'target',         labelEn: 'Progress',     labelAr: 'متابعة تقدمي' },
-    { id: 'mentors',   icon: 'users-round',    labelEn: 'Mentors',      labelAr: 'المرشدون' },
-    { id: 'pricing',   icon: 'credit-card',    labelEn: 'Pricing',      labelAr: 'الباقات' },
+  const journeyItems = [
+    { id: 'profile',  icon: 'user-round',     labelEn: 'My Profile',   labelAr: 'ملفي الشخصي' },
+    { id: 'test',     icon: 'clipboard-list', labelEn: 'Assessment',   labelAr: 'الاختبار' },
+    { id: 'results',  icon: 'bar-chart-3',    labelEn: 'My Results',   labelAr: 'نتائجي' },
+    { id: 'roadmap',  icon: 'route',          labelEn: 'Roadmap',      labelAr: 'مسار التطور' },
+    { id: 'progress', icon: 'target',         labelEn: 'My Progress',  labelAr: 'متابعة تقدمي' },
+  ];
+
+  const exploreItems = [
+    { id: 'track-details', icon: 'layers-3',    labelEn: 'Tracks',    labelAr: 'التخصصات', lock: false },
+    { id: 'platforms',     icon: 'layout-grid', labelEn: 'Platforms', labelAr: 'منصات التعلم', lock: false },
+    { id: 'mentors',       icon: 'users-round', labelEn: 'Mentors',   labelAr: 'المرشدون', lock: false },
+    { id: 'pricing',       icon: 'credit-card', labelEn: 'Pricing',   labelAr: 'الباقات', lock: false },
   ];
 
   const premiumItems = [
-    { id: 'session-booking',  icon: 'calendar-days',  labelEn: 'Book a Session',   labelAr: 'احجز جلسة',          lock: !isPro },
-    { id: 'recorded-library', icon: 'library',         labelEn: 'Recorded Library', labelAr: 'مكتبة الجلسات',      lock: !isPro },
-    { id: 'chat',             icon: 'message-square',  labelEn: 'Mentor Chat',      labelAr: 'تواصل مع مرشدك',    lock: !isPro },
-    { id: 'subtrack-test',    icon: 'flask-conical',   labelEn: 'Specialization',   labelAr: 'اكتشف تخصصك',       lock: !sessionDone },
-    { id: 'sub-track-result', icon: 'crosshair',       labelEn: 'Sub-track Result', labelAr: 'تخصصك الدقيق',      lock: !sessionDone },
+    { id: 'session-booking',  icon: 'calendar-days',  labelEn: 'Book a Session',   labelAr: 'احجز جلسة',        lock: !isPro },
+    { id: 'recorded-library', icon: 'library',         labelEn: 'Recorded Library', labelAr: 'مكتبة الجلسات',    lock: !isPro },
+    { id: 'chat',             icon: 'message-square',  labelEn: 'Mentor Chat',      labelAr: 'تواصل مع مرشدك',  lock: !isPro },
+    { id: 'subtrack-test',    icon: 'flask-conical',   labelEn: 'Specialization',   labelAr: 'اكتشف تخصصك',     lock: !sessionDone },
+    { id: 'sub-track-result', icon: 'crosshair',       labelEn: 'Sub-track Result', labelAr: 'تخصصك الدقيق',    lock: !sessionDone },
   ];
 
   function renderItem(item) {
@@ -313,65 +387,93 @@ window.renderMobilePanel = function renderMobilePanel() {
     const locked   = item.lock;
     return `
       <button
-        class="btn ${isActive ? 'btn-secondary' : 'btn-ghost'}"
-        style="justify-content:flex-start;gap:.65rem;${locked ? 'opacity:.45;' : ''}"
+        class="mobile-nav-item ${isActive ? 'is-active' : ''} ${locked ? 'is-locked' : ''}"
         onclick="${locked ? `openPremiumLock('${item.id}')` : `guardedNavigate('${item.id}')`}">
-        <i data-lucide="${locked ? 'lock' : item.icon}" style="width:15px;height:15px;flex-shrink:0;"></i>
-        <span style="flex:1;text-align:start;">${isAr ? item.labelAr : item.labelEn}</span>
+        <span class="mobile-nav-item-icon">
+          <i data-lucide="${locked ? 'lock' : item.icon}"></i>
+        </span>
+        <span class="mobile-nav-item-label">${isAr ? item.labelAr : item.labelEn}</span>
         ${locked ? `<span class="nav-lock-badge">${isAr ? 'مدفوع' : 'PRO'}</span>` : ''}
+        ${isActive ? `<i data-lucide="chevron-${isAr ? 'left' : 'right'}" class="mobile-nav-item-chevron"></i>` : ''}
       </button>`;
   }
 
   return `
-    <div class="mobile-panel ${state.mobileMenuOpen ? 'is-open' : ''}" onclick="closeMobileMenu(event)">
+    <div class="mobile-panel ${state.mobileMenuOpen ? 'is-open' : ''}" onclick="closeMobileMenu(event)" role="dialog" aria-modal="true" aria-label="Navigation menu">
       <div class="mobile-sheet" onclick="event.stopPropagation()">
 
-        <div class="page-header" style="margin-bottom:1rem;">
+        <!-- Sheet header -->
+        <div class="mobile-sheet-header">
           <div class="brand-block" style="pointer-events:none;">
             <span class="brand-mark">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)" aria-hidden="true">
                 <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
               </svg>
             </span>
             <span class="brand-name">TrackUp</span>
           </div>
-          <button class="btn-icon" onclick="toggleMobileMenu()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          <button class="btn-icon" onclick="toggleMobileMenu()" aria-label="Close menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
 
+        <!-- Profile strip -->
         ${hasProfile ? `
-          <div style="display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--surface-2,var(--surface));border-radius:14px;margin-bottom:1rem;border:1px solid var(--border);">
-            <div class="nav-avatar ${isPro ? 'nav-avatar--pro' : ''}" style="pointer-events:none;">
+          <div class="mobile-profile-strip">
+            <div class="nav-avatar ${isPro ? 'nav-avatar--pro' : ''}" style="pointer-events:none;flex-shrink:0;">
               <span class="nav-avatar-initials">${initials}</span>
               ${isPro ? `<span class="nav-avatar-badge">PRO</span>` : ''}
             </div>
-            <div>
-              <div style="font-weight:700;font-size:.9rem;">${state.profile.fullName}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="mobile-profile-name">${state.profile.fullName}</div>
               ${isPro
-                ? `<div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-top:.1rem;">Premium</div>`
-                : `<div class="text-muted" style="font-size:.78rem;">${isAr ? 'مجاني' : 'Free Plan'}</div>`}
+                ? `<div class="mobile-profile-plan mobile-profile-plan--pro">${isAr ? 'Premium' : 'Premium'}</div>`
+                : `<div class="mobile-profile-plan">${isAr ? 'مجاني' : 'Free Plan'}</div>`}
             </div>
-            ${!isPro ? `<button class="btn btn-primary" style="margin-${isAr?'right':'left'}:auto;font-size:.75rem;padding:.3rem .75rem;" onclick="navigateTo('pricing');closeMobileMenu();">${isAr?'ترقية':'Upgrade'}</button>` : ''}
+            ${!isPro ? `<button class="btn btn-primary" style="font-size:.75rem;padding:.3rem .8rem;min-height:auto;flex-shrink:0;" onclick="navigateTo('pricing');closeMobileMenu();">${isAr ? 'ترقية' : 'Upgrade'}</button>` : ''}
           </div>
         ` : ''}
 
-        <div style="display:grid;gap:1.2rem;">
-          <div style="display:grid;gap:.3rem;">
-            <div class="eyebrow" style="padding:0 .5rem .4rem;">${isAr ? 'التنقل' : 'Navigation'}</div>
-            ${primaryItems.map(renderItem).join('')}
+        <!-- Nav groups -->
+        <div class="mobile-nav-groups">
+
+          <div class="mobile-nav-group">
+            <div class="mobile-nav-group-label">
+              <i data-lucide="compass" style="width:11px;height:11px;"></i>
+              ${isAr ? 'رحلتي' : 'My Journey'}
+            </div>
+            ${journeyItems.map(renderItem).join('')}
           </div>
-          <div>
-            <div class="eyebrow" style="padding:0 .5rem .4rem;display:flex;align-items:center;gap:.4rem;">
+
+          <div class="mobile-nav-group">
+            <div class="mobile-nav-group-label">
+              <i data-lucide="telescope" style="width:11px;height:11px;"></i>
+              ${isAr ? 'استكشف' : 'Explore'}
+            </div>
+            ${exploreItems.map(renderItem).join('')}
+          </div>
+
+          <div class="mobile-nav-group">
+            <div class="mobile-nav-group-label">
               <i data-lucide="crown" style="width:11px;height:11px;color:var(--accent);"></i>
               ${isAr ? 'المميزات المدفوعة' : 'Premium Features'}
             </div>
-            <div style="display:grid;gap:.3rem;">
-              ${premiumItems.map(renderItem).join('')}
-            </div>
+            ${premiumItems.map(renderItem).join('')}
           </div>
-        </div>
 
+          <!-- Utility -->
+          <div class="mobile-nav-group">
+            <button class="mobile-nav-item" onclick="navigateTo('about');closeMobileMenu();">
+              <span class="mobile-nav-item-icon"><i data-lucide="info"></i></span>
+              <span class="mobile-nav-item-label">${isAr ? 'عن TrackUp' : 'About'}</span>
+            </button>
+            <button class="mobile-nav-item" onclick="navigateTo('contact');closeMobileMenu();">
+              <span class="mobile-nav-item-icon"><i data-lucide="mail"></i></span>
+              <span class="mobile-nav-item-label">${isAr ? 'تواصل معنا' : 'Contact'}</span>
+            </button>
+          </div>
+
+        </div>
       </div>
     </div>
   `;
@@ -388,10 +490,10 @@ window.renderBottomNav = function renderBottomNav() {
     { id: 'profile', icon: 'user-round',     labelEn: 'Profile',  labelAr: 'ملفي' }
   ];
   return `
-    <div class="mobile-bottom-nav">
+    <div class="mobile-bottom-nav" role="navigation" aria-label="Quick navigation">
       <div class="mobile-bottom-grid">
         ${items.map(item => `
-          <button class="mobile-bottom-item ${state.currentView === item.id ? 'is-active' : ''}" onclick="guardedNavigate('${item.id}')">
+          <button class="mobile-bottom-item ${state.currentView === item.id ? 'is-active' : ''}" onclick="guardedNavigate('${item.id}')" aria-label="${item.labelEn}">
             <i data-lucide="${item.icon}" style="width:20px;height:20px;"></i>
             <span>${isAr ? item.labelAr : item.labelEn}</span>
           </button>
