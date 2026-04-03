@@ -12,14 +12,12 @@ window.renderHomeView = function renderHomeView() {
 
   /* ── Partners scroll ─────────────────────────────────── */
   const partnersList = [
-    { id:'udemy',            label:'Udemy',            color:'#a435f0' },
-    { id:'coursera',         label:'Coursera',         color:'#0056d2' },
-    { id:'iti',              label:'ITI Egypt',        color:'#005f87' },
-    { id:'tryhackme',        label:'TryHackMe',        color:'#88cc14' },
-    { id:'datacamp',         label:'DataCamp',         color:'#03ef62' },
-    { id:'frontend_masters', label:'Frontend Masters', color:'#c02d28' },
-    { id:'cybrary',          label:'Cybrary',          color:'#00c0ef' },
-    { id:'hackthebox',       label:'Hack The Box',     color:'#9fef00' },
+    { id: 'client-1', label: 'Udemy', color: '#a435f0' },
+    { id: 'client-2', label: 'Coursera', color: '#0056d2' },
+    { id: 'client-3', label: 'ITI Egypt', color: '#005f87' },
+    { id: 'client-4', label: 'TryHackMe', color: '#88cc14' },
+    { id: 'client-5', label: 'Frontend Masters', color: '#c02d28' },
+    { id: 'client-6', label: 'Cybrary', color: '#00c0ef' },
   ];
   const partnerChip = (p) => `
     <div class="partner-chip">
@@ -35,63 +33,103 @@ window.renderHomeView = function renderHomeView() {
       icon: 'clipboard-list',
       titleEn: 'Take the Assessment',
       titleAr: 'ابدأ التقييم',
-      descEn:  '5 targeted questions reveal which engineering track fits you best.',
-      descAr:  '5 أسئلة دقيقة تكشف أنسب مسار هندسي لك.'
+      descEn:
+        '5 targeted questions reveal which engineering track fits you best.',
+      descAr: '5 أسئلة دقيقة تكشف أنسب مسار هندسي لك.',
     },
     {
       num: '02',
       icon: 'bar-chart-3',
       titleEn: 'See Your Ranked Results',
       titleAr: 'شوف نتائجك مرتّبة',
-      descEn:  'Get your top 3 tracks with fit percentages and clear explanations.',
-      descAr:  'أفضل 3 مسارات بنسب توافق واضحة وأسباب حقيقية.'
+      descEn:
+        'Get your top 3 tracks with fit percentages and clear explanations.',
+      descAr: 'أفضل 3 مسارات بنسب توافق واضحة وأسباب حقيقية.',
     },
     {
       num: '03',
       icon: 'route',
       titleEn: 'Follow Your Roadmap',
       titleAr: 'اتبع مسار تطورك',
-      descEn:  'A step-by-step roadmap, resources, and expert sessions guide your growth.',
-      descAr:  'خارطة تطور تفصيلية وموارد وجلسات خبراء ترشدك خطوة بخطوة.'
-    }
+      descEn:
+        'A step-by-step roadmap, resources, and expert sessions guide your growth.',
+      descAr: 'خارطة تطور تفصيلية وموارد وجلسات خبراء ترشدك خطوة بخطوة.',
+    },
   ];
 
   /* ── Free vs Premium features ────────────────────────── */
-  const freeFeatures  = [
+  const freeFeatures = [
     isAr ? 'تقييم سريع (5 أسئلة)' : 'Quick assessment (5 questions)',
-    isAr ? 'أفضل 3 مسارات مرتّبة'  : 'Top 3 ranked tracks',
-    isAr ? 'نظرة عامة على المسار'  : 'Basic track overview',
+    isAr ? 'أفضل 3 مسارات مرتّبة' : 'Top 3 ranked tracks',
+    isAr ? 'نظرة عامة على المسار' : 'Basic track overview',
   ];
-  const premFeatures  = [
-    isAr ? 'عرض كامل وتحليل عميق'  : 'Full fit analysis & deep insights',
-    isAr ? 'خارطة مسار تفصيلية'    : 'Detailed step-by-step roadmap',
-    isAr ? 'توصيات منصات التعلم'   : 'Platform recommendations',
-    isAr ? 'متابعة تقدمك'          : 'Progress tracking',
-    isAr ? 'جلسات فردية مع خبير'   : '1-on-1 expert sessions',
-    isAr ? 'مكتبة جلسات مسجّلة'   : 'Recorded sessions library',
+  const premFeatures = [
+    isAr ? 'عرض كامل وتحليل عميق' : 'Full fit analysis & deep insights',
+    isAr ? 'خارطة مسار تفصيلية' : 'Detailed step-by-step roadmap',
+    isAr ? 'توصيات منصات التعلم' : 'Platform recommendations',
+    isAr ? 'متابعة تقدمك' : 'Progress tracking',
+    isAr ? 'جلسات فردية مع خبير' : '1-on-1 expert sessions',
+    isAr ? 'مكتبة جلسات مسجّلة' : 'Recorded sessions library',
   ];
   const check = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
 
   /* ── Testimonials ─────────────────────────────────────── */
   const testimonials = [
-    { name: t('testimonial1Name'), role: t('testimonial1Role'), text: t('testimonial1Text'), stars: 5 },
-    { name: t('testimonial2Name'), role: t('testimonial2Role'), text: t('testimonial2Text'), stars: 5 },
-    { name: t('testimonial3Name'), role: t('testimonial3Role'), text: t('testimonial3Text'), stars: 5 }
+    {
+      name: t('testimonial1Name'),
+      role: t('testimonial1Role'),
+      text: t('testimonial1Text'),
+      stars: 5,
+    },
+    {
+      name: t('testimonial2Name'),
+      role: t('testimonial2Role'),
+      text: t('testimonial2Text'),
+      stars: 5,
+    },
+    {
+      name: t('testimonial3Name'),
+      role: t('testimonial3Role'),
+      text: t('testimonial3Text'),
+      stars: 5,
+    },
   ];
 
   /* ── Stats strip ───────────────────────────────────────── */
   const stats = [
-    { valEn: '500+', valAr: '500+', labelEn: 'Students guided',   labelAr: 'طالب استفاد' },
-    { valEn: '3',    valAr: '3',    labelEn: 'Engineering tracks', labelAr: 'مسار هندسي' },
-    { valEn: '10+',  valAr: '10+',  labelEn: 'Expert mentors',    labelAr: 'مرشد خبير' },
-    { valEn: '98%',  valAr: '98%',  labelEn: 'Satisfaction rate', labelAr: 'نسبة رضا' },
+    {
+      valEn: '500+',
+      valAr: '500+',
+      labelEn: 'Students guided',
+      labelAr: 'طالب استفاد',
+    },
+    {
+      valEn: '3',
+      valAr: '3',
+      labelEn: 'Engineering tracks',
+      labelAr: 'مسار هندسي',
+    },
+    {
+      valEn: '10+',
+      valAr: '10+',
+      labelEn: 'Expert mentors',
+      labelAr: 'مرشد خبير',
+    },
+    {
+      valEn: '98%',
+      valAr: '98%',
+      labelEn: 'Satisfaction rate',
+      labelAr: 'نسبة رضا',
+    },
   ];
 
   const noiseOffsets = [80, 100, 115, 130, 165, 178, 192, 210];
-  const noiseWaves = noiseOffsets.map((y, i) => {
-    const a = 18 + (i % 3) * 8;
-    return `<path class="wave-noise wave-noise-${i + 1}" d="M0,${y} C60,${y - a} 120,${y + a} 180,${y} S260,${y - a} 300,${y}"/>`;
-  }).join('');
+  const noiseWaves = noiseOffsets
+    .map((y, i) => {
+      const a = 18 + (i % 3) * 8;
+      return `<path class="wave-noise wave-noise-${i + 1}" d="M0,${y} C60,${y - a} 120,${y + a} 180,${y} S260,${y - a} 300,${y}"/>`;
+    })
+    .join('');
 
   return `
     <!-- ──────────────────── HERO ──────────────────── -->
@@ -101,14 +139,18 @@ window.renderHomeView = function renderHomeView() {
           ${isAr ? 'دليلك لاختيار التخصص الصحيح' : 'Your engineering career, decided.'}
         </span>
         <h1 class="home-hero-title">
-          ${isAr
-            ? 'بتخصص في دقيقتين.<br>بدون تخمين ولا حيرة.'
-            : 'Find your engineering<br>track in 2 minutes.'}
+          ${
+            isAr
+              ? 'بتخصص في دقيقتين.<br>بدون تخمين ولا حيرة.'
+              : 'Find your engineering<br>track in 2 minutes.'
+          }
         </h1>
         <p class="home-hero-sub">
-          ${isAr
-            ? 'TrackUp يحلل إجاباتك ويرتّب أفضل 3 مسارات هندسية لك — ثم يرشدك خطوة بخطوة.'
-            : 'TrackUp analyzes your answers and ranks the top 3 engineering specializations for you — then guides you step by step.'}
+          ${
+            isAr
+              ? 'TrackUp يحلل إجاباتك ويرتّب أفضل 3 مسارات هندسية لك — ثم يرشدك خطوة بخطوة.'
+              : 'TrackUp analyzes your answers and ranks the top 3 engineering specializations for you — then guides you step by step.'
+          }
         </p>
         <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.75rem;">
           <button class="btn btn-primary" onclick="navigateTo('profile')">${isAr ? 'ابدأ التقييم' : 'Start Assessment'}</button>
@@ -134,12 +176,16 @@ window.renderHomeView = function renderHomeView() {
     <!-- ──────────────────── STATS ──────────────────── -->
     <section class="surface-soft" style="padding:1.25rem;border-radius:16px;" data-aos="fade-up">
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;text-align:center;">
-        ${stats.map(s => `
+        ${stats
+          .map(
+            (s) => `
           <div>
             <div style="font-size:1.7rem;font-weight:900;color:var(--accent);line-height:1;">${isAr ? s.valAr : s.valEn}</div>
             <div class="text-muted" style="font-size:.78rem;margin-top:.35rem;line-height:1.4;">${isAr ? s.labelAr : s.labelEn}</div>
           </div>
-        `).join('')}
+        `,
+          )
+          .join('')}
       </div>
     </section>
 
@@ -147,7 +193,9 @@ window.renderHomeView = function renderHomeView() {
     <section data-aos="fade-up">
       <div class="eyebrow" style="text-align:center;margin-bottom:1.25rem;">${isAr ? 'كيف يشتغل TrackUp' : 'How it works'}</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;position:relative;">
-        ${steps.map((s, i) => `
+        ${steps
+          .map(
+            (s, i) => `
           <div class="surface-panel section-pad" style="position:relative;" data-aos="fade-up" data-aos-delay="${i * 80}">
             <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.85rem;">
               <div style="width:2.4rem;height:2.4rem;border-radius:10px;background:var(--accent-soft);border:1px solid rgba(37,99,235,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -158,7 +206,9 @@ window.renderHomeView = function renderHomeView() {
             <div style="font-weight:700;font-size:.97rem;margin-bottom:.4rem;">${isAr ? s.titleAr : s.titleEn}</div>
             <div class="text-muted" style="font-size:.86rem;line-height:1.7;">${isAr ? s.descAr : s.descEn}</div>
           </div>
-        `).join('')}
+        `,
+          )
+          .join('')}
       </div>
     </section>
 
@@ -191,18 +241,26 @@ window.renderHomeView = function renderHomeView() {
           <div style="background:var(--surface-2,var(--surface-soft));border:1px solid var(--border);border-radius:14px;padding:.85rem;">
             <div style="font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);margin-bottom:.65rem;">${isAr ? 'مجاني' : 'Free'}</div>
             <div style="display:grid;gap:.45rem;">
-              ${freeFeatures.map(f => `
+              ${freeFeatures
+                .map(
+                  (f) => `
                 <div style="display:flex;gap:.45rem;align-items:flex-start;font-size:.82rem;">${check}<span>${f}</span></div>
-              `).join('')}
+              `,
+                )
+                .join('')}
             </div>
           </div>
           <!-- Premium -->
           <div style="background:var(--accent-soft);border:1.5px solid rgba(37,99,235,.3);border-radius:14px;padding:.85rem;">
             <div style="font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:.65rem;">Premium</div>
             <div style="display:grid;gap:.45rem;">
-              ${premFeatures.map(f => `
+              ${premFeatures
+                .map(
+                  (f) => `
                 <div style="display:flex;gap:.45rem;align-items:flex-start;font-size:.82rem;">${check}<span>${f}</span></div>
-              `).join('')}
+              `,
+                )
+                .join('')}
             </div>
           </div>
         </div>
@@ -218,7 +276,7 @@ window.renderHomeView = function renderHomeView() {
       <div class="eyebrow" style="text-align:center;margin-bottom:1.1rem;">${t('partnersTitle')}</div>
       <div class="partners-track-wrap">
         <div class="partners-track" id="partnersTrack">
-          ${partnersList.map(p => partnerChip(p)).join('')}
+          ${partnersList.map((p) => partnerChip(p)).join('')}
         </div>
       </div>
     </section>
@@ -227,7 +285,9 @@ window.renderHomeView = function renderHomeView() {
     <section data-aos="fade-up">
       <div class="eyebrow" style="margin-bottom:1.1rem;">${t('testimonials')}</div>
       <div class="testimonials-grid">
-        ${testimonials.map(item => `
+        ${testimonials
+          .map(
+            (item) => `
           <div class="testimonial-card surface-panel section-pad">
             <div style="display:flex;align-items:center;gap:2px;margin-bottom:.6rem;">
               ${renderStars(item.stars)}
@@ -241,7 +301,9 @@ window.renderHomeView = function renderHomeView() {
               </div>
             </div>
           </div>
-        `).join('')}
+        `,
+          )
+          .join('')}
       </div>
     </section>
   `;
@@ -253,8 +315,8 @@ window.initPartnersScroll = function initPartnersScroll() {
   if (!track) return;
   if (window._partnersRAF) cancelAnimationFrame(window._partnersRAF);
   const originals = Array.from(track.children);
-  track.querySelectorAll('[data-clone]').forEach(el => el.remove());
-  originals.forEach(chip => {
+  track.querySelectorAll('[data-clone]').forEach((el) => el.remove());
+  originals.forEach((chip) => {
     const clone = chip.cloneNode(true);
     clone.setAttribute('data-clone', '1');
     track.appendChild(clone);
@@ -262,9 +324,15 @@ window.initPartnersScroll = function initPartnersScroll() {
   const speed = 0.5;
   let pos = 0;
   let paused = false;
-  track.addEventListener('mouseenter', () => { paused = true; });
-  track.addEventListener('mouseleave', () => { paused = false; });
-  function getHalfWidth() { return track.scrollWidth / 2; }
+  track.addEventListener('mouseenter', () => {
+    paused = true;
+  });
+  track.addEventListener('mouseleave', () => {
+    paused = false;
+  });
+  function getHalfWidth() {
+    return track.scrollWidth / 2;
+  }
   function loop() {
     if (!paused) {
       pos -= speed;
