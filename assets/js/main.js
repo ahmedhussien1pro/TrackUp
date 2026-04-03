@@ -96,9 +96,11 @@ window.bindForms = function bindForms() {
       updateProgress('profileCompleted', true);
       persistState();
       showToast(t('saved'), '#16a34a');
-      navigateTo('test');
+      // ── UC2: show branching “knows-track?” step instead of jumping to test directly
+      setProfileStep('ask');
     });
   }
+
   const sessionForm = document.getElementById('sessionForm');
   if (sessionForm) {
     sessionForm.addEventListener('submit', e => {
@@ -155,4 +157,5 @@ state.direction  = state.language === 'ar' ? 'rtl' : 'ltr';
 if (!state.auth)        state.auth        = null;
 if (!state.accountOpen) state.accountOpen = false;
 initRouter();
+seedDemoAccount();
 renderApp();
