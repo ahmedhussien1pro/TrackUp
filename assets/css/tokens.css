@@ -15,6 +15,8 @@ html[data-theme="dark"] {
   --primary-contrast: #0a0a0a;
   --accent: #3b82f6;
   --accent-soft: rgba(59, 130, 246, 0.12);
+  --brand: #3b82f6;
+  --surface-soft: #111111;
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -44,6 +46,8 @@ html[data-theme="light"] {
   --primary-contrast: #ffffff;
   --accent: #2563eb;
   --accent-soft: rgba(37, 99, 235, 0.09);
+  --brand: #2563eb;
+  --surface-soft: #fafafa;
   --success: #16a34a;
   --warning: #d97706;
   --danger: #dc2626;
