@@ -11,8 +11,6 @@ window.validateSessionForm = function validateSessionForm(data) {
   const errors = {};
   if (!data.fullName.trim()) errors.fullName = true;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = true;
-  if (!data.password || data.password.length < 6) errors.password = true;
-  if (data.password !== data.confirmPassword) errors.confirmPassword = true;
   if (!data.specialization.trim()) errors.specialization = true;
   if (!data.topic.trim()) errors.topic = true;
   return errors;

@@ -96,7 +96,7 @@ window.bindForms = function bindForms() {
       updateProgress('profileCompleted', true);
       persistState();
       showToast(t('saved'), '#16a34a');
-      // ── UC2: show branching “knows-track?” step instead of jumping to test directly
+      // ── UC2: show branching "knows-track?" step instead of jumping to test directly
       setProfileStep('ask');
     });
   }
@@ -108,18 +108,14 @@ window.bindForms = function bindForms() {
       if (!state.premiumUnlocked) return navigateTo('pricing');
       const fd = new FormData(sessionForm);
       const payload = {
-        fullName:        String(fd.get('fullName')        || '').trim(),
-        email:           String(fd.get('email')           || '').trim(),
-        password:        String(fd.get('password')        || '').trim(),
-        confirmPassword: String(fd.get('confirmPassword') || '').trim(),
-        specialization:  String(fd.get('specialization')  || '').trim(),
-        topic:           String(fd.get('topic')           || '').trim()
+        fullName:       String(fd.get('fullName')       || '').trim(),
+        email:          String(fd.get('email')          || '').trim(),
+        specialization: String(fd.get('specialization') || '').trim(),
+        topic:          String(fd.get('topic')          || '').trim(),
       };
       const errors = validateSessionForm(payload);
-      if (errors.email)           return showToast(t('invalidEmail'),  '#dc2626');
-      if (errors.password)        return showToast(t('weakPassword'),   '#dc2626');
-      if (errors.confirmPassword) return showToast(t('passMismatch'),   '#dc2626');
-      if (errors.topic)           return showToast(t('chooseTopic'),    '#dc2626');
+      if (errors.email)                          return showToast(t('invalidEmail'), '#dc2626');
+      if (errors.topic)                          return showToast(t('chooseTopic'),  '#dc2626');
       if (errors.fullName || errors.specialization) return showToast(t('formErrors'), '#dc2626');
       updateProgress('sessionBooked', true);
       persistState();
